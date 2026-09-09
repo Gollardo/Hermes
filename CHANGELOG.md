@@ -12,6 +12,8 @@ assigned.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-09
+
 ### Added
 
 - Runtime Russian/English interface selection on setup, login and Settings,
@@ -22,6 +24,10 @@ assigned.
   clients default to Russian and existing/restored names remain unchanged.
 
 ### Changed
+
+- Recurring occurrence confirmation supports reviewed operation fields while
+  retaining its original plan snapshot. Confirmed occurrences are excluded
+  from pending daily calendar totals.
 
 - Request validation preserves HTTP 422 field/type metadata without reflecting
   input values or exception context. Localized restore confirmation maps to the

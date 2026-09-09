@@ -94,7 +94,7 @@ An unfinished item is never moved silently into the next release.
 
 ## 1.1.0 — multilingual foundation
 
-**Implemented and locally verified; unreleased.** Selected by the owner on
+**Completed for release `1.1.0` on 2026-09-09.** Selected by the owner on
 2026-09-09 ahead of deferred operational hardening. See the
 [implementation record](multilingual-foundation-plan.md),
 [i18n contract](ui-ux/internationalization.md) and current
@@ -109,8 +109,8 @@ layout and keyboard/accessibility-tree checks were performed in the local browse
 
 All four [production-backup acceptance findings](operations/multilingual-acceptance-2026-09-09.md)
 are fixed, covered by rendered regressions and manually retested on the rebuilt
-local production image. Remaining release gate: owner acceptance and the standard
-release checklist.
+local production image. The owner authorized release publication on 2026-09-09; the release checklist
+is recorded in project status.
 Exhaustive Safari/VoiceOver testing remains unverified. No database migration,
 server language preference, extra languages or operational hardening is included.
 

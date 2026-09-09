@@ -18,8 +18,25 @@ On 2026-08-28, the owner accepted Hermes on a restored copy of real data and
 approved publication of the first public tag. On 2026-09-09 the owner selected
 `1.1.0 — multilingual foundation` as the next milestone and deferred operational
 hardening. The multilingual foundation is now implemented and locally verified,
-but remains unreleased. The [implementation record](multilingual-foundation-plan.md)
+and the owner authorized release `1.1.0` on 2026-09-09. The [implementation record](multilingual-foundation-plan.md)
 and [i18n contract](ui-ux/internationalization.md) describe the accepted scope.
+
+### Release 1.1.0 — 2026-09-09
+
+The owner authorized publication after the recorded real-data acceptance,
+regression fixes and README refresh. Backend metadata, frontend package metadata
+and the visible release badge are aligned at `1.1.0`.
+
+Release checks: 109 backend tests, 70 PostgreSQL integration tests and 171
+frontend tests; lint, typecheck, documentation checks and production Compose
+build. An isolated final-image startup returned HTTP health `ok`, reported
+version `1.1.0`, reached `0014_one_off_plans` and passed `alembic check`.
+The first integration attempt exhausted the Docker disk and PostgreSQL exited;
+the full suite was rerun against disposable PostgreSQL 17 with data in tmpfs.
+No user data volumes were removed. Existing bundle/CSS warnings remain.
+
+Distribution follows the existing annotated-tag and GitHub Release source-build
+model. No registry image or production-server deployment is included.
 
 ### Production-backup browser acceptance — 2026-09-09
 
@@ -34,8 +51,7 @@ The four acceptance findings are fixed and manually retested in Chrome on the
 rebuilt production image: localized restore submission, visible composer errors,
 signed day plurals, and responsive forecast date labels. The follow-up JSON
 export equals the complete source `data` object. Rendered-component regressions
-now exercise the actual restore button instead of bypassing its guard. Owner
-release acceptance remains outstanding. The local restored instance remains
+now exercise the actual restore button instead of bypassing its guard. The owner subsequently authorized release publication. The local restored instance remains
 running for inspection; production was not changed.
 
 ### Calendar layout and README refresh — 2026-09-09
@@ -807,7 +823,7 @@ access. Direct public-internet exposure is unsupported.
 
 ## Recommended next action
 
-Complete owner acceptance of the corrected local instance and the standard
-release checklist before preparing `1.1.0`. Review the initial-bundle warning
-before adding further languages. Operational hardening remains deferred; no
-public tag or version bump was made by this implementation.
+Upgrade the owner deployment from the `v1.1.0` tag only after validating a
+protected backup, then verify health and the primary financial screens.
+Review the initial-bundle warning before adding further languages. Operational
+hardening remains deferred.

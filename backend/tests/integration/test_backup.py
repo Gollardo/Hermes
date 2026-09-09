@@ -137,7 +137,7 @@ def test_export_preview_and_transactional_restore_on_initialized_database(
         document = exported.json()
         assert document["format"] == "hermes-json-backup"
         assert document["schema_version"] == 1
-        assert document["app_version"] == "1.0.0"
+        assert document["app_version"] == "1.1.0"
         assert document["data"]["account_movements"][0]["amount"] == "125.5000"
         assert "password" not in exported.text
         assert "sessions" not in document["data"]
