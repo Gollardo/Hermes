@@ -6,33 +6,34 @@
           <span class="brand-mark" aria-hidden="true">H</span>
           <span>Hermes</span>
         </span>
-        <h2>Деньги под вашим контролем.</h2>
+        <h2>{{ t('login.yourMoneyUnderYourControl') }}</h2>
         <p>
-          Личное финансовое пространство, которое работает на вашем сервере и по вашим правилам.
+          {{ t('login.aPersonalFinancialSpaceRunningOnYour') }}
         </p>
       </div>
     </aside>
 
     <section class="access-card compact" aria-labelledby="login-title">
-      <p class="eyebrow">С возвращением</p>
-      <h1 id="login-title">Войдите в Hermes</h1>
-      <p class="intro">Используйте мастер-пароль владельца для доступа к финансовым данным.</p>
+      <p class="eyebrow">{{ t('login.welcomeBack') }}</p>
+      <h1 id="login-title">{{ t('login.signInToHermes') }}</h1>
+      <p class="intro">{{ t('login.useTheOwnerSMasterPasswordTo') }}</p>
 
+      <app-language-select />
       <form [formGroup]="form" (ngSubmit)="submit()">
-        <label for="login-password">Мастер-пароль</label>
+        <label for="login-password"> {{ t('login.masterPassword') }} </label>
         <input
           id="login-password"
           type="password"
           formControlName="password"
           autocomplete="current-password"
-          placeholder="Введите мастер-пароль"
+          [placeholder]="t('login.enterTheMasterPassword')"
         />
-        <p class="hint">Пароль проверяется вашим экземпляром и не передаётся внешним сервисам.</p>
+        <p class="hint">{{ t('login.yourInstanceVerifiesThePasswordWithoutSending') }}</p>
         @if (error(); as message) {
           <p class="form-error" role="alert">{{ message }}</p>
         }
         <button type="submit" [disabled]="submitting()">
-          {{ submitting() ? 'Проверяем…' : 'Войти в приложение' }}
+          {{ submitting() ? t('login.checking') : t('login.signIn') }}
         </button>
       </form>
     </section>

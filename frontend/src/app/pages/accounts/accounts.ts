@@ -1,9 +1,10 @@
+import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { environment } from '../../../environments/environment';
-import { apiErrorMessage } from '../../core/auth.service';
+import { apiErrorMessage } from '../../core/api-error';
 import { currencySymbol, MoneyPipe } from '../../shared/money.pipe';
 import { DecimalInput, decimalPayload } from '../../shared/decimal-input';
 
@@ -26,13 +27,14 @@ interface Account {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountsPage implements OnInit {
+  protected readonly t = t;
   private readonly http = inject(HttpClient);
   private readonly builder = inject(NonNullableFormBuilder);
 
   protected readonly accounts = signal<Account[]>([]);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly error = localizedSignal();
   protected readonly editingId = signal<string | null>(null);
   protected readonly formOpen = signal(false);
   protected readonly baseCurrency = signal('₽');
@@ -45,11 +47,13 @@ export class AccountsPage implements OnInit {
 
   ngOnInit(): void {
     this.load();
-    this.http
-      .get<{ base_currency: string }>(`${environment.apiBaseUrl}/settings`)
-      .subscribe(({ base_currency: baseCurrency }) => {
+    this.http.get<{ base_currency: string }>(`${environment.apiBaseUrl}/settings`).subscribe({
+      next: ({ base_currency: baseCurrency }) => {
         this.baseCurrency.set(currencySymbol(baseCurrency));
-      });
+      },
+      error: (error: unknown) =>
+        this.error.set(() => apiErrorMessage(error, t('settings.couldNotLoadSettings'))),
+    });
   }
 
   protected submit(): void {
@@ -76,7 +80,7 @@ export class AccountsPage implements OnInit {
       },
       error: (error: unknown) => {
         this.saving.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось сохранить счёт.'));
+        this.error.set(() => apiErrorMessage(error, t('accounts.couldNotSaveTheAccount')));
       },
     });
   }
@@ -106,7 +110,9 @@ export class AccountsPage implements OnInit {
   }
 
   protected accountTypeLabel(type: AccountType): string {
-    return { cash: 'Наличные', debit: 'Дебетовый', savings: 'Сберегательный' }[type];
+    return { cash: t('accounts.cash'), debit: t('accounts.debit'), savings: t('accounts.savings') }[
+      type
+    ];
   }
 
   protected toggleArchive(account: Account): void {
@@ -116,14 +122,17 @@ export class AccountsPage implements OnInit {
       .subscribe({
         next: () => this.load(),
         error: (error: unknown) =>
-          this.error.set(apiErrorMessage(error, 'Не удалось изменить состояние счёта.')),
+          this.error.set(() =>
+            apiErrorMessage(error, t('accounts.couldNotChangeTheAccountStatus')),
+          ),
       });
   }
 
   protected remove(account: Account): void {
     this.http.delete<void>(`${environment.apiBaseUrl}/accounts/${account.id}`).subscribe({
       next: () => this.load(),
-      error: (error: unknown) => this.error.set(apiErrorMessage(error, 'Не удалось удалить счёт.')),
+      error: (error: unknown) =>
+        this.error.set(() => apiErrorMessage(error, t('accounts.couldNotDeleteTheAccount'))),
     });
   }
 
@@ -136,7 +145,7 @@ export class AccountsPage implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить счета.'));
+        this.error.set(() => apiErrorMessage(error, t('accounts.couldNotLoadAccounts')));
       },
     });
   }

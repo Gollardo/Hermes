@@ -5,7 +5,7 @@
     autocomplete="off"
     [id]="inputId"
     [attr.aria-label]="accessibleLabel"
-    [placeholder]="placeholder"
+    [placeholder]="placeholder ?? t('entity-combobox.startTypingAName')"
     [value]="query()"
     [disabled]="disabled()"
     [attr.aria-expanded]="open()"
@@ -19,7 +19,7 @@
     <button
       type="button"
       class="clear"
-      aria-label="Очистить выбор"
+      [attr.aria-label]="t('entity-combobox.clearSelection')"
       [disabled]="disabled()"
       (click)="clear()"
     >

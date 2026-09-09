@@ -1,15 +1,15 @@
 <section class="directory-page">
   <header class="page-header">
     <div class="page-header-copy">
-      <p class="eyebrow">Финансовая структура</p>
+      <p class="eyebrow">{{ t('accounts.financialStructure') }}</p>
       <div class="accounts-title-row">
-        <h1>Счета</h1>
-        <button type="button" (click)="openCreate()">Добавить счёт</button>
+        <h1>{{ t('accounts.accounts') }}</h1>
+        <button type="button" (click)="openCreate()">{{ t('accounts.addAccount') }}</button>
       </div>
-      <p>Физическое местонахождение денег. Остаток всегда рассчитывается из журнала движений.</p>
+      <p>{{ t('accounts.whereYourMoneyIsHeldBalancesAre') }}</p>
       <span class="accounts-rule">
-        <strong>Важно:</strong>
-        баланс нельзя изменить напрямую
+        <strong> {{ t('accounts.note') }} </strong>
+        {{ t('accounts.balancesCannotBeEditedDirectly') }}
       </span>
     </div>
   </header>
@@ -19,18 +19,19 @@
       <div class="panel-heading">
         <div>
           <h2 id="accounts-list-title">
-            Все счета <span class="accounts-count">· {{ accounts().length }}</span>
+            {{ t('accounts.allAccounts') }}
+            <span class="accounts-count">· {{ accounts().length }}</span>
           </h2>
-          <p>Активные и архивные счета сохраняют финансовую историю.</p>
+          <p>{{ t('accounts.activeAndArchivedAccountsRetainFinancialHistory') }}</p>
         </div>
       </div>
 
       @if (loading()) {
-        <p class="empty-state" aria-live="polite">Загружаем счета…</p>
+        <p class="empty-state" aria-live="polite">{{ t('accounts.loadingAccounts') }}</p>
       } @else if (accounts().length === 0) {
         <div class="empty-state">
-          <strong>Счетов пока нет</strong>
-          <p>Создайте первый счёт и укажите известный начальный остаток.</p>
+          <strong> {{ t('accounts.noAccountsYet') }} </strong>
+          <p>{{ t('accounts.createYourFirstAccountAndEnterIts') }}</p>
         </div>
       } @else {
         <div class="item-list accounts-list">
@@ -46,25 +47,31 @@
                   @if (account.description) {
                     <p>{{ account.description }}</p>
                   } @else if (account.archived) {
-                    <p>Счёт находится в архиве</p>
+                    <p>{{ t('accounts.thisAccountIsArchived') }}</p>
                   }
                 </div>
               </div>
               <div class="balance-block">
-                <span>Текущий остаток</span>
+                <span> {{ t('accounts.currentBalance') }} </span>
                 <strong class="balance">{{ account.balance | money }} {{ baseCurrency() }}</strong>
               </div>
               <div class="item-actions">
-                <button type="button" class="secondary" (click)="edit(account)">Изменить</button>
+                <button type="button" class="secondary" (click)="edit(account)">
+                  {{ t('accounts.edit') }}
+                </button>
                 <details class="item-more-actions">
-                  <summary [attr.aria-label]="'Дополнительные действия для счёта ' + account.name">
-                    Ещё <span aria-hidden="true">▾</span>
+                  <summary
+                    [attr.aria-label]="t('accounts.moreAccountActions') + ' ' + account.name"
+                  >
+                    {{ t('accounts.more') }} <span aria-hidden="true">▾</span>
                   </summary>
                   <div class="item-actions-popover">
                     <button type="button" class="secondary" (click)="toggleArchive(account)">
-                      {{ account.archived ? 'Восстановить' : 'Архивировать' }}
+                      {{ account.archived ? t('accounts.restore') : t('accounts.archive') }}
                     </button>
-                    <button type="button" class="danger" (click)="remove(account)">Удалить</button>
+                    <button type="button" class="danger" (click)="remove(account)">
+                      {{ t('accounts.delete') }}
+                    </button>
                   </div>
                 </details>
               </div>
@@ -85,30 +92,37 @@
       >
         <div class="modal-header">
           <div>
-            <p class="section-label">{{ editingId() ? 'Изменение' : 'Новое' }}</p>
+            <p class="section-label">
+              {{ editingId() ? t('accounts.editing') : t('accounts.new') }}
+            </p>
             <h2 id="account-form-title">
-              {{ editingId() ? 'Редактировать счёт' : 'Добавить счёт' }}
+              {{ editingId() ? t('accounts.editAccount') : t('accounts.addAccount') }}
             </h2>
           </div>
-          <button type="button" class="modal-close" (click)="cancelEdit()" aria-label="Закрыть">
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelEdit()"
+            [attr.aria-label]="t('accounts.close')"
+          >
             ×
           </button>
         </div>
         <form [formGroup]="form" (ngSubmit)="submit()">
-          <label for="account-name">Название</label>
+          <label for="account-name"> {{ t('accounts.name') }} </label>
           <input
             id="account-name"
             formControlName="name"
             maxlength="120"
-            placeholder="Например, Наличные"
+            [placeholder]="t('accounts.forExampleCash')"
           />
-          <label for="account-type">Тип счёта</label>
+          <label for="account-type"> {{ t('accounts.accountType') }} </label>
           <select id="account-type" formControlName="type">
-            <option value="cash">Наличные</option>
-            <option value="debit">Дебетовый</option>
-            <option value="savings">Сберегательный</option>
+            <option value="cash">{{ t('accounts.cash') }}</option>
+            <option value="debit">{{ t('accounts.debit') }}</option>
+            <option value="savings">{{ t('accounts.savings') }}</option>
           </select>
-          <label for="initial-balance">Начальный остаток</label>
+          <label for="initial-balance"> {{ t('accounts.openingBalance') }} </label>
           <input
             id="initial-balance"
             appDecimalInput
@@ -117,28 +131,34 @@
             placeholder="0"
           />
           <p class="hint">
-            Будет записан отдельной корректировкой. Допустимо до 4 знаков после запятой.
+            {{ t('accounts.recordedAsASeparateAdjustmentUpTo') }}
           </p>
           @if (form.controls.initialBalance.touched && form.controls.initialBalance.invalid) {
-            <p class="field-error">Введите неотрицательное число, до 4 знаков после запятой.</p>
+            <p class="field-error">{{ t('accounts.enterANonNegativeNumberWithUp') }}</p>
           }
-          <label for="account-description">Описание</label>
+          <label for="account-description"> {{ t('accounts.description') }} </label>
           <textarea
             id="account-description"
             formControlName="description"
             maxlength="2000"
             rows="3"
-            placeholder="Необязательный контекст счёта"
+            [placeholder]="t('accounts.optionalAccountContext')"
           ></textarea>
           @if (error(); as message) {
             <p class="form-error" role="alert">{{ message }}</p>
           }
           <button type="submit" [disabled]="saving()">
-            {{ saving() ? 'Сохраняем…' : editingId() ? 'Сохранить изменения' : 'Создать счёт' }}
+            {{
+              saving()
+                ? t('accounts.saving')
+                : editingId()
+                  ? t('accounts.saveChanges')
+                  : t('accounts.createAccount')
+            }}
           </button>
           @if (editingId()) {
             <button type="button" class="secondary" (click)="cancelEdit()">
-              Отменить изменение
+              {{ t('accounts.cancelChanges') }}
             </button>
           }
         </form>

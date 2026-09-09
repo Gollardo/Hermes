@@ -220,3 +220,10 @@ unavailable source and offers retry; actual balance may appear separately.
   Forecast points use roving tabindex: `Tab` enters once, while `ArrowLeft`,
   `ArrowRight`, `Home`, and `End` move selection. The exact monthly risk marker
   remains a separate infrequent action.
+
+## Multilingual presentation
+
+The implemented RU/EN presentation follows the shared
+[internationalization contract](../internationalization.md). Language changes
+update screen copy and accessible labels while preserving financial semantics,
+user-entered data, dates, selected context and exact monetary payloads.

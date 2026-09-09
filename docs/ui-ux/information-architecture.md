@@ -234,3 +234,9 @@ time order. Every point reveals its starting balance and influencing events.
 - Which four destinations genuinely deserve mobile bottom navigation?
 - Is a side panel sufficient for operation details on desktop, and what is the
   correct mobile transition?
+
+## Language selection
+
+The implemented RU/EN selector is available throughout setup, on login and in
+Settings. It is a browser preference independent of server-owned financial
+settings. See the [internationalization contract](internationalization.md).

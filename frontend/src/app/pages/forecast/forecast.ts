@@ -1,3 +1,4 @@
+import { t, localizedSignal, locale, plural } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -12,7 +13,7 @@ import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { apiErrorMessage } from '../../core/auth.service';
+import { apiErrorMessage } from '../../core/api-error';
 import { DateTextPipe, formatTextDate } from '../../shared/date-text.pipe';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
 import {
@@ -158,18 +159,21 @@ interface ForecastRiskMarker extends PlotCoordinate {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ForecastPage implements OnInit {
+  protected readonly t = t;
   private readonly http = inject(HttpClient);
   private requestId = 0;
   private fundRequestId = 0;
 
   protected readonly accounts = signal<Account[]>([]);
-  protected readonly horizons: readonly HorizonOption[] = [
-    { value: 'two_weeks', label: '2 недели' },
-    { value: 'month', label: 'Месяц' },
-    { value: 'quarter', label: 'Квартал' },
-    { value: 'half_year', label: 'Полгода' },
-    { value: 'year', label: 'Год' },
-  ];
+  protected get horizons(): readonly HorizonOption[] {
+    return [
+      { value: 'two_weeks', label: t('forecast.2Weeks') },
+      { value: 'month', label: t('forecast.month') },
+      { value: 'quarter', label: t('forecast.quarter') },
+      { value: 'half_year', label: t('forecast.halfYear') },
+      { value: 'year', label: t('forecast.year') },
+    ];
+  }
   protected readonly timelineEventLimit = TIMELINE_EVENT_LIMIT;
   protected readonly baseCurrency = signal('RUB');
   protected readonly forecast = signal<ForecastDataset | null>(null);
@@ -184,12 +188,12 @@ export class ForecastPage implements OnInit {
       this.fundForecast()?.series.map((series) => series.ending_allocation_percentage) ?? [],
     ),
   );
-  protected readonly fundError = signal<string | null>(null);
+  protected readonly fundError = localizedSignal();
   protected readonly accountOptions = computed<EntityOption[]>(() =>
     this.accounts().map((account) => ({
       id: account.id,
       label: account.name,
-      detail: account.archived ? 'В архиве' : undefined,
+      detail: account.archived ? t('forecast.archived') : undefined,
     })),
   );
   protected readonly selectedAccountId = signal('');
@@ -200,7 +204,7 @@ export class ForecastPage implements OnInit {
   protected readonly hoveredPointIndex = signal<number | null>(null);
   protected readonly timelineExpanded = signal(false);
   protected readonly loading = signal(true);
-  protected readonly error = signal<string | null>(null);
+  protected readonly error = localizedSignal();
 
   protected readonly viewModel = computed<ForecastViewModel | null>(() => {
     const value = this.forecast();
@@ -273,12 +277,18 @@ export class ForecastPage implements OnInit {
     return value.points.map((point) => {
       const numericBalance = Number(point.closing_balance);
       const eventText = point.events.length
-        ? `. Операций: ${point.events.length}. Нажмите, чтобы показать детали`
-        : '. Операций нет';
+        ? t('forecast.operationsP0PressToShowDetails', { p0: point.events.length })
+        : t('forecast.noOperations');
       return {
         ...point,
         numericBalance,
-        ariaLabel: `${formatPointPeriod(point, value.granularity)}: баланс ${formatMoney(point.closing_balance)} ${currency}, изменение ${formatMoney(signedDecimal(point.change))}${eventText}`,
+        ariaLabel: t('forecast.p0BalanceP1P2ChangeP3P4', {
+          p0: formatPointPeriod(point, value.granularity),
+          p1: formatMoney(point.closing_balance),
+          p2: currency,
+          p3: formatMoney(signedDecimal(point.change)),
+          p4: eventText,
+        }),
         x: plotXForDate(point.on, value),
         y: plotY(numericBalance, scale),
       };
@@ -422,7 +432,7 @@ export class ForecastPage implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось подготовить прогноз.'));
+        this.error.set(() => apiErrorMessage(error, t('forecast.couldNotPrepareTheForecast')));
       },
     });
   }
@@ -498,20 +508,20 @@ export class ForecastPage implements OnInit {
 
   protected detailContextLabel(point: ForecastPoint): string {
     return this.forecast()?.granularity === 'month' && point.period_from !== point.on
-      ? 'Детали выбранного интервала'
-      : 'Детали выбранного дня';
+      ? t('forecast.selectedIntervalDetails')
+      : t('forecast.selectedDayDetails');
   }
 
   protected balanceModeLabel(mode: ForecastBalanceMode): string {
-    return mode === 'free' ? 'Свободные средства' : 'Все средства';
+    return mode === 'free' ? t('forecast.freeBalance') : t('forecast.totalBalance');
   }
 
   protected chartTitle(mode: ForecastBalanceMode): string {
-    return mode === 'free' ? 'Прогноз свободных средств' : 'Прогноз всех средств';
+    return mode === 'free' ? t('forecast.freeBalanceForecast') : t('forecast.totalBalanceForecast');
   }
 
   protected granularityLabel(value: ForecastDataset): string {
-    return value.granularity === 'month' ? 'Закрытие месяца' : 'Закрытие дня';
+    return value.granularity === 'month' ? t('forecast.monthClose') : t('forecast.dayClose');
   }
 
   protected tooltipBelow(point: PlotPoint): boolean {
@@ -519,7 +529,11 @@ export class ForecastPage implements OnInit {
   }
 
   protected typeLabel(type: ForecastEvent['type']): string {
-    return { income: 'Доход', expense: 'Расход', transfer: 'Перевод' }[type];
+    return {
+      income: t('operation-create-menu.income'),
+      expense: t('operation-create-menu.expense'),
+      transfer: t('operation-create-menu.transfer'),
+    }[type];
   }
 
   protected eventTitle(event: ForecastEvent): string {
@@ -541,12 +555,12 @@ export class ForecastPage implements OnInit {
   }
 
   protected operationsWord(count: number): string {
-    const lastTwo = count % 100;
-    const last = count % 10;
-    if (lastTwo >= 11 && lastTwo <= 14) return 'операций';
-    if (last === 1) return 'операция';
-    if (last >= 2 && last <= 4) return 'операции';
-    return 'операций';
+    return plural(count, {
+      one: 'common.operationsOne',
+      few: 'common.operationsFew',
+      many: 'common.operationsMany',
+      other: 'common.operationsOther',
+    });
   }
 
   protected isNegative(value: string): boolean {
@@ -559,9 +573,16 @@ export class ForecastPage implements OnInit {
 
   protected chartAriaLabel(viewModel: ForecastViewModel): string {
     const risk = viewModel.metrics.hasCashGap
-      ? `Первый кассовый разрыв ${formatTextDate(viewModel.metrics.firstNegativeBalanceDate)}.`
-      : 'Кассовых разрывов не ожидается.';
-    return `${this.chartTitle(viewModel.dataset.balance_mode)} с ${formatTextDate(viewModel.dataset.from_on)} по ${formatTextDate(viewModel.dataset.through_on)}. ${risk}`;
+      ? t('forecast.firstCashShortfallOnP0', {
+          p0: formatTextDate(viewModel.metrics.firstNegativeBalanceDate),
+        })
+      : t('forecast.noCashShortfallsExpected');
+    return t('forecast.p0FromP1ThroughP2P3', {
+      p0: this.chartTitle(viewModel.dataset.balance_mode),
+      p1: formatTextDate(viewModel.dataset.from_on),
+      p2: formatTextDate(viewModel.dataset.through_on),
+      p3: risk,
+    });
   }
 
   protected fundDonutStyle(): string {
@@ -620,7 +641,7 @@ export class ForecastPage implements OnInit {
       error: (error: unknown) => {
         if (requestId !== this.requestId) return;
         this.loading.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось рассчитать прогноз.'));
+        this.error.set(() => apiErrorMessage(error, t('forecast.couldNotCalculateTheForecast')));
       },
     });
   }
@@ -637,7 +658,9 @@ export class ForecastPage implements OnInit {
       error: (error: unknown) => {
         if (requestId !== this.fundRequestId) return;
         // This additional read model must not hide an otherwise valid cash forecast.
-        this.fundError.set(apiErrorMessage(error, 'Не удалось рассчитать перспективу фондов.'));
+        this.fundError.set(() =>
+          apiErrorMessage(error, t('forecast.couldNotCalculateTheFundOutlook')),
+        );
       },
     });
   }
@@ -708,7 +731,7 @@ function formatAxisMoney(value: number): string {
 function compactDate(value: string, monthOnly = false): string {
   const [year, month, day] = value.split('-').map(Number);
   return new Intl.DateTimeFormat(
-    'ru-RU',
+    locale(),
     monthOnly
       ? { month: 'short', year: 'numeric', timeZone: 'UTC' }
       : { day: 'numeric', month: 'short', timeZone: 'UTC' },

@@ -1,3 +1,4 @@
+import { t, localizedSignal, LanguageService } from './i18n/i18n';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,7 +10,8 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
-import { AuthService, apiErrorMessage } from './core/auth.service';
+import { AuthService } from './core/auth.service';
+import { apiErrorMessage } from './core/api-error';
 import { IdleSessionService } from './core/idle-session.service';
 import { LoginPage } from './pages/login/login';
 import { SetupPage } from './pages/setup/setup';
@@ -22,9 +24,11 @@ import { SetupPage } from './pages/setup/setup';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App implements OnInit, OnDestroy {
+  protected readonly t = t;
+  private readonly languageService = inject(LanguageService);
   protected readonly auth = inject(AuthService);
   private readonly idleSession = inject(IdleSessionService);
-  protected readonly actionError = signal<string | null>(null);
+  protected readonly actionError = localizedSignal();
   protected readonly sidebarHidden = signal(readSidebarPreference());
 
   constructor() {
@@ -53,7 +57,7 @@ export class App implements OnInit, OnDestroy {
     this.actionError.set(null);
     this.auth.logout().subscribe({
       error: (error: unknown) =>
-        this.actionError.set(apiErrorMessage(error, 'Не удалось завершить сессию.')),
+        this.actionError.set(() => apiErrorMessage(error, t('app.couldNotEndTheSession'))),
     });
   }
 

@@ -1,3 +1,4 @@
+import { t } from '../i18n/i18n';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -23,19 +24,37 @@ export type CreateOperationType = 'expense' | 'income' | 'transfer' | 'balance_a
   },
 })
 export class OperationCreateMenu {
+  protected readonly t = t;
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private readonly router = inject(Router);
 
   @Input() navigate = false;
   @Output() readonly selected = new EventEmitter<CreateOperationType>();
   protected readonly open = signal(false);
-  protected readonly items: readonly { type: CreateOperationType; label: string; hint: string }[] =
-    [
-      { type: 'expense', label: 'Расход', hint: 'Списать со счёта' },
-      { type: 'income', label: 'Доход', hint: 'Зачислить на счёт' },
-      { type: 'transfer', label: 'Перевод', hint: 'Между счетами' },
-      { type: 'balance_adjustment', label: 'Корректировка', hint: 'Уточнить остаток' },
+  protected get items(): readonly { type: CreateOperationType; label: string; hint: string }[] {
+    return [
+      {
+        type: 'expense',
+        label: t('operation-create-menu.expense'),
+        hint: t('operation-create-menu.debitAnAccount'),
+      },
+      {
+        type: 'income',
+        label: t('operation-create-menu.income'),
+        hint: t('operation-create-menu.creditAnAccount'),
+      },
+      {
+        type: 'transfer',
+        label: t('operation-create-menu.transfer'),
+        hint: t('operation-create-menu.betweenAccounts'),
+      },
+      {
+        type: 'balance_adjustment',
+        label: t('operation-create-menu.adjustment'),
+        hint: t('operation-create-menu.correctABalance'),
+      },
     ];
+  }
 
   protected toggle(): void {
     this.open.update((value) => !value);

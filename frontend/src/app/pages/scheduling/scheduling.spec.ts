@@ -406,7 +406,7 @@ describe('SchedulingPage recurrence editor', () => {
     flushInitial([OCCURRENCE], [RULE]);
     setValue('#postpone-occurrence-1', '2026-08-14');
     expect(fixture.nativeElement.textContent).toContain(
-      'следующие нетронутые события сдвинутся на +4 дн.',
+      'следующие нетронутые события сдвинутся на +4 дня.',
     );
     clickButton('Перенести серию');
     const request = http.expectOne('/api/v1/scheduling/occurrences/occurrence-1/postpone');

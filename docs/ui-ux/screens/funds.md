@@ -211,3 +211,10 @@ value caused the conflict.
 - Which matters more in the list: current amount or allocation percentage?
 - Is a target date needed in addition to target amount?
 - How should remaining balance be handled before archiving?
+
+## Multilingual presentation
+
+The implemented RU/EN presentation follows the shared
+[internationalization contract](../internationalization.md). Language changes
+update screen copy and accessible labels while preserving financial semantics,
+user-entered data, dates, selected context and exact monetary payloads.

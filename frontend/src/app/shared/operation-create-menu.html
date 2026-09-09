@@ -8,14 +8,14 @@
     (click)="toggle()"
     (keydown)="openFromKeyboard($event)"
   >
-    Добавить операцию <span aria-hidden="true">▾</span>
+    {{ t('operation-create-menu.addOperation') }} <span aria-hidden="true">▾</span>
   </button>
   @if (open()) {
     <div
       id="operation-create-menu"
       class="create-menu-popover"
       role="menu"
-      aria-label="Тип новой операции"
+      [attr.aria-label]="t('operation-create-menu.newOperationType')"
     >
       @for (item of items; track item.type) {
         <button

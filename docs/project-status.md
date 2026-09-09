@@ -6,7 +6,7 @@ map lives in [index.md](./index.md).
 
 ## Last updated
 
-2026-09-04
+2026-09-09
 
 ## Current phase
 
@@ -15,9 +15,36 @@ were owner development milestones and were not published as GitHub Releases or
 public git tags.
 
 On 2026-08-28, the owner accepted Hermes on a restored copy of real data and
-approved publication of the first public tag. The next action is to maintain
-the `1.x` line through focused fixes and complete the deferred operational
-hardening listed in the roadmap.
+approved publication of the first public tag. On 2026-09-09 the owner selected
+`1.1.0 — multilingual foundation` as the next milestone and deferred operational
+hardening. The multilingual foundation is now implemented and locally verified,
+but remains unreleased. The [implementation record](multilingual-foundation-plan.md)
+and [i18n contract](ui-ux/internationalization.md) describe the accepted scope.
+
+### Multilingual verification — 2026-09-09
+
+- Russian and English runtime catalogs cover all implemented screens, validation,
+  notices and accessible labels. The browser-local preference also works before
+  login; switching preserves entered data and does not issue financial writes.
+- Fresh setup independently selects Russian or English category templates.
+  Existing names and restored content remain unchanged. No migration is needed:
+  database schema, settings and backup formats remain unchanged at head `0014_one_off_plans`.
+- `make test`: 109 backend tests passed (69 PostgreSQL-gated skips in the first
+  run), then all 70 PostgreSQL integration tests passed; 163 frontend tests passed.
+  `make lint typecheck`, catalog/source checks and production frontend build passed.
+  `alembic check` detected no schema changes. Final Docker image verification is
+  blocked: two builds failed at `npm ci` with network `ECONNRESET`; a previous
+  intermediate image build succeeded, but does not certify the final sources.
+  The disposable test database and local verification server were stopped.
+- Live browser checks used disposable PostgreSQL data: setup, login, overview,
+  accounts, funds, forecast, calendar, reports and settings; mobile width 390 px,
+  language selection by keyboard and accessible labels were inspected.
+  This is not exhaustive Safari/VoiceOver certification.
+- Both catalogs are eagerly bundled. The initial frontend bundle exceeds the
+  500 kB warning budget by 15.45 kB (515.45 kB total); existing component CSS
+  warnings remain.
+  Native file/date dialogs can retain the browser or operating-system language.
+  Cross-tab preference synchronization is outside this scope.
 
 The owner confirmed the version policy on 2026-08-18: the `0.x` series remained
 internal testing, `1.0.0` is the first stable public release, and major product
@@ -750,6 +777,7 @@ access. Direct public-internet exposure is unsupported.
 
 ## Recommended next action
 
-Perform owner acceptance: restore a real backup into a separate instance and
-begin a period of daily use. Then update the Angular toolchain and determine
-whether temporary dependency overrides can be removed.
+Perform owner acceptance of RU/EN workflows on an isolated restored copy, then
+prepare the `1.1.0` release using the existing release checklist. Review the small
+initial-bundle warning before adding further languages. Operational hardening
+remains deferred; no public tag or version bump was made by this implementation.

@@ -1,3 +1,4 @@
+import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -10,7 +11,7 @@ import {
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { environment } from '../../../environments/environment';
-import { apiErrorMessage } from '../../core/auth.service';
+import { apiErrorMessage } from '../../core/api-error';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
 
 type CategoryType = 'income' | 'expense';
@@ -35,6 +36,7 @@ interface Category {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CategoriesPage implements OnInit {
+  protected readonly t = t;
   private readonly http = inject(HttpClient);
   private readonly builder = inject(NonNullableFormBuilder);
 
@@ -48,7 +50,7 @@ export class CategoriesPage implements OnInit {
   );
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly error = localizedSignal();
   protected readonly editingId = signal<string | null>(null);
   protected readonly formOpen = signal(false);
   protected readonly expandedIncome = signal<string | null>(null);
@@ -126,7 +128,7 @@ export class CategoriesPage implements OnInit {
       },
       error: (error: unknown) => {
         this.saving.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось сохранить категорию.'));
+        this.error.set(() => apiErrorMessage(error, t('categories.couldNotSaveTheCategory')));
       },
     });
   }
@@ -166,7 +168,9 @@ export class CategoriesPage implements OnInit {
       .subscribe({
         next: () => this.load(),
         error: (error: unknown) =>
-          this.error.set(apiErrorMessage(error, 'Не удалось изменить состояние категории.')),
+          this.error.set(() =>
+            apiErrorMessage(error, t('categories.couldNotChangeTheCategoryStatus')),
+          ),
       });
   }
 
@@ -179,7 +183,7 @@ export class CategoriesPage implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить категории.'));
+        this.error.set(() => apiErrorMessage(error, t('categories.couldNotLoadCategories')));
       },
     });
   }

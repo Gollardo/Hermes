@@ -5,28 +5,27 @@
         <span class="brand-lockup"
           ><span class="brand-mark" aria-hidden="true">H</span><span>Hermes</span></span
         >
-        <h2>Ваш финансовый центр начинается здесь.</h2>
-        <p>Сначала решите, начать с чистого листа или восстановить данные из прежней версии.</p>
+        <h2>{{ t('setup.yourFinancialHubStartsHere') }}</h2>
+        <p>{{ t('setup.firstChooseWhetherToStartFreshOr') }}</p>
       </div>
-      <p class="access-note">Шаг {{ step() }} из {{ mode() === 'fresh' ? 3 : 2 }}</p>
+      <p class="access-note">
+        {{ t('setup.stepP0OfP1', { p0: step(), p1: mode() === 'fresh' ? 3 : 2 }) }}
+      </p>
     </aside>
 
     <section class="access-card" [class.question-card]="step() === 3" aria-labelledby="setup-title">
-      <p class="eyebrow">Первый запуск · шаг {{ step() }}</p>
+      <p class="eyebrow">{{ t('setup.firstRunStepP0', { p0: step() }) }}</p>
 
+      <app-language-select />
       @if (step() === 1) {
-        <h1 id="setup-title">Добро пожаловать в Hermes</h1>
+        <h1 id="setup-title">{{ t('setup.welcomeToHermes') }}</h1>
         <p class="intro">
-          Можно восстановить защищённый Hermes-backup, JSON-backup прежней версии или создать новое
-          финансовое пространство.
+          {{ t('setup.restoreAProtectedHermesBackupAPrevious') }}
         </p>
         <div class="start-options">
           <label class="start-option" for="setup-backup">
-            <strong>Загрузить backup</strong>
-            <span
-              >Счета, операции, фонды, правила и настройки будут проверены перед
-              восстановлением.</span
-            >
+            <strong> {{ t('setup.uploadBackup') }} </strong>
+            <span> {{ t('setup.accountsOperationsFundsRulesAndSettingsAre') }} </span>
             <input
               id="setup-backup"
               type="file"
@@ -35,55 +34,56 @@
             />
           </label>
           <button type="button" class="secondary fresh-action" (click)="startFresh()">
-            Начать с чистого листа
+            {{ t('setup.startFresh') }}
           </button>
         </div>
         @if (readingBackup()) {
-          <p class="hint">Читаем файл…</p>
+          <p class="hint">{{ t('setup.readingFile') }}</p>
         }
       }
 
       @if (step() === 2) {
-        <h1 id="setup-title">Защитите приложение</h1>
+        <h1 id="setup-title">{{ t('setup.secureYourApplication') }}</h1>
         <p class="intro">
           @if (mode() === 'restore') {
-            После создания мастер-пароля проверим и восстановим {{ backupName() }}.
+            {{ t('setup.afterCreatingTheMasterPasswordWeWill', { p0: backupName() }) }}
           } @else {
-            Создайте мастер-пароль и выберите базовые параметры.
+            {{ t('setup.createAMasterPasswordAndChooseThe') }}
           }
         </p>
+
         <form [formGroup]="form" (ngSubmit)="continueToCategories()">
-          <label for="setup-password">Мастер-пароль</label>
+          <label for="setup-password"> {{ t('login.masterPassword') }} </label>
           <input
             id="setup-password"
             type="password"
             formControlName="password"
             autocomplete="new-password"
-            placeholder="Не менее 12 символов"
+            [placeholder]="t('settings.atLeast12Characters')"
           />
           @if (form.controls.password.touched && form.controls.password.invalid) {
-            <p class="field-error">Используйте от 12 до 1024 символов.</p>
+            <p class="field-error">{{ t('setup.use12To1024Characters') }}</p>
           }
 
-          <label for="setup-password-confirmation">Повторите пароль</label>
+          <label for="setup-password-confirmation"> {{ t('setup.repeatPassword') }} </label>
           <input
             id="setup-password-confirmation"
             type="password"
             formControlName="passwordConfirmation"
             autocomplete="new-password"
-            placeholder="Введите пароль ещё раз"
+            [placeholder]="t('setup.enterThePasswordAgain')"
           />
           @if (
             form.controls.passwordConfirmation.touched &&
             form.controls.password.value !== form.controls.passwordConfirmation.value
           ) {
-            <p class="field-error">Пароли не совпадают.</p>
+            <p class="field-error">{{ t('setup.thePasswordsDoNotMatch') }}</p>
           }
 
           @if (mode() === 'fresh') {
             <div class="field-grid">
               <div>
-                <label for="setup-currency">Основная валюта</label>
+                <label for="setup-currency"> {{ t('settings.baseCurrency') }} </label>
                 <input
                   id="setup-currency"
                   formControlName="baseCurrency"
@@ -98,7 +98,7 @@
                 </datalist>
               </div>
               <div>
-                <label for="setup-timezone">Часовой пояс</label>
+                <label for="setup-timezone"> {{ t('settings.timezone') }} </label>
                 <select id="setup-timezone" formControlName="timezone">
                   @for (timezone of timezones; track timezone) {
                     <option [value]="timezone">{{ timezone }}</option>
@@ -107,11 +107,11 @@
               </div>
             </div>
             <p class="hint">
-              Основную валюту можно изменить только до появления финансовых данных.
+              {{ t('setup.theBaseCurrencyCanOnlyChangeBefore') }}
             </p>
           }
           @if (mode() === 'restore' && backupRequiresPassword()) {
-            <label for="setup-backup-password">Пароль защищённого backup</label>
+            <label for="setup-backup-password"> {{ t('settings.protectedBackupPassword') }} </label>
             <input
               id="setup-backup-password"
               type="password"
@@ -119,7 +119,7 @@
               autocomplete="current-password"
             />
             <p class="hint">
-              Это пароль, с которым был создан файл. Он может отличаться от нового мастер-пароля.
+              {{ t('setup.thisIsThePasswordUsedToCreate') }}
             </p>
           }
           <button
@@ -134,23 +134,32 @@
             "
           >
             @if (submitting()) {
-              {{ mode() === 'restore' ? 'Проверяем и восстанавливаем…' : 'Продолжаем…' }}
+              {{ mode() === 'restore' ? t('setup.validatingAndRestoring') : t('setup.continuing') }}
             } @else {
-              {{ mode() === 'restore' ? 'Создать и восстановить' : 'Продолжить' }}
+              {{ mode() === 'restore' ? t('setup.createAndRestore') : t('setup.continue') }}
             }
           </button>
           <button type="button" class="secondary" (click)="back()" [disabled]="submitting()">
-            Назад
+            {{ t('funds.back') }}
           </button>
         </form>
       }
 
       @if (step() === 3) {
-        <h1 id="setup-title">Какие расходы вам важны?</h1>
+        <h1 id="setup-title">{{ t('setup.whichExpensesMatterToYou') }}</h1>
         <p class="intro">
-          Отметьте подходящие пункты — мы создадим для них категории и подкатегории. Этот шаг можно
-          пропустить.
+          {{ t('setup.selectRelevantItemsToCreateCategoriesAnd') }}
         </p>
+        <label for="template-language">{{ t('setup.templateLanguage') }}</label>
+        <select
+          id="template-language"
+          [value]="templateLanguage()"
+          (change)="templateLanguage.set($any($event.target).value)"
+        >
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+        </select>
+        <p class="hint">{{ t('setup.templateLanguageHint') }}</p>
         <div class="question-list">
           @for (question of questions; track question.key) {
             <label class="question-option">
@@ -169,14 +178,14 @@
         <button type="button" (click)="submit()" [disabled]="submitting()">
           {{
             submitting()
-              ? 'Создаём категории…'
+              ? t('setup.creatingCategories')
               : selectedGroups().size
-                ? 'Создать приложение'
-                : 'Пропустить и создать приложение'
+                ? t('setup.createApplication')
+                : t('setup.skipAndCreateApplication')
           }}
         </button>
         <button type="button" class="secondary" (click)="back()" [disabled]="submitting()">
-          Назад
+          {{ t('funds.back') }}
         </button>
       }
 

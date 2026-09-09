@@ -103,3 +103,10 @@ events merely because they are within the next 30 days.
 - Forecast balances or insufficiency projections inside calendar cells.
 - Final decision whether Calendar and Forecast share a permanent top-level
   “Plan” container.
+
+## Multilingual presentation
+
+The implemented RU/EN presentation follows the shared
+[internationalization contract](../internationalization.md). Language changes
+update screen copy and accessible labels while preserving financial semantics,
+user-entered data, dates, selected context and exact monetary payloads.

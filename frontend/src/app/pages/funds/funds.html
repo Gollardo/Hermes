@@ -1,12 +1,12 @@
 <section class="directory-page funds-page">
   <header class="page-header">
     <div class="page-header-copy">
-      <p class="eyebrow">Виртуальные назначения</p>
-      <h1>Фонды</h1>
-      <p>Фонд отмечает, для чего предназначена часть денег на реальном счёте.</p>
+      <p class="eyebrow">{{ t('funds.virtualAllocations') }}</p>
+      <h1>{{ t('funds.funds') }}</h1>
+      <p>{{ t('funds.aFundAssignsAPurposeToSome') }}</p>
     </div>
     <div class="page-actions">
-      <button type="button" (click)="openFund()">Создать фонд</button>
+      <button type="button" (click)="openFund()">{{ t('funds.createFund') }}</button>
     </div>
   </header>
 
@@ -15,19 +15,22 @@
   }
 
   @if (loading()) {
-    <p class="empty-state" aria-live="polite">Восстанавливаем остатки фондов из журнала…</p>
+    <p class="empty-state" aria-live="polite">
+      {{ t('funds.reconstructingFundBalancesFromTheJournal') }}
+    </p>
   } @else if (summary(); as data) {
-    <section class="fund-summary" aria-label="Сводка фондов">
+    <section class="fund-summary" [attr.aria-label]="t('funds.fundSummary')">
       <article class="fund-summary-primary">
-        <span>В фондах</span
+        <span> {{ t('funds.inFunds') }} </span
         ><strong>{{ data.total_fund_reserved | money }} {{ baseCurrency() }}</strong>
       </article>
       <article class="fund-summary-primary">
-        <span>Свободно</span><strong>{{ data.total_free | money }} {{ baseCurrency() }}</strong>
+        <span> {{ t('funds.free') }} </span
+        ><strong>{{ data.total_free | money }} {{ baseCurrency() }}</strong>
       </article>
       <div class="fund-summary-secondary">
         <div>
-          <span>{{ dynamicMode() ? 'Активная доля' : 'Нераспределённая доля' }}</span
+          <span>{{ dynamicMode() ? t('funds.activeShare') : t('funds.unallocatedShare') }}</span
           ><strong
             >{{
               dynamicMode() ? (data.active_percentage | money) : (remainingPercentage() | money)
@@ -35,12 +38,12 @@
           >
         </div>
         <div>
-          <span>Общий прогресс целей</span>
+          <span> {{ t('funds.overallTargetProgress') }} </span>
           <strong>
             @if (overallTargetProgress(); as progress) {
               {{ progress | money }}%
             } @else {
-              Цели не заданы
+              {{ t('funds.noTargetsSet') }}
             }
           </strong>
         </div>
@@ -51,13 +54,12 @@
       <section class="panel coverage" aria-labelledby="reserve-title">
         <div class="panel-heading">
           <div>
-            <h2 id="reserve-title">Резерв фондов</h2>
+            <h2 id="reserve-title">{{ t('funds.fundReserve') }}</h2>
             <p>
               @if (dynamicMode()) {
-                Деньги уже отложены для фондов и автоматически пополнят следующую незаполненную
-                цель.
+                {{ t('funds.thisMoneyIsAlreadySetAsideFor') }}
               } @else {
-                Резерв сохранён после динамического режима и не распределяется автоматически.
+                {{ t('funds.theReserveRemainsFromDynamicModeAnd') }}
               }
             </p>
           </div>
@@ -68,11 +70,12 @@
             @if (reserveHasBalance(account)) {
               <article>
                 <strong
-                  >{{ account.account_name }}{{ account.archived ? ' · в архиве' : '' }}</strong
+                  >{{ account.account_name
+                  }}{{ account.archived ? t('funds.archived') : '' }}</strong
                 >
                 <p>{{ account.reserve_balance | money }} {{ baseCurrency() }}</p>
                 <button type="button" class="secondary" (click)="openReserveRelease(account)">
-                  Вернуть в свободные
+                  {{ t('funds.releaseToFreeBalance') }}
                 </button>
               </article>
             }
@@ -81,47 +84,48 @@
       </section>
     }
 
-    <section class="panel allocation-mode-note" aria-label="Режим распределения фондов">
+    <section class="panel allocation-mode-note" [attr.aria-label]="t('funds.fundAllocationMode')">
       <div>
-        <p class="section-label">Распределение новых сумм</p>
-        <strong>{{ dynamicMode() ? 'Динамически по целям' : 'Ручные проценты' }}</strong>
+        <p class="section-label">{{ t('funds.allocationOfNewAmounts') }}</p>
+        <strong>{{
+          dynamicMode() ? t('funds.dynamicByTarget') : t('funds.manualPercentages')
+        }}</strong>
       </div>
       <p>
         @if (dynamicMode()) {
-          Проценты рассчитаны по незаполненной доле каждой цели. Заполненные и архивные фонды
-          получают 0,00%; при 20 и более активных целях гарантированные доли становятся равными.
-          После следующего пополнения доли изменятся автоматически.
+          {{ t('funds.percentagesFollowEachTargetSUnfilledShare') }}
         } @else {
-          Проценты задаются в каждом фонде, а нераспределённая часть остаётся свободной.
+          {{ t('funds.percentagesAreSetInEachFundThe') }}
         }
       </p>
     </section>
 
     <section class="fund-primary-actions panel" aria-labelledby="fund-actions-title">
       <div>
-        <p class="section-label">Пополнение фондов</p>
-        <h2 id="fund-actions-title">Выберите, откуда взять деньги</h2>
+        <p class="section-label">{{ t('funds.addMoneyToFunds') }}</p>
+        <h2 id="fund-actions-title">{{ t('funds.chooseTheSourceOfMoney') }}</h2>
         <p>
-          Можно распределить свободные деньги по процентам или перевести их с другого счёта — по
-          процентам либо в один выбранный фонд.
+          {{ t('funds.allocateFreeMoneyByPercentageOrTransfer') }}
         </p>
       </div>
       <div class="fund-primary-action-controls">
-        <button type="button" (click)="openAllocation()">Выделить со счёта</button>
+        <button type="button" (click)="openAllocation()">
+          {{ t('funds.allocateFromAccount') }}
+        </button>
         <button type="button" class="secondary" (click)="openSpecificTransfer()">
-          Перевести в фонд
+          {{ t('funds.transferIntoFund') }}
         </button>
         <button type="button" class="secondary" (click)="openTransferAllocation()">
-          Перевести и распределить
+          {{ t('funds.transferAndAllocate') }}
         </button>
         <details class="fund-more-actions">
-          <summary>Другие операции</summary>
+          <summary>{{ t('funds.otherOperations') }}</summary>
           <div>
             <button type="button" class="secondary" (click)="openRedistribution()">
-              Перенести назначение между счетами
+              {{ t('funds.moveAllocationBetweenAccounts') }}
             </button>
             <button type="button" class="secondary" (click)="openFundTransfer()">
-              Перевести между фондами
+              {{ t('funds.transferBetweenFunds') }}
             </button>
           </div>
         </details>
@@ -131,15 +135,15 @@
     <section class="panel directory-list-panel">
       <div class="panel-heading">
         <div>
-          <h2>Назначения денег</h2>
-          <p>Итог фонда и счета, на которых он зарезервирован.</p>
+          <h2>{{ t('funds.moneyAllocations') }}</h2>
+          <p>{{ t('funds.fundTotalsAndTheAccountsHoldingTheir') }}</p>
         </div>
-        <span class="count-pill">Фондов: {{ data.funds.length }}</span>
+        <span class="count-pill"> {{ t('funds.fundsP0', { p0: data.funds.length }) }} </span>
       </div>
       @if (data.funds.length === 0) {
         <div class="empty-state">
-          <strong>Фондов пока нет</strong>
-          <p>Создайте фонд и сразу выделите в него часть свободных денег.</p>
+          <strong> {{ t('funds.noFundsYet') }} </strong>
+          <p>{{ t('funds.createAFundAndAllocateSomeFree') }}</p>
         </div>
       } @else {
         <div class="item-list">
@@ -150,17 +154,24 @@
                   <h3>{{ fund.name }}</h3>
                   <span class="fund-allocation"
                     >{{ displayedFundPercentages()[$index] }}%
-                    {{ dynamicMode() ? 'сейчас' : 'при распределении' }}</span
+                    {{ dynamicMode() ? t('funds.now') : t('funds.onAllocation') }}</span
                   >
                   @if (fund.distribution_status === 'filled') {
-                    <small>Цель достигнута — фонд исключён из динамического распределения.</small>
+                    <small> {{ t('funds.targetReachedExcludedFromDynamicAllocation') }} </small>
                   } @else if (fund.distribution_status === 'archived' && dynamicMode()) {
-                    <small>Архивный фонд не участвует в динамическом распределении.</small>
+                    <small> {{ t('funds.archivedFundsAreExcludedFromDynamicAllocation') }} </small>
                   } @else if (dynamicMode() && fund.remaining_amount) {
-                    <small>До цели {{ fund.remaining_amount | money }} {{ baseCurrency() }}</small>
+                    <small>
+                      {{
+                        t('funds.remainingToTargetP0P1', {
+                          p0: (fund.remaining_amount | money),
+                          p1: baseCurrency(),
+                        })
+                      }}
+                    </small>
                   }
                   @if (fund.description || fund.archived) {
-                    <p>{{ fund.description || 'Фонд находится в архиве' }}</p>
+                    <p>{{ fund.description || t('funds.thisFundIsArchived') }}</p>
                   }
                   @for (position of positionsFor(fund.id); track position.account_id) {
                     <small
@@ -174,28 +185,37 @@
                 @if (fund.target_amount) {
                   <div class="fund-progress">
                     <div>
-                      <span>Цель {{ fund.target_amount | money }} {{ baseCurrency() }}</span>
+                      <span>
+                        {{
+                          t('funds.targetP0P1', {
+                            p0: (fund.target_amount | money),
+                            p1: baseCurrency(),
+                          })
+                        }}
+                      </span>
                       <strong>{{ fund.progress_percentage | money }}%</strong>
                     </div>
                     <progress
                       [value]="Math.min(100, +(fund.progress_percentage || 0))"
                       max="100"
-                      [attr.aria-label]="'Прогресс фонда ' + fund.name"
+                      [attr.aria-label]="t('funds.fundProgress') + ' ' + fund.name"
                     ></progress>
                   </div>
                 }
               </div>
               <div class="balance-block">
-                <span>Общий остаток</span>
+                <span> {{ t('funds.totalBalance') }} </span>
                 <strong class="balance"
                   >{{ fund.total_balance | money }} {{ baseCurrency() }}</strong
                 >
               </div>
               <div class="directory-item-side">
                 <div class="item-actions">
-                  <button type="button" class="secondary" (click)="edit(fund)">Изменить</button>
+                  <button type="button" class="secondary" (click)="edit(fund)">
+                    {{ t('accounts.edit') }}
+                  </button>
                   <details class="item-more-actions">
-                    <summary>Ещё</summary>
+                    <summary>{{ t('accounts.more') }}</summary>
                     <div>
                       <button
                         type="button"
@@ -203,10 +223,10 @@
                         (click)="toggleArchive(fund)"
                         [disabled]="!fund.archived && !fundIsEmpty(fund)"
                       >
-                        {{ fund.archived ? 'Восстановить' : 'Архивировать' }}
+                        {{ fund.archived ? t('accounts.restore') : t('accounts.archive') }}
                       </button>
                       @if (!fund.archived && !fundIsEmpty(fund)) {
-                        <small>Доступно после обнуления остатка.</small>
+                        <small> {{ t('funds.availableWhenTheBalanceReachesZero') }} </small>
                       }
                     </div>
                   </details>
@@ -221,29 +241,31 @@
     <section class="coverage panel">
       <div class="panel-heading">
         <div>
-          <h2>Деньги по счетам</h2>
-          <p>Физический остаток = в фондах + в резерве + свободно.</p>
+          <h2>{{ t('funds.moneyByAccount') }}</h2>
+          <p>{{ t('funds.physicalBalanceInFundsInReserveFree') }}</p>
         </div>
       </div>
       <div class="coverage-grid">
         @for (account of data.accounts; track account.account_id) {
           <article>
-            <strong>{{ account.account_name }}{{ account.archived ? ' · в архиве' : '' }}</strong>
+            <strong
+              >{{ account.account_name }}{{ account.archived ? t('funds.archived') : '' }}</strong
+            >
             <dl>
               <div>
-                <dt>Физически</dt>
+                <dt>{{ t('funds.physical') }}</dt>
                 <dd>{{ account.physical_balance | money }} {{ baseCurrency() }}</dd>
               </div>
               <div>
-                <dt>В фондах</dt>
+                <dt>{{ t('funds.inFunds') }}</dt>
                 <dd>{{ account.fund_reserved_balance | money }} {{ baseCurrency() }}</dd>
               </div>
               <div>
-                <dt>В резерве</dt>
+                <dt>{{ t('funds.inReserve') }}</dt>
                 <dd>{{ account.reserve_balance | money }} {{ baseCurrency() }}</dd>
               </div>
               <div>
-                <dt>Свободно</dt>
+                <dt>{{ t('funds.free') }}</dt>
                 <dd>{{ account.free_balance | money }} {{ baseCurrency() }}</dd>
               </div>
             </dl>
@@ -255,12 +277,12 @@
     <section class="panel history-panel">
       <div class="panel-heading">
         <div>
-          <h2>История движений фондов</h2>
-          <p>Каждое назначение и перенос остаются объяснимыми.</p>
+          <h2>{{ t('funds.fundMovementHistory') }}</h2>
+          <p>{{ t('funds.everyAllocationAndMovementRemainsExplainable') }}</p>
         </div>
       </div>
       @if (history().length === 0) {
-        <p class="empty-state">Движений фондов пока нет.</p>
+        <p class="empty-state">{{ t('funds.noFundMovementsYet') }}</p>
       } @else {
         <div class="history-list">
           @for (event of history(); track event.id) {
@@ -270,7 +292,7 @@
                   <span class="badge">{{ eventLabel(event) }}</span>
                   <strong>{{ event.occurred_on | textDate }}</strong>
                 </div>
-                <p>{{ event.description || 'Без описания' }}</p>
+                <p>{{ event.description || t('funds.noDescription') }}</p>
               </div>
               <ul>
                 @for (movement of event.movements; track movement.fund_id + movement.account_id) {
@@ -281,7 +303,7 @@
                 }
                 @for (movement of event.reserve_movements; track movement.account_id) {
                   <li>
-                    Резерв · {{ movement.account_name }}
+                    {{ t('funds.reserveP0', { p0: movement.account_name }) }}
                     <strong>{{ movement.amount | money }} {{ baseCurrency() }}</strong>
                   </li>
                 }
@@ -291,26 +313,30 @@
         </div>
       }
       @if (historyTotal() > historyPageSize || historyPage() > 1) {
-        <nav class="pagination" aria-label="Страницы истории фондов">
+        <nav class="pagination" [attr.aria-label]="t('funds.fundHistoryPages')">
           <button
             type="button"
             class="secondary"
             (click)="previousHistoryPage()"
             [disabled]="historyPage() === 1"
           >
-            Назад
+            {{ t('funds.back') }}
           </button>
-          <span
-            >Страница {{ historyPage() }} из
-            {{ Math.max(1, Math.ceil(historyTotal() / historyPageSize)) }}</span
-          >
+          <span>
+            {{
+              t('funds.pageP0OfP1', {
+                p0: historyPage(),
+                p1: Math.max(1, Math.ceil(historyTotal() / historyPageSize)),
+              })
+            }}
+          </span>
           <button
             type="button"
             class="secondary"
             (click)="nextHistoryPage()"
             [disabled]="historyPage() * historyPageSize >= historyTotal()"
           >
-            Далее
+            {{ t('funds.next') }}
           </button>
         </nav>
       }
@@ -326,55 +352,61 @@
         >
           <div class="modal-header">
             <div>
-              <p class="section-label">Фонды</p>
+              <p class="section-label">{{ t('funds.funds') }}</p>
               <h2 id="fund-modal-title">
                 @switch (activeModal()) {
                   @case ('fund') {
-                    {{ editingId() ? 'Редактировать фонд' : 'Создать фонд' }}
+                    {{ editingId() ? t('funds.editFund') : t('funds.createFund') }}
                   }
                   @case ('allocation') {
-                    Выделить свободные деньги в фонды
+                    {{ t('funds.allocateFreeMoneyToFunds') }}
                   }
                   @case ('specificTransfer') {
-                    Перевести деньги в конкретный фонд
+                    {{ t('funds.transferMoneyIntoASpecificFund') }}
                   }
                   @case ('transfer') {
-                    Перевести и распределить по фондам
+                    {{ t('funds.transferAndAllocateToFunds') }}
                   }
                   @case ('redistribution') {
-                    Перенести назначение фонда
+                    {{ t('funds.moveFundAllocation') }}
                   }
                   @case ('fundTransfer') {
-                    Перевести между фондами
+                    {{ t('funds.transferBetweenFunds') }}
                   }
                   @case ('reserveRelease') {
-                    Вернуть резерв в свободные деньги
+                    {{ t('funds.releaseReserveToFreeBalance') }}
                   }
                 }
               </h2>
             </div>
-            <button type="button" class="modal-close" (click)="closeModal()" aria-label="Закрыть">
+            <button
+              type="button"
+              class="modal-close"
+              (click)="closeModal()"
+              [attr.aria-label]="t('accounts.close')"
+            >
               ×
             </button>
           </div>
 
           @if (activeModal() === 'fund') {
             <form [formGroup]="fundForm" (ngSubmit)="submitFund()">
-              <label for="fund-name">Название</label
+              <label for="fund-name"> {{ t('accounts.name') }} </label
               ><input
                 id="fund-name"
                 formControlName="name"
                 maxlength="120"
-                placeholder="Например, Резерв"
+                [placeholder]="t('funds.forExampleEmergencyFund')"
               />
-              <label for="fund-description">Описание</label
+              <label for="fund-description"> {{ t('accounts.description') }} </label
               ><textarea
                 id="fund-description"
                 formControlName="description"
                 maxlength="2000"
               ></textarea>
               @if (!dynamicMode()) {
-                <label for="fund-percentage">Процент при распределении новых сумм</label
+                <label for="fund-percentage">
+                  {{ t('funds.percentageAllocatedFromNewAmounts') }} </label
                 ><input
                   appDecimalInput
                   id="fund-percentage"
@@ -382,29 +414,31 @@
                   inputmode="decimal"
                 />
                 <p class="hint">
-                  Доступно: {{ availablePercentage() | money }}%. Процент не меняет уже назначенные
-                  деньги.
+                  {{
+                    t('funds.availableP0ThePercentageDoesNotChange', {
+                      p0: (availablePercentage() | money),
+                    })
+                  }}
                 </p>
                 @if (fundForm.controls.percentage.touched && fundForm.controls.percentage.invalid) {
-                  <p class="field-error">Введите процент от 0 до 100, не более четырёх знаков.</p>
+                  <p class="field-error">{{ t('funds.enterAPercentageFrom0To100') }}</p>
                 } @else if (fundForm.controls.percentage.touched && percentageExceedsAvailable()) {
                   <p class="field-error">
-                    Сумма процентов активных фондов не может превышать 100,00%.
+                    {{ t('auth.activeFundPercentagesCannotTotalMoreThan') }}
                   </p>
                 }
               } @else {
                 <p class="modal-explanation">
-                  Процент вычисляется автоматически по незаполненной доле цели и не редактируется
-                  вручную.
+                  {{ t('funds.thePercentageIsCalculatedAutomaticallyFromUnfilled') }}
                 </p>
               }
-              <label for="fund-target">Целевая сумма</label
+              <label for="fund-target"> {{ t('funds.targetAmount') }} </label
               ><input
                 appDecimalInput
                 id="fund-target"
                 formControlName="targetAmount"
                 inputmode="decimal"
-                [placeholder]="dynamicMode() ? 'Обязательно' : 'Необязательно'"
+                [placeholder]="dynamicMode() ? t('funds.required') : t('funds.optional')"
               />
               @if (
                 fundForm.controls.targetAmount.touched &&
@@ -415,41 +449,40 @@
                 <p class="field-error">
                   {{
                     dynamicMode()
-                      ? 'Укажите положительную цель для динамического режима.'
-                      : 'Введите положительную целевую сумму.'
+                      ? t('funds.setAPositiveTargetForDynamicMode')
+                      : t('funds.enterAPositiveTargetAmount')
                   }}
                 </p>
               }
               @if (!editingId()) {
                 <p class="modal-explanation">
-                  Можно сразу выделить свободные деньги только в создаваемый фонд — процентное
-                  распределение не применяется.
+                  {{ t('funds.youCanAllocateFreeMoneyDirectlyTo') }}
                 </p>
-                <label for="fund-initial-account">Счёт со свободными деньгами</label>
+                <label for="fund-initial-account"> {{ t('funds.accountWithFreeMoney') }} </label>
                 <app-entity-combobox
                   inputId="fund-initial-account"
                   formControlName="initialAccountId"
                   [options]="accountOptions()"
                   recentKey="accounts"
-                  placeholder="Не пополнять сейчас"
+                  [placeholder]="t('funds.doNotAddMoneyNow')"
                   [allowEmpty]="true"
                 />
-                <label for="fund-initial-amount">Начальная сумма фонда</label
+                <label for="fund-initial-amount"> {{ t('funds.initialFundAmount') }} </label
                 ><input
                   appDecimalInput
                   id="fund-initial-amount"
                   formControlName="initialAmount"
                   inputmode="decimal"
-                  placeholder="Необязательно"
+                  [placeholder]="t('funds.optional')"
                 />
                 @if (
                   fundForm.controls.initialAmount.touched &&
                   (fundForm.controls.initialAmount.invalid ||
                     optionalMoneyInvalid(fundForm.controls.initialAmount.value))
                 ) {
-                  <p class="field-error">Введите положительную начальную сумму.</p>
+                  <p class="field-error">{{ t('funds.enterAPositiveInitialAmount') }}</p>
                 }
-                <label for="fund-initial-date">Дата</label
+                <label for="fund-initial-date"> {{ t('funds.date') }} </label
                 ><input id="fund-initial-date" type="date" formControlName="initialOccurredOn" />
                 @if (
                   fundForm.touched &&
@@ -461,30 +494,35 @@
                     fundForm.controls.initialOccurredOn.value
                   )
                 ) {
-                  <p class="field-error">Для пополнения укажите счёт, сумму и дату.</p>
+                  <p class="field-error">{{ t('funds.selectAnAccountAmountAndDateTo') }}</p>
                 }
               }
               <button type="submit" [disabled]="saving() || !canSaveFund()">
-                {{ saving() ? 'Сохраняем…' : editingId() ? 'Сохранить' : 'Создать фонд' }}
+                {{
+                  saving()
+                    ? t('accounts.saving')
+                    : editingId()
+                      ? t('funds.save')
+                      : t('funds.createFund')
+                }}
               </button>
             </form>
           }
 
           @if (activeModal() === 'allocation') {
             <p class="modal-explanation">
-              Выберите счёт с нераспределённым остатком. Деньги останутся на нём, но получат
-              назначение в фондах.
+              {{ t('funds.chooseAnAccountWithFreeMoneyThe') }}
             </p>
             <form [formGroup]="allocationForm" (ngSubmit)="saveAllocation()">
-              <label for="allocation-account">Счёт со свободными деньгами</label
+              <label for="allocation-account"> {{ t('funds.accountWithFreeMoney') }} </label
               ><app-entity-combobox
                 inputId="allocation-account"
                 formControlName="accountId"
                 [options]="accountOptions()"
                 recentKey="accounts"
-                placeholder="Введите название счёта"
+                [placeholder]="t('funds.typeAnAccountName')"
               />
-              <label for="allocation-amount">Сколько выделить</label
+              <label for="allocation-amount"> {{ t('funds.amountToAllocate') }} </label
               ><input
                 appDecimalInput
                 id="allocation-amount"
@@ -494,9 +532,9 @@
               @if (
                 allocationForm.controls.amount.touched && allocationForm.controls.amount.invalid
               ) {
-                <p class="field-error">Введите положительную сумму.</p>
+                <p class="field-error">{{ t('funds.enterAPositiveAmount') }}</p>
               }
-              <label for="allocation-date">Дата</label
+              <label for="allocation-date"> {{ t('funds.date') }} </label
               ><input id="allocation-date" type="date" formControlName="occurredOn" />
               <button
                 type="button"
@@ -506,12 +544,19 @@
                   !allocationForm.controls.accountId.value || !allocationForm.controls.amount.value
                 "
               >
-                Рассчитать по процентам
+                {{ t('funds.calculateByPercentage') }}
               </button>
               @if (preview(); as result) {
                 <div class="preview-box">
-                  <strong>Распределение можно поправить</strong>
-                  <p>Свободно до: {{ result.free_before | money }} {{ baseCurrency() }}</p>
+                  <strong> {{ t('funds.youCanAdjustTheAllocation') }} </strong>
+                  <p>
+                    {{
+                      t('funds.freeBeforeP0P1', {
+                        p0: (result.free_before | money),
+                        p1: baseCurrency(),
+                      })
+                    }}
+                  </p>
                   <div formArrayName="allocations">
                     @for (control of allocationControls.controls; track $index) {
                       <div class="allocation-row" [formGroupName]="$index">
@@ -527,25 +572,35 @@
                           inputmode="decimal"
                         />
                         @if (control.get('amount')?.touched && control.get('amount')?.invalid) {
-                          <p class="field-error">Проверьте сумму фонда.</p>
+                          <p class="field-error">{{ t('funds.checkTheFundAmount') }}</p>
                         }
                       </div>
                     }
                   </div>
                   @if (allocationTotals(); as totals) {
                     <p>
-                      В фонды: {{ totals.allocated | money }} · останется свободно из выбранной
-                      суммы: {{ totals.unallocated | money }} {{ baseCurrency() }}
+                      {{
+                        t('funds.intoFundsP0RemainingFreeFromThe', {
+                          p0: (totals.allocated | money),
+                          p1: (totals.unallocated | money),
+                          p2: baseCurrency(),
+                        })
+                      }}
                     </p>
                     <p>
-                      Свободно на счёте после: {{ totals.freeAfter | money }} {{ baseCurrency() }}
+                      {{
+                        t('funds.freeAccountBalanceAfterP0P1', {
+                          p0: (totals.freeAfter | money),
+                          p1: baseCurrency(),
+                        })
+                      }}
                     </p>
                   }
                 </div>
-                <label for="allocation-description">Описание</label
+                <label for="allocation-description"> {{ t('accounts.description') }} </label
                 ><input id="allocation-description" formControlName="description" />
                 <button type="submit" [disabled]="saving() || !canSaveAllocation()">
-                  Выделить деньги
+                  {{ t('funds.allocateMoney') }}
                 </button>
               }
             </form>
@@ -553,20 +608,20 @@
 
           @if (activeModal() === 'specificTransfer') {
             <p class="modal-explanation">
-              Будет создан один физический перевод. На счёте назначения вся его сумма будет
-              назначена выбранному фонду; проценты распределения не изменятся. В динамическом режиме
-              сумма не может превысить остаток до цели.
+              {{ t('funds.onePhysicalTransferWillBeCreatedIts') }}
             </p>
             <form [formGroup]="specificTransferForm" (ngSubmit)="transferToSpecificFund()">
-              <label for="specific-transfer-source">С какого счёта перевести</label>
+              <label for="specific-transfer-source"> {{ t('funds.sourceAccount') }} </label>
               <app-entity-combobox
                 inputId="specific-transfer-source"
                 formControlName="sourceAccountId"
                 [options]="accountOptions(activeAccounts(), 'physical')"
                 recentKey="accounts"
-                placeholder="Введите название счёта"
+                [placeholder]="t('funds.typeAnAccountName')"
               />
-              <label for="specific-transfer-destination">На какой счёт зачислить</label>
+              <label for="specific-transfer-destination">
+                {{ t('funds.destinationAccount') }}
+              </label>
               <app-entity-combobox
                 inputId="specific-transfer-destination"
                 formControlName="destinationAccountId"
@@ -578,31 +633,36 @@
                   )
                 "
                 recentKey="accounts"
-                placeholder="Введите название счёта"
+                [placeholder]="t('funds.typeAnAccountName')"
               />
-              <label for="specific-transfer-fund">Фонд</label>
+              <label for="specific-transfer-fund"> {{ t('funds.fund') }} </label>
               <app-entity-combobox
                 inputId="specific-transfer-fund"
                 formControlName="fundId"
                 [options]="specificTransferFundOptions()"
                 recentKey="funds"
-                placeholder="Введите название фонда"
+                [placeholder]="t('funds.typeAFundName')"
               />
               @if (specificTransferFundOptions().length === 0) {
                 <p class="hint">
                   {{
                     dynamicMode()
-                      ? 'Все активные фонды заполнены.'
-                      : 'Сначала создайте или восстановите активный фонд.'
+                      ? t('funds.allActiveFundsAreComplete')
+                      : t('funds.createOrRestoreAnActiveFundFirst')
                   }}
                 </p>
               }
               @if (dynamicMode() && selectedSpecificTransferFund(); as fund) {
                 <p class="hint">
-                  До цели можно направить: {{ fund.remaining_amount | money }} {{ baseCurrency() }}.
+                  {{
+                    t('funds.availableTargetCapacityP0P1', {
+                      p0: (fund.remaining_amount | money),
+                      p1: baseCurrency(),
+                    })
+                  }}
                 </p>
               }
-              <label for="specific-transfer-amount">Сумма перевода</label>
+              <label for="specific-transfer-amount"> {{ t('funds.transferAmount') }} </label>
               <input
                 appDecimalInput
                 id="specific-transfer-amount"
@@ -612,38 +672,36 @@
               @if (specificTransferForm.touched && !canTransferToSpecificFund()) {
                 <p class="field-error">
                   @if (dynamicMode()) {
-                    Выберите разные счета, незаполненный фонд и сумму не больше остатка на счёте и
-                    остатка до цели.
+                    {{ t('funds.chooseDifferentAccountsAnIncompleteFundAnd') }}
                   } @else {
-                    Выберите разные счета, фонд и сумму не больше остатка на исходном счёте.
+                    {{ t('funds.chooseDifferentAccountsAFundAndAn') }}
                   }
                 </p>
               }
-              <label for="specific-transfer-date">Дата</label>
+              <label for="specific-transfer-date"> {{ t('funds.date') }} </label>
               <input id="specific-transfer-date" type="date" formControlName="occurredOn" />
-              <label for="specific-transfer-description">Описание</label>
+              <label for="specific-transfer-description"> {{ t('accounts.description') }} </label>
               <input id="specific-transfer-description" formControlName="description" />
               <button type="submit" [disabled]="saving() || !canTransferToSpecificFund()">
-                Перевести в фонд
+                {{ t('funds.transferIntoFund') }}
               </button>
             </form>
           }
 
           @if (activeModal() === 'transfer') {
             <p class="modal-explanation">
-              Будет создан один физический перевод. После зачисления его сумма в той же транзакции
-              распределится между активными фондами по заданным процентам.
+              {{ t('funds.onePhysicalTransferWillBeCreatedAfter') }}
             </p>
             <form [formGroup]="transferAllocationForm" (ngSubmit)="transferAndAllocate()">
-              <label for="transfer-allocation-source">С какого счёта перевести</label
+              <label for="transfer-allocation-source"> {{ t('funds.sourceAccount') }} </label
               ><app-entity-combobox
                 inputId="transfer-allocation-source"
                 formControlName="sourceAccountId"
                 [options]="accountOptions(activeAccounts(), 'physical')"
                 recentKey="accounts"
-                placeholder="Введите название счёта"
+                [placeholder]="t('funds.typeAnAccountName')"
               />
-              <label for="transfer-allocation-target">На какой счёт зачислить</label
+              <label for="transfer-allocation-target"> {{ t('funds.destinationAccount') }} </label
               ><app-entity-combobox
                 inputId="transfer-allocation-target"
                 formControlName="destinationAccountId"
@@ -655,54 +713,53 @@
                   )
                 "
                 recentKey="accounts"
-                placeholder="Введите название счёта"
+                [placeholder]="t('funds.typeAnAccountName')"
               />
-              <label for="transfer-allocation-amount">Сумма перевода</label
+              <label for="transfer-allocation-amount"> {{ t('funds.transferAmount') }} </label
               ><input
                 appDecimalInput
                 id="transfer-allocation-amount"
                 formControlName="amount"
                 inputmode="decimal"
               />
-              <label for="transfer-allocation-date">Дата</label
+              <label for="transfer-allocation-date"> {{ t('funds.date') }} </label
               ><input id="transfer-allocation-date" type="date" formControlName="occurredOn" />
-              <label for="transfer-allocation-description">Описание</label
+              <label for="transfer-allocation-description"> {{ t('accounts.description') }} </label
               ><input id="transfer-allocation-description" formControlName="description" />
               @if (transferAllocationForm.touched && !canTransferAndAllocate()) {
                 <p class="field-error">
-                  Выберите разные счета, доступную сумму и задайте ненулевые проценты фондов.
+                  {{ t('funds.chooseDifferentAccountsAnAvailableAmountAnd') }}
                 </p>
               }
               <button type="submit" [disabled]="saving() || !canTransferAndAllocate()">
-                Перевести и распределить
+                {{ t('funds.transferAndAllocate') }}
               </button>
             </form>
           }
 
           @if (activeModal() === 'redistribution') {
             <p class="modal-explanation">
-              Физические деньги не переводятся. Меняется только счёт, на котором числится уже
-              существующая часть выбранного фонда.
+              {{ t('funds.noPhysicalMoneyIsTransferredOnlyThe') }}
             </p>
             <form [formGroup]="redistributionForm" (ngSubmit)="redistribute()">
-              <label for="redistribution-fund">Фонд</label
+              <label for="redistribution-fund"> {{ t('funds.fund') }} </label
               ><select id="redistribution-fund" formControlName="fundId">
-                <option value="">Выберите фонд</option>
+                <option value="">{{ t('funds.chooseAFund') }}</option>
                 @for (fund of activeFunds(); track fund.id) {
                   <option [value]="fund.id">
                     {{ fund.name }} · {{ fund.total_balance | money }} {{ baseCurrency() }}
                   </option>
                 }
               </select>
-              <label for="redistribution-source">Где назначение сейчас</label
+              <label for="redistribution-source"> {{ t('funds.currentAllocationAccount') }} </label
               ><app-entity-combobox
                 inputId="redistribution-source"
                 formControlName="sourceAccountId"
                 [options]="redistributionSourceOptions()"
                 recentKey="accounts"
-                placeholder="Введите название счёта"
+                [placeholder]="t('funds.typeAnAccountName')"
               />
-              <label for="redistribution-target">Где учитывать назначение</label
+              <label for="redistribution-target"> {{ t('funds.newAllocationAccount') }} </label
               ><app-entity-combobox
                 inputId="redistribution-target"
                 formControlName="destinationAccountId"
@@ -714,94 +771,93 @@
                   )
                 "
                 recentKey="accounts"
-                placeholder="Введите название счёта"
+                [placeholder]="t('funds.typeAnAccountName')"
               />
-              <label for="redistribution-amount">Сумма</label
+              <label for="redistribution-amount"> {{ t('funds.amount') }} </label
               ><input
                 appDecimalInput
                 id="redistribution-amount"
                 formControlName="amount"
                 inputmode="decimal"
               />
-              <label for="redistribution-date">Дата</label
+              <label for="redistribution-date"> {{ t('funds.date') }} </label
               ><input id="redistribution-date" type="date" formControlName="occurredOn" />
-              <label for="redistribution-description">Описание</label
+              <label for="redistribution-description"> {{ t('accounts.description') }} </label
               ><input id="redistribution-description" formControlName="description" />
               @if (redistributionForm.touched && !canRedistribute()) {
-                <p class="field-error">Проверьте остаток фонда и выберите разные счета.</p>
+                <p class="field-error">{{ t('funds.checkTheFundBalanceAndChooseDifferent') }}</p>
               }
               <button type="submit" [disabled]="saving() || !canRedistribute()">
-                Перенести назначение
+                {{ t('funds.moveAllocation') }}
               </button>
             </form>
           }
 
           @if (activeModal() === 'fundTransfer') {
             <p class="modal-explanation">
-              Физические деньги остаются на том же счёте. Меняется только их назначение.
+              {{ t('funds.physicalMoneyStaysOnTheSameAccount') }}
             </p>
             <form [formGroup]="fundTransferForm" (ngSubmit)="transferBetweenFunds()">
-              <label for="fund-transfer-source">Из фонда</label>
+              <label for="fund-transfer-source"> {{ t('funds.fromFund') }} </label>
               <app-entity-combobox
                 inputId="fund-transfer-source"
                 formControlName="sourceFundId"
                 [options]="fundOptions()"
                 recentKey="funds"
-                placeholder="Введите название фонда"
+                [placeholder]="t('funds.typeAFundName')"
               />
-              <label for="fund-transfer-target">В фонд</label>
+              <label for="fund-transfer-target"> {{ t('funds.toFund') }} </label>
               <app-entity-combobox
                 inputId="fund-transfer-target"
                 formControlName="destinationFundId"
                 [options]="fundOptions(fundTransferForm.controls.sourceFundId.value)"
                 recentKey="funds"
-                placeholder="Введите название фонда"
+                [placeholder]="t('funds.typeAFundName')"
               />
-              <label for="fund-transfer-account">На счёте</label>
+              <label for="fund-transfer-account"> {{ t('funds.onAccount') }} </label>
               <app-entity-combobox
                 inputId="fund-transfer-account"
                 formControlName="accountId"
                 [options]="fundTransferAccountOptions()"
                 recentKey="accounts"
-                placeholder="Введите название счёта"
+                [placeholder]="t('funds.typeAnAccountName')"
               />
-              <label for="fund-transfer-amount">Сумма</label>
+              <label for="fund-transfer-amount"> {{ t('funds.amount') }} </label>
               <input
                 appDecimalInput
                 id="fund-transfer-amount"
                 formControlName="amount"
                 inputmode="decimal"
               />
-              <label for="fund-transfer-date">Дата</label>
+              <label for="fund-transfer-date"> {{ t('funds.date') }} </label>
               <input id="fund-transfer-date" type="date" formControlName="occurredOn" />
-              <label for="fund-transfer-description">Описание</label>
+              <label for="fund-transfer-description"> {{ t('accounts.description') }} </label>
               <input id="fund-transfer-description" formControlName="description" />
               @if (fundTransferForm.touched && !canTransferBetweenFunds()) {
                 <p class="field-error">
-                  Выберите разные фонды, счёт с остатком исходного фонда и доступную сумму.
+                  {{ t('funds.chooseDifferentFundsAnAccountHoldingSource') }}
                 </p>
               }
               <button type="submit" [disabled]="saving() || !canTransferBetweenFunds()">
-                Перевести между фондами
+                {{ t('funds.transferBetweenFunds') }}
               </button>
             </form>
           }
 
           @if (activeModal() === 'reserveRelease') {
             <p class="modal-explanation">
-              Деньги останутся на том же физическом счёте и перестанут быть зарезервированными.
-              Направить резерв в фонд вручную нельзя.
+              {{ t('funds.moneyStaysOnTheSamePhysicalAccount') }}
             </p>
             <form [formGroup]="reserveReleaseForm" (ngSubmit)="releaseReserve()">
-              <label for="reserve-release-account">Счёт</label>
+              <label for="reserve-release-account"> {{ t('forecast.account') }} </label>
               <app-entity-combobox
                 inputId="reserve-release-account"
                 formControlName="accountId"
                 [options]="reserveAccountOptions()"
                 recentKey="accounts"
-                placeholder="Выберите счёт"
+                [placeholder]="t('funds.chooseAnAccount')"
               />
-              <label for="reserve-release-amount">Сумма</label>
+              <label for="reserve-release-amount"> {{ t('funds.amount') }} </label>
               <input
                 appDecimalInput
                 id="reserve-release-amount"
@@ -810,15 +866,15 @@
               />
               @if (reserveReleaseForm.controls.amount.touched && !canReleaseReserve()) {
                 <p class="field-error">
-                  Введите положительную сумму не больше резерва выбранного счёта.
+                  {{ t('funds.enterAPositiveAmountWithinTheSelected') }}
                 </p>
               }
-              <label for="reserve-release-date">Дата</label>
+              <label for="reserve-release-date"> {{ t('funds.date') }} </label>
               <input id="reserve-release-date" type="date" formControlName="occurredOn" />
-              <label for="reserve-release-description">Описание</label>
+              <label for="reserve-release-description"> {{ t('accounts.description') }} </label>
               <input id="reserve-release-description" formControlName="description" />
               <button type="submit" [disabled]="saving() || !canReleaseReserve()">
-                Вернуть в свободные
+                {{ t('funds.releaseToFreeBalance') }}
               </button>
             </form>
           }

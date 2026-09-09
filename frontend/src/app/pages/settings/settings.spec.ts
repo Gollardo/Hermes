@@ -1,3 +1,4 @@
+import { language, LANGUAGE_STORAGE_KEY } from '../../i18n/i18n';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -29,7 +30,11 @@ describe('SettingsPage', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    language.set('ru');
+    localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+    http.verify();
+  });
 
   it('loads and updates application settings', () => {
     fixture.detectChanges();
@@ -219,55 +224,59 @@ describe('SettingsPage', () => {
     expect(fixture.nativeElement.textContent).toContain('Фраза подтверждения не совпадает');
   });
 
-  it('submits the previewed backup only after exact confirmation', () => {
-    fixture.detectChanges();
-    http.expectOne('/api/v1/settings').flush({
-      base_currency: 'RUB',
-      timezone: 'Europe/Moscow',
-      default_account_id: null,
-      base_currency_locked: true,
-      updated_at: '2026-08-12T00:00:00Z',
-    });
-    http.expectOne('/api/v1/accounts').flush([]);
-    const backup = { format: 'hermes-json-backup', schema_version: 1 };
-    const page = fixture.componentInstance as unknown as {
-      backupDocument: { set: (value: unknown) => void };
-      restoreForm: {
-        setValue: (value: {
-          confirmation: string;
-          masterPassword: string;
-          backupPassword: string;
-        }) => void;
-        getRawValue: () => {
-          confirmation: string;
-          masterPassword: string;
-          backupPassword: string;
+  it.each(['ru', 'en'] as const)(
+    'submits the previewed backup after exact %s confirmation',
+    (selected) => {
+      fixture.detectChanges();
+      http.expectOne('/api/v1/settings').flush({
+        base_currency: 'RUB',
+        timezone: 'Europe/Moscow',
+        default_account_id: null,
+        base_currency_locked: true,
+        updated_at: '2026-08-12T00:00:00Z',
+      });
+      http.expectOne('/api/v1/accounts').flush([]);
+      const backup = { format: 'hermes-json-backup', schema_version: 1 };
+      const page = fixture.componentInstance as unknown as {
+        backupDocument: { set: (value: unknown) => void };
+        restoreForm: {
+          setValue: (value: {
+            confirmation: string;
+            masterPassword: string;
+            backupPassword: string;
+          }) => void;
+          getRawValue: () => {
+            confirmation: string;
+            masterPassword: string;
+            backupPassword: string;
+          };
         };
+        restoreBackup: () => void;
       };
-      restoreBackup: () => void;
-    };
-    page.backupDocument.set(backup);
-    page.restoreForm.setValue({
-      confirmation: 'ЗАМЕНИТЬ ВСЕ ДАННЫЕ',
-      masterPassword: 'correct-master-password',
-      backupPassword: '',
-    });
-    page.restoreBackup();
+      language.set(selected);
+      page.backupDocument.set(backup);
+      page.restoreForm.setValue({
+        confirmation: selected === 'ru' ? 'ЗАМЕНИТЬ ВСЕ ДАННЫЕ' : 'REPLACE ALL DATA',
+        masterPassword: 'correct-master-password',
+        backupPassword: '',
+      });
+      page.restoreBackup();
 
-    const request = http.expectOne('/api/v1/backup/restore');
-    expect(request.request.method).toBe('POST');
-    expect(request.request.body).toEqual({
-      backup,
-      confirmation: 'ЗАМЕНИТЬ ВСЕ ДАННЫЕ',
-      master_password: 'correct-master-password',
-      backup_password: null,
-    });
-    request.flush(
-      { detail: { code: 'invalid_backup' } },
-      { status: 422, statusText: 'Unprocessable Content' },
-    );
-    expect(page.restoreForm.getRawValue().masterPassword).toBe('');
-  });
+      const request = http.expectOne('/api/v1/backup/restore');
+      expect(request.request.method).toBe('POST');
+      expect(request.request.body).toEqual({
+        backup,
+        confirmation: 'ЗАМЕНИТЬ ВСЕ ДАННЫЕ',
+        master_password: 'correct-master-password',
+        backup_password: null,
+      });
+      request.flush(
+        { detail: { code: 'invalid_backup' } },
+        { status: 422, statusText: 'Unprocessable Content' },
+      );
+      expect(page.restoreForm.getRawValue().masterPassword).toBe('');
+    },
+  );
 
   it('asks for a Hermes password before preview and keeps password roles separate', async () => {
     fixture.detectChanges();

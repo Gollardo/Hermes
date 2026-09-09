@@ -1,9 +1,12 @@
+import { LanguageSelect } from '../../i18n/language-select';
+import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { environment } from '../../../environments/environment';
-import { AuthService, apiErrorMessage } from '../../core/auth.service';
+import { AuthService } from '../../core/auth.service';
+import { apiErrorMessage } from '../../core/api-error';
 import { formatTextTimestamp } from '../../shared/date-text.pipe';
 import { currencySymbol } from '../../shared/money.pipe';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
@@ -43,12 +46,13 @@ const RESTORE_CONFIRMATION = 'ЗАМЕНИТЬ ВСЕ ДАННЫЕ';
 
 @Component({
   selector: 'app-settings-page',
-  imports: [ReactiveFormsModule, EntityCombobox],
+  imports: [LanguageSelect, ReactiveFormsModule, EntityCombobox],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsPage implements OnInit {
+  protected readonly t = t;
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
   private readonly formBuilder = inject(NonNullableFormBuilder);
@@ -64,21 +68,21 @@ export class SettingsPage implements OnInit {
   protected readonly savingSettings = signal(false);
   protected readonly savingFundMode = signal(false);
   protected readonly changingPassword = signal(false);
-  protected readonly settingsError = signal<string | null>(null);
-  protected readonly accountsError = signal<string | null>(null);
-  protected readonly settingsSuccess = signal<string | null>(null);
-  protected readonly fundModeError = signal<string | null>(null);
-  protected readonly fundModeSuccess = signal<string | null>(null);
+  protected readonly settingsError = localizedSignal();
+  protected readonly accountsError = localizedSignal();
+  protected readonly settingsSuccess = localizedSignal();
+  protected readonly fundModeError = localizedSignal();
+  protected readonly fundModeSuccess = localizedSignal();
   protected readonly currentFundMode = signal<'manual' | 'dynamic'>('manual');
-  protected readonly passwordError = signal<string | null>(null);
-  protected readonly passwordSuccess = signal<string | null>(null);
+  protected readonly passwordError = localizedSignal();
+  protected readonly passwordSuccess = localizedSignal();
   protected readonly currencyLocked = signal(false);
   protected readonly accounts = signal<Account[]>([]);
   protected readonly backupDocument = signal<unknown | null>(null);
   protected readonly backupPreview = signal<BackupPreview | null>(null);
   protected readonly backupBusy = signal(false);
-  protected readonly backupError = signal<string | null>(null);
-  protected readonly backupSuccess = signal<string | null>(null);
+  protected readonly backupError = localizedSignal();
+  protected readonly backupSuccess = localizedSignal();
   protected readonly backupRequiresPassword = signal(false);
   protected readonly restoreConfirmation = RESTORE_CONFIRMATION;
   protected readonly formatTimestamp = formatTextTimestamp;
@@ -139,11 +143,11 @@ export class SettingsPage implements OnInit {
         next: (settings) => {
           this.savingSettings.set(false);
           this.applySettings(settings);
-          this.settingsSuccess.set('Настройки сохранены.');
+          this.settingsSuccess.set(() => t('settings.settingsSaved'));
         },
         error: (error: unknown) => {
           this.savingSettings.set(false);
-          this.settingsError.set(apiErrorMessage(error, 'Не удалось сохранить настройки.'));
+          this.settingsError.set(() => apiErrorMessage(error, t('settings.couldNotSaveSettings')));
         },
       });
   }
@@ -157,7 +161,7 @@ export class SettingsPage implements OnInit {
     }
     const value = this.passwordForm.getRawValue();
     if (value.newPassword !== value.newPasswordConfirmation) {
-      this.passwordError.set('Новые пароли не совпадают.');
+      this.passwordError.set(() => t('settings.theNewPasswordsDoNotMatch'));
       return;
     }
     this.changingPassword.set(true);
@@ -170,11 +174,13 @@ export class SettingsPage implements OnInit {
         next: () => {
           this.changingPassword.set(false);
           this.passwordForm.reset();
-          this.passwordSuccess.set('Мастер-пароль изменён. Остальные сессии завершены.');
+          this.passwordSuccess.set(() => t('settings.masterPasswordChangedOtherSessionsHaveEnded'));
         },
         error: (error: unknown) => {
           this.changingPassword.set(false);
-          this.passwordError.set(apiErrorMessage(error, 'Не удалось изменить мастер-пароль.'));
+          this.passwordError.set(() =>
+            apiErrorMessage(error, t('settings.couldNotChangeTheMasterPassword')),
+          );
         },
       });
   }
@@ -190,16 +196,16 @@ export class SettingsPage implements OnInit {
         next: (settings) => {
           this.savingFundMode.set(false);
           this.applySettings(settings);
-          this.fundModeSuccess.set(
+          this.fundModeSuccess.set(() =>
             mode === 'dynamic'
-              ? 'Динамическое распределение включено.'
-              : 'Текущие проценты зафиксированы для ручного режима.',
+              ? t('settings.dynamicAllocationEnabled')
+              : t('settings.currentPercentagesSavedForManualMode'),
           );
         },
         error: (error: unknown) => {
           this.savingFundMode.set(false);
-          this.fundModeError.set(
-            apiErrorMessage(error, 'Не удалось изменить режим распределения.'),
+          this.fundModeError.set(() =>
+            apiErrorMessage(error, t('settings.couldNotChangeAllocationMode')),
           );
         },
       });
@@ -208,7 +214,7 @@ export class SettingsPage implements OnInit {
   protected logoutAll(): void {
     this.auth.logoutAll().subscribe({
       error: (error: unknown) =>
-        this.settingsError.set(apiErrorMessage(error, 'Не удалось завершить все сессии.')),
+        this.settingsError.set(() => apiErrorMessage(error, t('settings.couldNotEndAllSessions'))),
     });
   }
 
@@ -220,11 +226,11 @@ export class SettingsPage implements OnInit {
       next: (document) => {
         this.backupBusy.set(false);
         this.downloadBackup(document, 'json');
-        this.backupSuccess.set('Открытый JSON-backup создан. Храните его в защищённом месте.');
+        this.backupSuccess.set(() => t('settings.plaintextJsonBackupCreatedStoreItIn'));
       },
       error: (error: unknown) => {
         this.backupBusy.set(false);
-        this.backupError.set(apiErrorMessage(error, 'Не удалось создать backup.'));
+        this.backupError.set(() => apiErrorMessage(error, t('settings.couldNotCreateTheBackup')));
       },
     });
   }
@@ -246,14 +252,16 @@ export class SettingsPage implements OnInit {
           this.backupBusy.set(false);
           this.hermesExportForm.reset();
           this.downloadBackup(document, 'hermes');
-          this.backupSuccess.set(
-            'Защищённый Hermes-backup создан. Для восстановления потребуется текущий пароль.',
+          this.backupSuccess.set(() =>
+            t('settings.protectedHermesBackupCreatedRestorationWillRequire'),
           );
         },
         error: (error: unknown) => {
           this.backupBusy.set(false);
           this.hermesExportForm.reset();
-          this.backupError.set(apiErrorMessage(error, 'Не удалось создать защищённый backup.'));
+          this.backupError.set(() =>
+            apiErrorMessage(error, t('settings.couldNotCreateTheProtectedBackup')),
+          );
         },
       });
   }
@@ -269,7 +277,7 @@ export class SettingsPage implements OnInit {
     this.restoreForm.reset();
     if (!file) return;
     if (file.size > 72 * 1024 * 1024) {
-      this.backupError.set('Файл больше допустимых 72 МБ.');
+      this.backupError.set(() => t('settings.theFileExceedsThe72MbLimit'));
       return;
     }
     file
@@ -280,12 +288,12 @@ export class SettingsPage implements OnInit {
         try {
           document = JSON.parse(text);
         } catch {
-          this.backupError.set('Файл не является корректным JSON.');
+          this.backupError.set(() => t('settings.theFileIsNotValidJson'));
           return;
         }
         const format = this.backupFormat(document);
         if (format === 'hermes-json-backup' && file.size > 50 * 1024 * 1024) {
-          this.backupError.set('Открытый JSON-backup больше допустимых 50 МБ.');
+          this.backupError.set(() => t('settings.thePlaintextJsonBackupExceedsThe50'));
           return;
         }
         this.backupDocument.set(document);
@@ -296,14 +304,14 @@ export class SettingsPage implements OnInit {
       .catch(() => {
         if (sequence !== this.selectedBackupSequence) return;
         this.backupBusy.set(false);
-        this.backupError.set('Не удалось прочитать выбранный файл. Выберите его повторно.');
+        this.backupError.set(() => t('settings.couldNotReadTheSelectedFileSelect'));
       });
   }
 
   protected previewEncryptedBackup(): void {
     if (!this.restoreForm.controls.backupPassword.value) {
       this.restoreForm.controls.backupPassword.markAsTouched();
-      this.backupError.set('Введите пароль защищённого backup.');
+      this.backupError.set(() => t('settings.enterTheProtectedBackupPassword'));
       return;
     }
     this.previewSelectedBackup(this.selectedBackupSequence);
@@ -312,10 +320,10 @@ export class SettingsPage implements OnInit {
   protected restoreBackup(): void {
     const backup = this.backupDocument();
     const value = this.restoreForm.getRawValue();
-    if (!backup || this.restoreForm.invalid || value.confirmation !== RESTORE_CONFIRMATION) {
+    if (!backup || this.restoreForm.invalid || value.confirmation !== t('settings.restorePhrase')) {
       this.restoreForm.markAllAsTouched();
-      if (value.confirmation !== RESTORE_CONFIRMATION) {
-        this.backupError.set('Фраза подтверждения не совпадает. Данные не изменены.');
+      if (value.confirmation !== t('settings.restorePhrase')) {
+        this.backupError.set(() => t('auth.theConfirmationPhraseDoesNotMatchNo'));
       }
       return;
     }
@@ -324,21 +332,21 @@ export class SettingsPage implements OnInit {
     this.http
       .post(`${environment.apiBaseUrl}/backup/restore`, {
         backup,
-        confirmation: value.confirmation,
+        confirmation: RESTORE_CONFIRMATION,
         master_password: value.masterPassword,
         backup_password: this.backupRequiresPassword() ? value.backupPassword : null,
       })
       .subscribe({
         next: () => {
           this.backupBusy.set(false);
-          this.backupSuccess.set('Данные восстановлены полностью. Обновляем приложение…');
+          this.backupSuccess.set(() => t('settings.allDataRestoredReloadingTheApplication'));
           window.location.reload();
         },
         error: (error: unknown) => {
           this.backupBusy.set(false);
           this.restoreForm.controls.masterPassword.reset();
-          this.backupError.set(
-            apiErrorMessage(error, 'Восстановление отменено, данные не изменены.'),
+          this.backupError.set(() =>
+            apiErrorMessage(error, t('settings.restorationCancelledNoDataWasChanged')),
           );
         },
       });
@@ -366,7 +374,7 @@ export class SettingsPage implements OnInit {
           if (sequence !== this.selectedBackupSequence) return;
           this.backupBusy.set(false);
           this.restoreForm.controls.backupPassword.reset();
-          this.backupError.set(apiErrorMessage(error, 'Backup не прошёл проверку.'));
+          this.backupError.set(() => apiErrorMessage(error, t('settings.backupValidationFailed')));
         },
       });
   }
@@ -395,7 +403,7 @@ export class SettingsPage implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
-        this.settingsError.set(apiErrorMessage(error, 'Не удалось загрузить настройки.'));
+        this.settingsError.set(() => apiErrorMessage(error, t('settings.couldNotLoadSettings')));
       },
     });
     this.http.get<Account[]>(`${environment.apiBaseUrl}/accounts`).subscribe({
@@ -406,8 +414,8 @@ export class SettingsPage implements OnInit {
       },
       error: (error: unknown) => {
         this.settingsForm.controls.defaultAccountId.disable();
-        this.accountsError.set(
-          apiErrorMessage(error, 'Не удалось загрузить счета. Остальные настройки доступны.'),
+        this.accountsError.set(() =>
+          apiErrorMessage(error, t('settings.couldNotLoadAccountsOtherSettingsRemain')),
         );
       },
     });

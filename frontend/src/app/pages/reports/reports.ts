@@ -1,3 +1,4 @@
+import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -11,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { environment } from '../../../environments/environment';
-import { apiErrorMessage } from '../../core/auth.service';
+import { apiErrorMessage } from '../../core/api-error';
 import { DateTextPipe } from '../../shared/date-text.pipe';
 import {
   currencySymbol,
@@ -62,6 +63,7 @@ interface Settings {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReportsPage implements OnInit {
+  protected readonly t = t;
   private readonly http = inject(HttpClient);
   protected readonly periodMode = signal<PeriodMode>('month');
   protected readonly selectedMonth = signal('');
@@ -81,7 +83,7 @@ export class ReportsPage implements OnInit {
   });
   protected readonly baseCurrency = signal('RUB');
   protected readonly loading = signal(true);
-  protected readonly error = signal<string | null>(null);
+  protected readonly error = localizedSignal();
   private requestSequence = 0;
 
   ngOnInit(): void {
@@ -97,7 +99,7 @@ export class ReportsPage implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить настройки отчёта.'));
+        this.error.set(() => apiErrorMessage(error, t('reports.couldNotLoadReportSettings')));
       },
     });
   }
@@ -125,7 +127,7 @@ export class ReportsPage implements OnInit {
 
   protected applyCustom(): void {
     if (!this.fromOn() || !this.throughOn() || this.throughOn() < this.fromOn()) {
-      this.error.set('Дата окончания должна быть не раньше даты начала.');
+      this.error.set(() => t('reports.theEndDateMustNotPrecedeThe'));
       return;
     }
     this.load();
@@ -138,7 +140,7 @@ export class ReportsPage implements OnInit {
   }
 
   protected typeLabel(type: ReportType = this.reportType()): string {
-    return type === 'expense' ? 'Расходы' : 'Доходы';
+    return type === 'expense' ? t('categories.expenses') : t('categories.income');
   }
 
   private load(): void {
@@ -162,7 +164,7 @@ export class ReportsPage implements OnInit {
         error: (error: unknown) => {
           if (sequence !== this.requestSequence) return;
           this.loading.set(false);
-          this.error.set(apiErrorMessage(error, 'Не удалось построить отчёт.'));
+          this.error.set(() => apiErrorMessage(error, t('reports.couldNotBuildTheReport')));
         },
       });
   }

@@ -1,3 +1,4 @@
+import { t } from '../i18n/i18n';
 import {
   AfterViewInit,
   Directive,
@@ -6,6 +7,7 @@ import {
   Input,
   OnDestroy,
   inject,
+  effect,
 } from '@angular/core';
 import { AbstractControl, NgControl, ValidationErrors } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -59,6 +61,14 @@ export class DecimalInput implements AfterViewInit, OnDestroy {
   private readonly element = inject<ElementRef<HTMLInputElement>>(ElementRef);
   private readonly subscriptions = new Subscription();
   private focused = false;
+  private readonly validationText = effect(() => {
+    const input = this.element.nativeElement;
+    const message =
+      this.appDecimalInput === 'expression'
+        ? t('decimal-input.enterAnAmountOrAnExpressionUsing')
+        : t('decimal-input.enterANumberForExample100000');
+    if (input.validity.customError) input.setCustomValidity(message);
+  });
 
   ngAfterViewInit(): void {
     const input = this.element.nativeElement;
@@ -111,8 +121,8 @@ export class DecimalInput implements AfterViewInit, OnDestroy {
     if (normalized === null) {
       input.setCustomValidity(
         this.appDecimalInput === 'expression'
-          ? 'Введите сумму или выражение из чисел, + и −. Допустимо до 4 знаков после запятой.'
-          : 'Введите число, например 100 000,00. Допустимо до 4 знаков после запятой.',
+          ? t('decimal-input.enterAnAmountOrAnExpressionUsing')
+          : t('decimal-input.enterANumberForExample100000'),
       );
       this.ngControl?.control?.setErrors({
         ...(this.ngControl?.control?.errors ?? {}),

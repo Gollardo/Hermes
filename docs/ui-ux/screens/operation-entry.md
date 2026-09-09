@@ -239,3 +239,10 @@ which current balances will be recalculated.
   it persist?
 - How often is an expense linked to a fund, and does fund selection belong in
   the primary form layer?
+
+## Multilingual presentation
+
+The implemented RU/EN presentation follows the shared
+[internationalization contract](../internationalization.md). Language changes
+update screen copy and accessible labels while preserving financial semantics,
+user-entered data, dates, selected context and exact monetary payloads.

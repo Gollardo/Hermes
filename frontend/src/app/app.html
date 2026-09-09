@@ -4,8 +4,8 @@
       <div class="state-card">
         <span class="brand-mark" aria-hidden="true">H</span>
         <p class="eyebrow">Hermes</p>
-        <h1>Готовим ваше пространство</h1>
-        <p>Проверяем состояние локального экземпляра…</p>
+        <h1>{{ t('app.preparingYourSpace') }}</h1>
+        <p>{{ t('app.checkingTheLocalInstance') }}</p>
         <span class="state-loader" aria-hidden="true"></span>
       </div>
     </main>
@@ -14,10 +14,12 @@
     <main class="state-screen" role="alert">
       <div class="state-card">
         <span class="brand-mark" aria-hidden="true">H</span>
-        <p class="eyebrow danger-label">Нет соединения</p>
-        <h1>Приложение временно недоступно</h1>
-        <p>Проверьте backend и базу данных, затем повторите попытку.</p>
-        <button type="button" (click)="auth.initialize()">Проверить снова</button>
+        <p class="eyebrow danger-label">{{ t('app.noConnection') }}</p>
+        <h1>{{ t('app.applicationTemporarilyUnavailable') }}</h1>
+        <p>{{ t('app.checkTheBackendAndDatabaseThenTry') }}</p>
+        <button type="button" (click)="auth.initialize()">
+          {{ t('backend-status.checkAgain') }}
+        </button>
       </div>
     </main>
   }
@@ -30,14 +32,14 @@
   @case ('authenticated') {
     <div class="app-shell" [class.sidebar-hidden]="sidebarHidden()">
       <aside id="app-sidebar" class="app-sidebar">
-        <a class="brand brand-lockup" routerLink="/" aria-label="Hermes — главная">
+        <a class="brand brand-lockup" routerLink="/" [attr.aria-label]="t('app.hermesHome')">
           <span class="brand-mark" aria-hidden="true">H</span>
           <span>Hermes</span>
         </a>
 
-        <nav class="primary-nav" aria-label="Основная навигация">
+        <nav class="primary-nav" [attr.aria-label]="t('app.mainNavigation')">
           <div class="nav-group">
-            <p>Пространство</p>
+            <p>{{ t('app.workspace') }}</p>
             <a
               routerLink="/"
               routerLinkActive="active"
@@ -47,7 +49,7 @@
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
               </svg>
-              <span>Обзор</span>
+              <span> {{ t('home.overview') }} </span>
             </a>
             <a routerLink="/accounts" routerLinkActive="active" ariaCurrentWhenActive="page">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -55,61 +57,61 @@
                   d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5zM4 9h16m-4 4h2"
                 />
               </svg>
-              <span>Счета</span>
+              <span> {{ t('accounts.accounts') }} </span>
             </a>
             <a routerLink="/operations" routerLinkActive="active" ariaCurrentWhenActive="page">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 6h14M5 12h14M5 18h9M7 4v4M12 10v4M17 16v4" />
               </svg>
-              <span>Операции</span>
+              <span> {{ t('operations.operations') }} </span>
             </a>
             <a routerLink="/funds" routerLinkActive="active" ariaCurrentWhenActive="page">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M4 7h16v12H4zM7 7V5h10v2M8 11h8M8 15h5" />
               </svg>
-              <span>Фонды</span>
+              <span> {{ t('funds.funds') }} </span>
             </a>
           </div>
 
           <div class="nav-group">
-            <p class="plan-label">План</p>
+            <p class="plan-label">{{ t('app.plan') }}</p>
             <a routerLink="/calendar" routerLinkActive="active" ariaCurrentWhenActive="page">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 5h14v14H5zM8 3v4M16 3v4M5 9h14M8 12h2M12 12h2M16 12h1M8 16h2M12 16h2" />
               </svg>
-              <span>Календарь</span>
+              <span> {{ t('scheduling.calendar') }} </span>
             </a>
             <a routerLink="/forecast" routerLinkActive="active" ariaCurrentWhenActive="page">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M4 18 9 12l4 3 7-9M4 20h16" />
               </svg>
-              <span>Прогноз</span>
+              <span> {{ t('app.forecast') }} </span>
             </a>
           </div>
 
           <div class="nav-group reports-nav-group">
-            <p>Отчёты</p>
+            <p>{{ t('reports.reports') }}</p>
             <a
               routerLink="/reports"
               routerLinkActive="active"
               ariaCurrentWhenActive="page"
-              aria-label="Доходы и расходы"
+              [attr.aria-label]="t('reports.incomeAndExpenses')"
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 19V9M12 19V5M19 19v-7M3 19h18" />
               </svg>
-              <span class="nav-label-full">Доходы и расходы</span>
-              <span class="nav-label-short" aria-hidden="true">Отчёты</span>
+              <span class="nav-label-full"> {{ t('reports.incomeAndExpenses') }} </span>
+              <span class="nav-label-short" aria-hidden="true"> {{ t('reports.reports') }} </span>
             </a>
           </div>
 
           <div class="nav-group utility-nav-group">
-            <p>Управление</p>
+            <p>{{ t('app.management') }}</p>
             <a routerLink="/categories" routerLinkActive="active" ariaCurrentWhenActive="page">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z" />
               </svg>
-              <span>Категории</span>
+              <span> {{ t('categories.categories') }} </span>
             </a>
             <a routerLink="/settings" routerLinkActive="active" ariaCurrentWhenActive="page">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -118,7 +120,7 @@
                   d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1A8 8 0 0 0 15 6l-.3-2.6h-4L10.4 6A8 8 0 0 0 8.8 7L6.5 6.1l-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a8 8 0 0 0 1.6 1l.3 2.6h4l.3-2.6a8 8 0 0 0 1.6-1l2.3 1 2-3.4-2-1.5a7 7 0 0 0 .1-1z"
                 />
               </svg>
-              <span>Настройки</span>
+              <span> {{ t('settings.settings') }} </span>
             </a>
           </div>
         </nav>
@@ -127,11 +129,13 @@
           <div class="instance-status">
             <span aria-hidden="true"></span>
             <div>
-              <strong>Локальный экземпляр</strong>
-              <small>Данные под вашим контролем</small>
+              <strong> {{ t('app.localInstance') }} </strong>
+              <small> {{ t('app.yourDataUnderYourControl') }} </small>
             </div>
           </div>
-          <button type="button" class="logout-action" (click)="logout()">Выйти</button>
+          <button type="button" class="logout-action" (click)="logout()">
+            {{ t('app.signOut') }}
+          </button>
         </div>
       </aside>
 
@@ -145,7 +149,7 @@
             aria-controls="app-sidebar"
           >
             <span aria-hidden="true">☰</span>
-            {{ sidebarHidden() ? 'Показать меню' : 'Скрыть меню' }}
+            {{ sidebarHidden() ? t('app.showMenu') : t('app.hideMenu') }}
           </button>
           <span class="release-pill">1.0.0</span>
         </header>
@@ -156,7 +160,7 @@
         <main class="app-content">
           <router-outlet />
         </main>
-        <footer>Hermes · self-hosted personal finance</footer>
+        <footer>{{ t('common.footer') }}</footer>
       </div>
     </div>
   }

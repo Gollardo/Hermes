@@ -1,9 +1,9 @@
 <section class="overview-page">
   <header class="page-header">
     <div class="page-header-copy">
-      <p class="eyebrow">Обзор</p>
-      <h1>Ваши деньги сейчас и в ближайшем будущем</h1>
-      <p>Краткая сводка фактов, планов и сигналов, которые требуют действия.</p>
+      <p class="eyebrow">{{ t('home.overview') }}</p>
+      <h1>{{ t('home.yourMoneyNowAndInTheNear') }}</h1>
+      <p>{{ t('home.aBriefSummaryOfFactsPlansAnd') }}</p>
     </div>
     <app-operation-create-menu [navigate]="true" />
   </header>
@@ -12,24 +12,24 @@
     <p class="form-error" role="alert">{{ message }}</p>
   }
   @if (loading()) {
-    <section class="panel empty-state">Собираем финансовую сводку…</section>
+    <section class="panel empty-state">{{ t('home.gatheringYourFinancialSummary') }}</section>
   } @else if (summary(); as data) {
-    <section class="overview-balances" aria-label="Текущее состояние денег">
+    <section class="overview-balances" [attr.aria-label]="t('home.currentMoneyOverview')">
       <article class="primary-balance">
-        <span>Свободно сейчас</span>
+        <span> {{ t('home.freeNow') }} </span>
         <strong>{{ data.total_free | money }} {{ baseCurrency() }}</strong>
-        <small>Доступно после резервов в фондах</small>
-        <a routerLink="/funds">Проверить распределение по фондам →</a>
+        <small> {{ t('home.availableAfterFundReserves') }} </small>
+        <a routerLink="/funds"> {{ t('home.checkFundAllocation') }} </a>
       </article>
       <article>
-        <span>Физический остаток</span
+        <span> {{ t('home.physicalBalance') }} </span
         ><strong>{{ physicalTotal() | money }} {{ baseCurrency() }}</strong
-        ><a routerLink="/accounts">Все счета →</a>
+        ><a routerLink="/accounts"> {{ t('home.allAccounts') }} </a>
       </article>
       <article>
-        <span>Из них зарезервировано</span
+        <span> {{ t('home.ofWhichReserved') }} </span
         ><strong>{{ data.total_reserved | money }} {{ baseCurrency() }}</strong
-        ><a routerLink="/funds">Все фонды →</a>
+        ><a routerLink="/funds"> {{ t('home.allFunds') }} </a>
       </article>
     </section>
 
@@ -37,20 +37,20 @@
       <section class="panel attention-panel" aria-labelledby="attention-title">
         <div class="panel-heading">
           <div>
-            <p class="section-label">Сегодня и просроченные</p>
-            <h2 id="attention-title">Требуют внимания</h2>
+            <p class="section-label">{{ t('home.todayAndOverdue') }}</p>
+            <h2 id="attention-title">{{ t('home.needsAttention') }}</h2>
           </div>
           <span class="count-pill">{{ attentionTotal() }}</span>
         </div>
         @if (!attention().length) {
-          <p class="empty-state">На сегодня обязательных действий нет.</p>
+          <p class="empty-state">{{ t('home.noRequiredActionsToday') }}</p>
         } @else {
           <div class="overview-list">
             @for (item of attention(); track item.id) {
               <article [class.overdue]="item.overdue">
                 <div>
                   <span
-                    >{{ item.overdue ? 'Просрочено' : 'Сегодня' }} ·
+                    >{{ item.overdue ? t('home.overdue') : t('home.today') }} ·
                     {{ typeLabel(item.type) }}</span
                   ><strong>{{ item.description || typeLabel(item.type) }}</strong>
                 </div>
@@ -58,32 +58,45 @@
               </article>
             }
           </div>
-          <a class="section-link" routerLink="/calendar">Обработать в календаре →</a>
+          <a class="section-link" routerLink="/calendar"> {{ t('home.resolveInCalendar') }} </a>
         }
       </section>
 
       @if (forecast(); as value) {
         <section class="panel forecast-preview" [class.risk]="value.first_negative_on">
           <div>
-            <p class="section-label">Ближайший месяц</p>
+            <p class="section-label">{{ t('home.nextMonth') }}</p>
             @if (value.first_negative_on) {
-              <h2>Возможен дефицит {{ value.first_negative_on | textDate }}</h2>
+              <h2>
+                {{ t('home.possibleShortfallOnP0', { p0: (value.first_negative_on | textDate) }) }}
+              </h2>
             } @else {
               <h2>
-                Минимум {{ value.minimum_balance | money }} {{ baseCurrency() }} ·
-                {{ value.minimum_on | textDate }}
+                {{
+                  t('home.minimumP0P1P2', {
+                    p0: (value.minimum_balance | money),
+                    p1: baseCurrency(),
+                    p2: (value.minimum_on | textDate),
+                  })
+                }}
               </h2>
             }
             <p class="forecast-ending">
-              Свободно к {{ value.through_on | textDate }}:
+              {{ t('home.freeByP0', { p0: (value.through_on | textDate) }) }}
               <strong>{{ value.ending_balance | money }} {{ baseCurrency() }}</strong>
             </p>
             <p>
-              Прогноз начинается с текущего свободного остатка {{ value.starting_balance | money }}
-              {{ baseCurrency() }} и учитывает известные ожидаемые события.
+              {{
+                t('home.theForecastStartsFromTheCurrentFree', {
+                  p0: (value.starting_balance | money),
+                  p1: baseCurrency(),
+                })
+              }}
             </p>
           </div>
-          <a class="button-link secondary" routerLink="/forecast">Разобрать прогноз</a>
+          <a class="button-link secondary" routerLink="/forecast">
+            {{ t('home.exploreForecast') }}
+          </a>
         </section>
       }
     </div>
@@ -91,8 +104,8 @@
     @if (analyticsError(); as message) {
       <p class="form-error analytics-error" role="status">{{ message }}</p>
     }
-    <section class="analytics-grid" aria-label="Структура доходов, расходов и фондов">
-      @for (chart of analyticsCharts(); track chart.title) {
+    <section class="analytics-grid" [attr.aria-label]="t('home.incomeExpenseAndFundBreakdown')">
+      @for (chart of analyticsCharts(); track chart.operationType ?? 'funds') {
         <article class="panel donut-card" [class.income-chart]="chart.operationType === 'income'">
           <div>
             <p class="section-label">{{ chart.context }}</p>
@@ -132,7 +145,7 @@
               }
             </ul>
           } @else {
-            <p class="empty-state">За период данных нет.</p>
+            <p class="empty-state">{{ t('home.noDataForThisPeriod') }}</p>
           }
         </article>
       }
@@ -141,13 +154,13 @@
     <section class="panel recent-panel" aria-labelledby="recent-title">
       <div class="panel-heading">
         <div>
-          <p class="section-label">Факты</p>
-          <h2 id="recent-title">Последние операции</h2>
+          <p class="section-label">{{ t('home.actual') }}</p>
+          <h2 id="recent-title">{{ t('home.recentOperations') }}</h2>
         </div>
       </div>
       <div class="recent-content">
         @if (!recentOperations().length) {
-          <p class="empty-state">Фактических операций пока нет.</p>
+          <p class="empty-state">{{ t('home.noPostedOperationsYet') }}</p>
         } @else {
           <div class="overview-list">
             @for (operation of recentOperations(); track operation.id) {
@@ -161,7 +174,7 @@
               </article>
             }
           </div>
-          <a class="section-link" routerLink="/operations">Открыть весь журнал →</a>
+          <a class="section-link" routerLink="/operations"> {{ t('home.openFullJournal') }} </a>
         }
       </div>
     </section>

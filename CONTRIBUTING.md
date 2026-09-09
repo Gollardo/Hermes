@@ -59,3 +59,10 @@ Routine implementation details belong in code and relevant documentation. For a
 choice with durable, cross-cutting consequences, start from the template in
 [the ADR registry](docs/decisions/README.md), submit it as `proposed`, and record
 alternatives and unresolved questions without inventing prior consensus.
+
+## Translations
+
+Follow the [internationalization and translation guide](docs/ui-ux/internationalization.md).
+Catalogs must have matching keys and parameters and preserve financial meaning.
+Run `npm run i18n:check --prefix frontend` and verify both interface languages
+before proposing a translation change.

@@ -1,3 +1,4 @@
+import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -10,7 +11,7 @@ import {
 import { FormArray, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { environment } from '../../../environments/environment';
-import { apiErrorMessage } from '../../core/auth.service';
+import { apiErrorMessage } from '../../core/api-error';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
 import { DecimalInput, decimalPayload } from '../../shared/decimal-input';
 import { DateTextPipe } from '../../shared/date-text.pipe';
@@ -135,6 +136,7 @@ interface AllocationTotals {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FundsPage implements OnInit {
+  protected readonly t = t;
   private readonly http = inject(HttpClient);
   private readonly builder = inject(NonNullableFormBuilder);
   private previewRequestId = 0;
@@ -159,7 +161,7 @@ export class FundsPage implements OnInit {
   );
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly error = localizedSignal();
   protected readonly editingId = signal<string | null>(null);
   protected readonly baseCurrency = signal('RUB');
   protected readonly Math = Math;
@@ -306,7 +308,7 @@ export class FundsPage implements OnInit {
       .map((account) => ({
         id: account.account_id,
         label: account.account_name,
-        detail: `${balance === 'free' ? 'Свободно' : 'Остаток'} ${formatMoney(
+        detail: `${balance === 'free' ? t('funds.free') : t('funds.balance')} ${formatMoney(
           balance === 'free' ? account.free_balance : account.physical_balance,
         )} ${this.baseCurrency()}`,
       }));
@@ -318,7 +320,10 @@ export class FundsPage implements OnInit {
       .map((account) => ({
         id: account.account_id,
         label: account.account_name,
-        detail: `В резерве ${formatMoney(account.reserve_balance)} ${this.baseCurrency()}`,
+        detail: t('funds.inReserveP0P1', {
+          p0: formatMoney(account.reserve_balance),
+          p1: this.baseCurrency(),
+        }),
       }));
   }
 
@@ -326,9 +331,12 @@ export class FundsPage implements OnInit {
     return this.sourceAccounts().map((account) => ({
       id: account.account_id,
       label: account.account_name,
-      detail: `В фонде ${formatMoney(
-        this.positionBalance(this.redistributionForm.controls.fundId.value, account.account_id),
-      )} ${this.baseCurrency()}`,
+      detail: t('funds.inFundP0P1', {
+        p0: formatMoney(
+          this.positionBalance(this.redistributionForm.controls.fundId.value, account.account_id),
+        ),
+        p1: this.baseCurrency(),
+      }),
     }));
   }
 
@@ -341,7 +349,10 @@ export class FundsPage implements OnInit {
       .map((account) => ({
         id: account.account_id,
         label: account.account_name,
-        detail: `В исходном фонде ${formatMoney(this.positionBalance(fundId, account.account_id))} ${this.baseCurrency()}`,
+        detail: t('funds.inSourceFundP0P1', {
+          p0: formatMoney(this.positionBalance(fundId, account.account_id)),
+          p1: this.baseCurrency(),
+        }),
       }));
   }
 
@@ -438,7 +449,7 @@ export class FundsPage implements OnInit {
         this.cancelEdit();
         this.load();
       },
-      error: (error: unknown) => this.failed(error, 'Не удалось сохранить фонд.'),
+      error: (error: unknown) => this.failed(error, () => t('funds.couldNotSaveTheFund')),
     });
   }
 
@@ -507,7 +518,8 @@ export class FundsPage implements OnInit {
           this.activeModal.set(null);
           this.load();
         },
-        error: (error: unknown) => this.failed(error, 'Не удалось вывести деньги из резерва.'),
+        error: (error: unknown) =>
+          this.failed(error, () => t('funds.couldNotReleaseMoneyFromTheReserve')),
       });
   }
 
@@ -545,7 +557,7 @@ export class FundsPage implements OnInit {
   protected toggleArchive(fund: Fund): void {
     if (
       !fund.archived &&
-      !window.confirm(`Архивировать фонд «${fund.name}»? Это возможно только при нулевом остатке.`)
+      !window.confirm(t('funds.archiveFundP0ThisIsOnlyPossible', { p0: fund.name }))
     ) {
       return;
     }
@@ -555,7 +567,7 @@ export class FundsPage implements OnInit {
       .subscribe({
         next: () => this.load(),
         error: (error: unknown) =>
-          this.error.set(apiErrorMessage(error, 'Не удалось изменить состояние фонда.')),
+          this.error.set(() => apiErrorMessage(error, t('funds.couldNotChangeTheFundStatus'))),
       });
   }
 
@@ -603,7 +615,7 @@ export class FundsPage implements OnInit {
         },
         error: (error: unknown) => {
           if (requestId !== this.previewRequestId) return;
-          this.error.set(apiErrorMessage(error, 'Не удалось рассчитать распределение.'));
+          this.error.set(() => apiErrorMessage(error, t('funds.couldNotCalculateTheAllocation')));
         },
       });
   }
@@ -635,7 +647,7 @@ export class FundsPage implements OnInit {
           this.activeModal.set(null);
           this.load();
         },
-        error: (error: unknown) => this.failed(error, 'Не удалось сохранить распределение.'),
+        error: (error: unknown) => this.failed(error, () => t('funds.couldNotSaveTheAllocation')),
       });
   }
 
@@ -662,7 +674,8 @@ export class FundsPage implements OnInit {
           this.activeModal.set(null);
           this.load();
         },
-        error: (error: unknown) => this.failed(error, 'Не удалось перевести деньги в фонд.'),
+        error: (error: unknown) =>
+          this.failed(error, () => t('funds.couldNotTransferMoneyIntoTheFund')),
       });
   }
 
@@ -673,7 +686,7 @@ export class FundsPage implements OnInit {
     }
     const value = this.redistributionForm.getRawValue();
     if (value.sourceAccountId === value.destinationAccountId) {
-      this.error.set('Выберите разные счета.');
+      this.error.set(() => t('funds.chooseDifferentAccounts'));
       return;
     }
     this.saving.set(true);
@@ -693,7 +706,8 @@ export class FundsPage implements OnInit {
           this.activeModal.set(null);
           this.load();
         },
-        error: (error: unknown) => this.failed(error, 'Не удалось перераспределить фонд.'),
+        error: (error: unknown) =>
+          this.failed(error, () => t('funds.couldNotMoveTheFundAllocation')),
       });
   }
 
@@ -720,7 +734,7 @@ export class FundsPage implements OnInit {
           this.load();
         },
         error: (error: unknown) =>
-          this.failed(error, 'Не удалось перевести и распределить деньги.'),
+          this.failed(error, () => t('funds.couldNotTransferAndAllocateMoney')),
       });
   }
 
@@ -746,7 +760,8 @@ export class FundsPage implements OnInit {
           this.activeModal.set(null);
           this.load();
         },
-        error: (error: unknown) => this.failed(error, 'Не удалось перевести деньги между фондами.'),
+        error: (error: unknown) =>
+          this.failed(error, () => t('funds.couldNotTransferMoneyBetweenFunds')),
       });
   }
 
@@ -783,8 +798,11 @@ export class FundsPage implements OnInit {
         id: fund.id,
         label: fund.name,
         detail: this.dynamicMode()
-          ? `До цели ${formatMoney(fund.remaining_amount ?? '0')} ${this.baseCurrency()}`
-          : `В фонде ${formatMoney(fund.total_balance)} ${this.baseCurrency()}`,
+          ? t('funds.remainingToTargetP0P1', {
+              p0: formatMoney(fund.remaining_amount ?? '0'),
+              p1: this.baseCurrency(),
+            })
+          : t('funds.inFundP0P1', { p0: formatMoney(fund.total_balance), p1: this.baseCurrency() }),
       }));
   }
 
@@ -830,7 +848,7 @@ export class FundsPage implements OnInit {
   }
 
   protected fundName(id: string): string {
-    return this.summary()?.funds.find((fund) => fund.id === id)?.name ?? 'Фонд';
+    return this.summary()?.funds.find((fund) => fund.id === id)?.name ?? t('funds.fund');
   }
 
   protected allocationTotals(): AllocationTotals | null {
@@ -894,13 +912,13 @@ export class FundsPage implements OnInit {
 
   protected eventLabel(event: FundEvent): string {
     return {
-      allocation: 'Распределение',
-      redistribution: 'Перераспределение',
-      fund_transfer: 'Перевод между фондами',
-      reserve_distribution: 'Автопополнение из резерва',
-      reserve_release: 'Вывод резерва',
-      expense: 'Расход из фонда',
-      transfer: 'Перевод с фондом',
+      allocation: t('funds.allocation'),
+      redistribution: t('funds.reallocation'),
+      fund_transfer: t('funds.transferBetweenFunds0368'),
+      reserve_distribution: t('funds.automaticContributionFromReserve'),
+      reserve_release: t('funds.reserveRelease'),
+      expense: t('funds.fundExpense'),
+      transfer: t('funds.transferWithFund'),
     }[event.type];
   }
 
@@ -927,7 +945,7 @@ export class FundsPage implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить фонды.'));
+        this.error.set(() => apiErrorMessage(error, t('funds.couldNotLoadFunds')));
       },
     });
     this.loadHistory();
@@ -945,7 +963,7 @@ export class FundsPage implements OnInit {
       },
       error: (error: unknown) => {
         if (requestId !== this.historyRequestId || page !== this.historyPage()) return;
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить историю фондов.'));
+        this.error.set(() => apiErrorMessage(error, t('funds.couldNotLoadFundHistory')));
       },
     });
   }
@@ -953,29 +971,33 @@ export class FundsPage implements OnInit {
   private loadDate(): void {
     this.http
       .get<{ timezone: string; base_currency: string }>(`${environment.apiBaseUrl}/settings`)
-      .subscribe(({ timezone, base_currency: baseCurrency }) => {
-        this.baseCurrency.set(currencySymbol(baseCurrency));
-        const parts = new Intl.DateTimeFormat('en-CA', {
-          timeZone: timezone,
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        }).formatToParts(new Date());
-        const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-        const today = `${value['year']}-${value['month']}-${value['day']}`;
-        this.allocationForm.patchValue({ occurredOn: today });
-        this.specificTransferForm.patchValue({ occurredOn: today });
-        this.redistributionForm.patchValue({ occurredOn: today });
-        this.transferAllocationForm.patchValue({ occurredOn: today });
-        this.fundTransferForm.patchValue({ occurredOn: today });
-        this.reserveReleaseForm.patchValue({ occurredOn: today });
-        this.fundForm.patchValue({ initialOccurredOn: today });
+      .subscribe({
+        next: ({ timezone, base_currency: baseCurrency }) => {
+          this.baseCurrency.set(currencySymbol(baseCurrency));
+          const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          }).formatToParts(new Date());
+          const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+          const today = `${value['year']}-${value['month']}-${value['day']}`;
+          this.allocationForm.patchValue({ occurredOn: today });
+          this.specificTransferForm.patchValue({ occurredOn: today });
+          this.redistributionForm.patchValue({ occurredOn: today });
+          this.transferAllocationForm.patchValue({ occurredOn: today });
+          this.fundTransferForm.patchValue({ occurredOn: today });
+          this.reserveReleaseForm.patchValue({ occurredOn: today });
+          this.fundForm.patchValue({ initialOccurredOn: today });
+        },
+        error: (error: unknown) =>
+          this.error.set(() => apiErrorMessage(error, t('settings.couldNotLoadSettings'))),
       });
   }
 
-  private failed(error: unknown, fallback: string): void {
+  private failed(error: unknown, fallback: () => string): void {
     this.saving.set(false);
-    this.error.set(apiErrorMessage(error, fallback));
+    this.error.set(() => apiErrorMessage(error, fallback));
   }
 
   private clearPreview(): void {

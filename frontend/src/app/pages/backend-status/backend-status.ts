@@ -1,3 +1,4 @@
+import { t } from '../../i18n/i18n';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 
@@ -16,6 +17,7 @@ interface HealthResponse {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BackendStatusPage implements OnInit {
+  protected readonly t = t;
   private readonly http = inject(HttpClient);
 
   protected readonly state = signal<HealthState>('checking');

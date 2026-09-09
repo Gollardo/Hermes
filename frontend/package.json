@@ -7,10 +7,11 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false",
-    "lint": "ng lint",
+    "lint": "ng lint && npm run i18n:check",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
     "format": "prettier --write \"src/**/*.{ts,html,css}\" \"*.{json,js}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,html,css}\" \"*.{json,js}\""
+    "format:check": "prettier --check \"src/**/*.{ts,html,css}\" \"*.{json,js}\"",
+    "i18n:check": "node ../scripts/check-i18n.mjs"
   },
   "private": true,
   "packageManager": "npm@10.9.8",

@@ -1,3 +1,4 @@
+import { t } from '../i18n/i18n';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -29,6 +30,7 @@ export interface EntityOption {
   host: { '(focusout)': 'handleFocusOut($event)' },
 })
 export class EntityCombobox implements ControlValueAccessor, OnChanges {
+  protected readonly t = t;
   private static nextId = 0;
   private readonly host = inject(ElementRef<HTMLElement>);
   protected value = '';
@@ -38,9 +40,9 @@ export class EntityCombobox implements ControlValueAccessor, OnChanges {
   @Input() options: EntityOption[] = [];
   @Input() inputId = `entity-input-${EntityCombobox.nextId++}`;
   @Input() accessibleLabel: string | null = null;
-  @Input() placeholder = 'Начните вводить название';
+  @Input() placeholder: string | null = null;
   @Input() recentKey = 'entities';
-  @Input() emptyLabel = 'Ничего не найдено';
+  @Input() emptyLabel: string | null = null;
   @Input() allowEmpty = false;
   @Input() matchMode: 'prefix' | 'contains' = 'prefix';
   protected readonly query = signal('');
@@ -67,7 +69,9 @@ export class EntityCombobox implements ControlValueAccessor, OnChanges {
   }
 
   protected emptyMessage(): string {
-    return this.query().trim() ? this.emptyLabel : 'Начните вводить название';
+    return this.query().trim()
+      ? (this.emptyLabel ?? t('entity-combobox.noMatchesFound'))
+      : t('entity-combobox.startTypingAName');
   }
 
   protected activeOptionId(): string | null {

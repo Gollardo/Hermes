@@ -1,15 +1,15 @@
 <section class="reports-page">
   <header class="page-header">
     <div class="page-header-copy">
-      <p class="eyebrow">Отчёты</p>
-      <h1>Доходы и расходы</h1>
-      <p>Разберите структуру операций за месяц или произвольный период.</p>
+      <p class="eyebrow">{{ t('reports.reports') }}</p>
+      <h1>{{ t('reports.incomeAndExpenses') }}</h1>
+      <p>{{ t('reports.exploreOperationBreakdownsForAMonthOr') }}</p>
     </div>
   </header>
 
-  <section class="panel report-controls" aria-label="Параметры отчёта">
+  <section class="panel report-controls" [attr.aria-label]="t('reports.reportSettings')">
     <fieldset class="type-control">
-      <legend>Тип операций</legend>
+      <legend>{{ t('reports.operationType') }}</legend>
       <div class="report-switch">
         <button
           type="button"
@@ -18,7 +18,7 @@
           [attr.aria-pressed]="reportType() === 'expense'"
           (click)="changeType('expense')"
         >
-          Расходы
+          {{ t('categories.expenses') }}
         </button>
         <button
           type="button"
@@ -27,12 +27,12 @@
           [attr.aria-pressed]="reportType() === 'income'"
           (click)="changeType('income')"
         >
-          Доходы
+          {{ t('categories.income') }}
         </button>
       </div>
     </fieldset>
     <fieldset class="period-control">
-      <legend>Период</legend>
+      <legend>{{ t('forecast.period') }}</legend>
       <div class="report-switch">
         <button
           type="button"
@@ -41,7 +41,7 @@
           [attr.aria-pressed]="periodMode() === 'month'"
           (click)="changeMode('month')"
         >
-          По месяцам
+          {{ t('reports.monthly') }}
         </button>
         <button
           type="button"
@@ -50,22 +50,25 @@
           [attr.aria-pressed]="periodMode() === 'custom'"
           (click)="changeMode('custom')"
         >
-          Произвольный
+          {{ t('reports.custom') }}
         </button>
       </div>
     </fieldset>
     @if (periodMode() === 'month') {
-      <label
-        >Месяц <input type="month" [ngModel]="selectedMonth()" (ngModelChange)="applyMonth($event)"
+      <label>
+        {{ t('forecast.month') }}
+        <input type="month" [ngModel]="selectedMonth()" (ngModelChange)="applyMonth($event)"
       /></label>
     } @else {
-      <label
-        >С даты <input type="date" [ngModel]="fromOn()" (ngModelChange)="fromOn.set($event)"
+      <label>
+        {{ t('operations.fromDate') }}
+        <input type="date" [ngModel]="fromOn()" (ngModelChange)="fromOn.set($event)"
       /></label>
-      <label
-        >По дату <input type="date" [ngModel]="throughOn()" (ngModelChange)="throughOn.set($event)"
+      <label>
+        {{ t('operations.throughDate') }}
+        <input type="date" [ngModel]="throughOn()" (ngModelChange)="throughOn.set($event)"
       /></label>
-      <button type="button" (click)="applyCustom()">Построить</button>
+      <button type="button" (click)="applyCustom()">{{ t('reports.buildReport') }}</button>
     }
   </section>
 
@@ -73,7 +76,7 @@
     <p class="form-error" role="alert">{{ message }}</p>
   }
   @if (loading() && !report()) {
-    <section class="panel empty-state">Строим отчёт…</section>
+    <section class="panel empty-state">{{ t('reports.buildingReport') }}</section>
   } @else if (report(); as data) {
     <section class="panel report-chart-panel" aria-labelledby="report-chart-title">
       <div class="report-summary">
@@ -81,19 +84,27 @@
           <p class="section-label">
             {{ data.from_on | textDate }} — {{ data.through_on | textDate }}
           </p>
-          <h2 id="report-chart-title">{{ typeLabel(data.type) }} по категориям</h2>
+          <h2 id="report-chart-title">
+            {{ t('reports.p0ByCategory', { p0: typeLabel(data.type) }) }}
+          </h2>
         </div>
         <div class="report-total">
-          <span>Всего {{ data.type === 'expense' ? 'расходов' : 'доходов' }}</span>
+          <span>
+            {{
+              t('reports.totalP0', {
+                p0: data.type === 'expense' ? t('reports.expenses') : t('reports.income'),
+              })
+            }}
+          </span>
           <strong>{{ data.total_amount | money }} {{ baseCurrency() }}</strong>
-          <small>{{ data.operation_count }} операций</small>
+          <small> {{ t('reports.operationsP0', { p0: data.operation_count }) }} </small>
         </div>
       </div>
       @if (data.categories.length) {
         <div
           class="category-chart"
           role="list"
-          [attr.aria-label]="typeLabel(data.type) + ' по категориям'"
+          [attr.aria-label]="typeLabel(data.type) + ' ' + t('reports.byCategory')"
         >
           @for (category of data.categories; track category.category_id) {
             <div class="chart-row" role="listitem">
@@ -114,13 +125,15 @@
           }
         </div>
       } @else {
-        <p class="empty-state">За выбранный период операций этого типа нет.</p>
+        <p class="empty-state">{{ t('reports.noOperationsOfThisTypeInThe') }}</p>
       }
     </section>
 
     @if (data.categories.length) {
       <section class="panel report-list" aria-labelledby="report-list-title">
-        <div class="panel-heading"><h2 id="report-list-title">Операции по категориям</h2></div>
+        <div class="panel-heading">
+          <h2 id="report-list-title">{{ t('reports.operationsByCategory') }}</h2>
+        </div>
         @for (category of data.categories; track category.category_id) {
           <details>
             <summary>
@@ -131,7 +144,7 @@
                 }
               </span>
               <span class="category-summary-meta">
-                <small>Операций: {{ category.operations.length }}</small>
+                <small> {{ t('reports.operationsP0', { p0: category.operations.length }) }} </small>
                 <strong>{{ category.amount | money }} {{ baseCurrency() }}</strong>
                 <span class="category-disclosure" aria-hidden="true">›</span>
               </span>

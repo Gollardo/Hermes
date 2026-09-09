@@ -15,3 +15,10 @@ text dates use a localized form such as “20 January 2025”. Child categories 
 label and show the root category as secondary context. Category disclosure uses
 the same compact chevron pattern as the operation journal and shows the number
 of source operations before expansion.
+
+## Multilingual presentation
+
+The implemented RU/EN presentation follows the shared
+[internationalization contract](../internationalization.md). Language changes
+update screen copy and accessible labels while preserving financial semantics,
+user-entered data, dates, selected context and exact monetary payloads.

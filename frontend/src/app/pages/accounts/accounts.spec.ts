@@ -1,3 +1,4 @@
+import { language } from '../../i18n/i18n';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -17,7 +18,47 @@ describe('AccountsPage', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    language.set('ru');
+    http.verify();
+  });
+
+  it('switches an open composer without changing user text, focus or exact submitted money', () => {
+    fixture.detectChanges();
+    http.expectOne('/api/v1/accounts').flush([]);
+    http.expectOne('/api/v1/settings').flush({ base_currency: 'RUB' });
+    fixture.detectChanges();
+    clickButton('Добавить счёт');
+    const name = fixture.nativeElement.querySelector('#account-name') as HTMLInputElement;
+    const balance = fixture.nativeElement.querySelector('#initial-balance') as HTMLInputElement;
+    name.value = 'Мои наличные';
+    name.dispatchEvent(new Event('input'));
+    balance.value = '1000,1234';
+    balance.dispatchEvent(new Event('input'));
+    balance.focus();
+    language.set('en');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Opening balance');
+    expect(name.value).toBe('Мои наличные');
+    expect(fixture.nativeElement.querySelector('#initial-balance')).toBe(balance);
+    expect(document.activeElement).toBe(balance);
+    expect(balance.value).toBe('1000.1234');
+    http.expectNone(() => true);
+    fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
+    const request = http.expectOne('/api/v1/accounts');
+    expect(request.request.body.name).toBe('Мои наличные');
+    expect(request.request.body.initial_balance).toBe('1000.1234');
+    request.flush(
+      { detail: { code: 'account_not_found' } },
+      { status: 404, statusText: 'Not Found' },
+    );
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Account not found');
+    language.set('ru');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Счёт не найден');
+    expect(name.value).toBe('Мои наличные');
+  });
 
   it('creates an account with initial balance as a string', () => {
     fixture.detectChanges();

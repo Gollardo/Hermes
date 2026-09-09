@@ -91,3 +91,12 @@ and throttling durations with the documented `HERMES_*` environment variables.
 - Decide whether long-lived remembered sessions are needed.
 - Add scheduled cleanup only if expired-session accumulation becomes material.
 - Document tested HTTPS reverse proxies and forwarded-header policy.
+
+## Multilingual setup and validation
+
+Language selection is available before authentication and grants no additional
+access. Optional fresh category templates use an independently selected RU/EN
+language while preserving atomic setup. The API validation boundary returns safe
+field/type metadata without echoing input or exception context. Session, password,
+CSRF and throttling rules are unchanged. See the
+[internationalization contract](../ui-ux/internationalization.md).

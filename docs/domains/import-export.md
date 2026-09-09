@@ -106,3 +106,11 @@ because data came from a file.
 - Forward/backward payload compatibility beyond exact schema 1.
 - Password-only DEK rewrap, streaming encryption, signatures and automatic
   rotated backups.
+
+## Multilingual compatibility
+
+The RU/EN foundation adds no backup field or schema version. Category names
+round-trip verbatim regardless of interface language. Interface language stays
+in browser storage. Localized restore confirmation is mapped to the existing
+server phrase after exact UI validation; protected-backup authentication errors
+retain one non-diagnostic meaning in both languages.

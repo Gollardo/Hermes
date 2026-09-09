@@ -12,6 +12,29 @@ assigned.
 
 ## [Unreleased]
 
+### Added
+
+- Runtime Russian/English interface selection on setup, login and Settings,
+  persisted per browser with Russian fallback and no reload.
+- Shared catalogs for screens, validation, API errors, dates, charts and accessible
+  labels, plus translation contributor guidance and completeness checks.
+- Independently selected Russian/English first-run category templates; existing
+  clients default to Russian and existing/restored names remain unchanged.
+
+### Changed
+
+- Request validation preserves HTTP 422 field/type metadata without reflecting
+  input values or exception context. Localized restore confirmation maps to the
+  unchanged server command.
+- Existing notices retranslate on language changes; financial formatting,
+  exact payloads, currency/timezone rules and backup schema remain unchanged.
+
+### Migration
+
+- None. Interface language is browser-local and template language affects only
+  names created during atomic setup. Existing migration head remains
+  `0014_one_off_plans`.
+
 ## [1.0.0] - 2026-08-28
 
 ### Added

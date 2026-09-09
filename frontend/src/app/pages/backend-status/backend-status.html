@@ -2,27 +2,30 @@
   <div class="status-heading">
     <span class="status-icon" aria-hidden="true">↔</span>
     <div>
-      <p class="eyebrow">Состояние экземпляра</p>
-      <h1>Доступность backend</h1>
+      <p class="eyebrow">{{ t('backend-status.instanceStatus') }}</p>
+      <h1>{{ t('backend-status.backendAvailability') }}</h1>
       <code>GET /api/v1/health</code>
     </div>
   </div>
 
   @switch (state()) {
     @case ('checking') {
-      <p class="status-message checking"><span aria-hidden="true"></span>Проверяем соединение…</p>
+      <p class="status-message checking">
+        <span aria-hidden="true"></span> {{ t('backend-status.checkingConnection') }}
+      </p>
     }
     @case ('available') {
       <p class="status-message success">
-        <span aria-hidden="true"></span>Backend отвечает: status ok.
+        <span aria-hidden="true"></span> {{ t('backend-status.backendRespondingStatusOk') }}
       </p>
     }
     @case ('unavailable') {
       <p class="status-message failure">
-        <span aria-hidden="true"></span>Backend недоступен. Проверьте локальный сервер.
+        <span aria-hidden="true"></span>
+        {{ t('backend-status.backendUnavailableCheckYourLocalServer') }}
       </p>
     }
   }
 
-  <button type="button" (click)="check()">Проверить снова</button>
+  <button type="button" (click)="check()">{{ t('backend-status.checkAgain') }}</button>
 </section>

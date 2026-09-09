@@ -1,7 +1,10 @@
+import { LanguageSelect } from '../../i18n/language-select';
+import { t, localizedSignal, language, Language } from '../../i18n/i18n';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { AuthService, apiErrorMessage } from '../../core/auth.service';
+import { AuthService } from '../../core/auth.service';
+import { apiErrorMessage } from '../../core/api-error';
 
 const CURRENCIES = ['RUB', 'USD', 'EUR', 'GBP', 'CNY', 'JPY', 'KZT', 'TRY', 'AED', 'CHF'];
 type SetupMode = 'fresh' | 'restore';
@@ -12,96 +15,99 @@ interface OnboardingQuestion {
   question: string;
 }
 
-const QUESTIONS: OnboardingQuestion[] = [
-  {
-    key: 'housing',
-    title: '🏠 Жильё',
-    question:
-      'Хотите учитывать расходы на квартиру или дом: аренду, ипотеку, коммунальные услуги и ремонт?',
-  },
-  {
-    key: 'car',
-    title: '🚗 Автомобиль',
-    question: 'Есть ли у вас автомобиль, расходы на который вы хотите учитывать?',
-  },
-  {
-    key: 'transport',
-    title: '🚌 Транспорт',
-    question:
-      'Пользуетесь ли вы общественным транспортом, такси, каршерингом или другими видами транспорта?',
-  },
-  {
-    key: 'children',
-    title: '👶 Дети',
-    question: 'Есть ли у вас дети, расходы на которых вы хотите учитывать отдельно?',
-  },
-  {
-    key: 'family',
-    title: '👨‍👩‍👧 Семья и близкие',
-    question: 'Хотите ли вы отдельно учитывать расходы на семью, родственников и подарки близким?',
-  },
-  {
-    key: 'pets',
-    title: '🐕 Домашние животные',
-    question: 'Есть ли у вас домашние животные?',
-  },
-  {
-    key: 'health',
-    title: '❤️ Здоровье',
-    question:
-      'Хотите отдельно учитывать расходы на врачей, лекарства, стоматологию и другие медицинские услуги?',
-  },
-  {
-    key: 'sport',
-    title: '🏃 Спорт и активность',
-    question: 'Занимаетесь ли вы спортом или регулярно тратите деньги на фитнес и активный отдых?',
-  },
-  {
-    key: 'education',
-    title: '🎓 Учёба и развитие',
-    question: 'Тратите ли вы деньги на образование, курсы, книги или профессиональное развитие?',
-  },
-  {
-    key: 'work',
-    title: '💼 Работа и карьера',
-    question: 'Есть ли у вас личные расходы, связанные с работой или профессией?',
-  },
-  {
-    key: 'business',
-    title: '🧑‍💻 Бизнес и самозанятость',
-    question: 'Ведёте ли вы бизнес, работаете на себя или получаете доход от частной деятельности?',
-  },
-  {
-    key: 'travel',
-    title: '✈️ Путешествия',
-    question: 'Хотите отдельно учитывать расходы на поездки, отпуск и путешествия?',
-  },
-  {
-    key: 'entertainment',
-    title: '🎬 Отдых и развлечения',
-    question: 'Хотите отдельно учитывать кафе, рестораны, развлечения, мероприятия и хобби?',
-  },
-  {
-    key: 'shopping',
-    title: '🛍️ Покупки и личные вещи',
-    question: 'Хотите отдельно учитывать покупки одежды, техники, косметики и других личных вещей?',
-  },
-];
+function questions(): OnboardingQuestion[] {
+  return [
+    {
+      key: 'housing',
+      title: t('setup.housing'),
+      question: t('setup.wouldYouLikeToTrackHousingCosts'),
+    },
+    {
+      key: 'car',
+      title: t('setup.car'),
+      question: t('setup.doYouOwnACarWhoseExpenses'),
+    },
+    {
+      key: 'transport',
+      title: t('setup.transport'),
+      question: t('setup.doYouUsePublicTransportTaxisCar'),
+    },
+    {
+      key: 'children',
+      title: t('setup.children'),
+      question: t('setup.doYouHaveChildrenWhoseExpensesYou'),
+    },
+    {
+      key: 'family',
+      title: t('setup.familyAndLovedOnes'),
+      question: t('setup.wouldYouLikeToTrackFamilySpending'),
+    },
+    {
+      key: 'pets',
+      title: t('setup.pets'),
+      question: t('setup.doYouHavePets'),
+    },
+    {
+      key: 'health',
+      title: t('setup.health'),
+      question: t('setup.wouldYouLikeToTrackDoctorsMedicines'),
+    },
+    {
+      key: 'sport',
+      title: t('setup.sportsAndActivity'),
+      question: t('setup.doYouPlaySportsOrRegularlySpend'),
+    },
+    {
+      key: 'education',
+      title: t('setup.educationAndDevelopment'),
+      question: t('setup.doYouSpendMoneyOnEducationCourses'),
+    },
+    {
+      key: 'work',
+      title: t('setup.workAndCareer'),
+      question: t('setup.doYouHavePersonalExpensesRelatedTo'),
+    },
+    {
+      key: 'business',
+      title: t('setup.businessAndSelfEmployment'),
+      question: t('setup.doYouRunABusinessWorkFor'),
+    },
+    {
+      key: 'travel',
+      title: t('setup.travel'),
+      question: t('setup.wouldYouLikeToTrackTripsHolidays'),
+    },
+    {
+      key: 'entertainment',
+      title: t('setup.leisureAndEntertainment'),
+      question: t('setup.wouldYouLikeToTrackCafS'),
+    },
+    {
+      key: 'shopping',
+      title: t('setup.shoppingAndPersonalItems'),
+      question: t('setup.wouldYouLikeToTrackClothingElectronics'),
+    },
+  ];
+}
 
 @Component({
   selector: 'app-setup-page',
-  imports: [ReactiveFormsModule],
+  imports: [LanguageSelect, ReactiveFormsModule],
   templateUrl: './setup.html',
   styleUrl: './setup.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SetupPage {
+  protected readonly t = t;
   private readonly auth = inject(AuthService);
   private readonly formBuilder = inject(NonNullableFormBuilder);
 
+  protected readonly templateLanguage = signal<Language>(language());
   protected readonly currencies = CURRENCIES;
   protected readonly timezones = supportedTimezones();
-  protected readonly questions = QUESTIONS;
+  protected get questions() {
+    return questions();
+  }
   protected readonly step = signal(1);
   protected readonly mode = signal<SetupMode | null>(null);
   protected readonly selectedGroups = signal(new Set<string>());
@@ -109,7 +115,7 @@ export class SetupPage {
   protected readonly backupRequiresPassword = signal(false);
   protected readonly readingBackup = signal(false);
   protected readonly submitting = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly error = localizedSignal();
   private backupDocument: unknown | null = null;
   private backupSequence = 0;
 
@@ -124,6 +130,7 @@ export class SetupPage {
   protected startFresh(): void {
     this.backupSequence += 1;
     this.mode.set('fresh');
+    this.templateLanguage.set(language());
     this.backupDocument = null;
     this.backupName.set(null);
     this.backupRequiresPassword.set(false);
@@ -143,7 +150,7 @@ export class SetupPage {
     this.error.set(null);
     if (!file) return;
     if (file.size > 72 * 1024 * 1024) {
-      this.error.set('Файл больше допустимых 72 МБ.');
+      this.error.set(() => t('settings.theFileExceedsThe72MbLimit'));
       return;
     }
     this.readingBackup.set(true);
@@ -156,7 +163,7 @@ export class SetupPage {
           const format = this.backupFormat(this.backupDocument);
           if (format === 'hermes-json-backup' && file.size > 50 * 1024 * 1024) {
             this.backupDocument = null;
-            this.error.set('Открытый JSON-backup больше допустимых 50 МБ.');
+            this.error.set(() => t('settings.thePlaintextJsonBackupExceedsThe50'));
             return;
           }
           this.backupRequiresPassword.set(format === 'hermes');
@@ -164,7 +171,7 @@ export class SetupPage {
           this.mode.set('restore');
           this.step.set(2);
         } catch {
-          this.error.set('Файл не является корректным JSON.');
+          this.error.set(() => t('settings.theFileIsNotValidJson'));
         } finally {
           this.readingBackup.set(false);
         }
@@ -172,7 +179,7 @@ export class SetupPage {
       .catch(() => {
         if (sequence !== this.backupSequence) return;
         this.readingBackup.set(false);
-        this.error.set('Не удалось прочитать выбранный файл.');
+        this.error.set(() => t('setup.couldNotReadTheSelectedFile'));
       });
   }
 
@@ -224,8 +231,8 @@ export class SetupPage {
           next: () => this.submitting.set(false),
           error: (error: unknown) => {
             this.submitting.set(false);
-            this.error.set(
-              apiErrorMessage(error, 'Backup не прошёл проверку. Выберите другой файл.'),
+            this.error.set(() =>
+              apiErrorMessage(error, t('setup.backupValidationFailedChooseAnotherFile')),
             );
           },
         });
@@ -238,6 +245,7 @@ export class SetupPage {
         base_currency: value.baseCurrency,
         timezone: value.timezone,
         create_default_categories: this.mode() === 'fresh',
+        category_template_language: this.templateLanguage(),
         onboarding_expense_groups: this.mode() === 'fresh' ? [...this.selectedGroups()] : [],
       })
       .subscribe({
@@ -246,7 +254,7 @@ export class SetupPage {
         },
         error: (error: unknown) => {
           this.submitting.set(false);
-          this.error.set(apiErrorMessage(error, 'Не удалось завершить первоначальную настройку.'));
+          this.error.set(() => apiErrorMessage(error, t('setup.couldNotCompleteInitialSetup')));
         },
       });
   }
@@ -260,7 +268,7 @@ export class SetupPage {
     ) {
       this.form.markAllAsTouched();
       if (this.form.valid && value.password !== value.passwordConfirmation) {
-        this.error.set('Пароли не совпадают.');
+        this.error.set(() => t('setup.thePasswordsDoNotMatch'));
       }
       return false;
     }

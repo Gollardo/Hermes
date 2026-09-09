@@ -1,16 +1,15 @@
 <section class="scheduling-page">
   <header class="page-header">
     <div class="page-header-copy">
-      <p class="eyebrow">Плановые события</p>
-      <h1>Календарь</h1>
+      <p class="eyebrow">{{ t('scheduling.plannedEvents') }}</p>
+      <h1>{{ t('scheduling.calendar') }}</h1>
       <p>
-        Ожидаемые операции не меняют фактический остаток. Деньги проводятся только после
-        подтверждения.
+        {{ t('scheduling.plannedOperationsDoNotChangeActualBalances') }}
       </p>
-      <span class="planning-horizon">Горизонт планирования · 1 год</span>
+      <span class="planning-horizon"> {{ t('scheduling.planningHorizon1Year') }} </span>
     </div>
     <div class="page-actions">
-      <button type="button" (click)="openRule()">Добавить правило</button>
+      <button type="button" (click)="openRule()">{{ t('scheduling.addRule') }}</button>
     </div>
   </header>
 
@@ -24,20 +23,27 @@
   <section class="panel calendar-panel" aria-labelledby="calendar-title">
     <div class="calendar-toolbar">
       <div>
-        <p class="section-label">Месячное представление</p>
+        <p class="section-label">{{ t('scheduling.monthlyView') }}</p>
         <h2 id="calendar-title">{{ monthTitle() }}</h2>
       </div>
-      <div class="month-actions" aria-label="Выбор месяца">
+      <div class="month-actions" [attr.aria-label]="t('scheduling.chooseMonth')">
         <button
           type="button"
           class="secondary"
           (click)="moveMonth(-1)"
-          aria-label="Предыдущий месяц"
+          [attr.aria-label]="t('scheduling.previousMonth')"
         >
           ←
         </button>
-        <button type="button" class="secondary" (click)="resetMonth()">Сегодня</button>
-        <button type="button" class="secondary" (click)="moveMonth(1)" aria-label="Следующий месяц">
+        <button type="button" class="secondary" (click)="resetMonth()">
+          {{ t('home.today') }}
+        </button>
+        <button
+          type="button"
+          class="secondary"
+          (click)="moveMonth(1)"
+          [attr.aria-label]="t('scheduling.nextMonth')"
+        >
           →
         </button>
       </div>
@@ -45,32 +51,34 @@
 
     <form class="calendar-filters" [formGroup]="filters">
       <div class="control-label">
-        Счёт
+        {{ t('forecast.account') }}
         <app-entity-combobox
           formControlName="accountId"
-          accessibleLabel="Счёт"
+          [accessibleLabel]="t('forecast.account')"
           [options]="accountOptions()"
           recentKey="accounts"
-          placeholder="Все счета"
+          [placeholder]="t('accounts.allAccounts')"
           [allowEmpty]="true"
         />
       </div>
       <label>
-        Тип
+        {{ t('operations.type') }}
         <select formControlName="type">
-          <option value="">Все типы</option>
-          <option value="income">Доходы</option>
-          <option value="expense">Расходы</option>
-          <option value="transfer">Переводы</option>
+          <option value="">{{ t('operations.allTypes') }}</option>
+          <option value="income">{{ t('categories.income') }}</option>
+          <option value="expense">{{ t('categories.expenses') }}</option>
+          <option value="transfer">{{ t('forecast.transfers') }}</option>
         </select>
       </label>
     </form>
 
-    <p class="calendar-scroll-hint">Проведите в сторону, чтобы увидеть остальные дни.</p>
-    <div class="calendar-scroll" tabindex="0" aria-label="Календарная сетка">
+    <p class="calendar-scroll-hint">{{ t('scheduling.swipeSidewaysToSeeTheRemainingDays') }}</p>
+    <div class="calendar-scroll" tabindex="0" [attr.aria-label]="t('scheduling.calendarGrid')">
       <div class="calendar-weekdays" aria-hidden="true">
-        <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span
-        ><span>Вс</span>
+        <span> {{ t('scheduling.mon') }} </span><span> {{ t('scheduling.tue') }} </span
+        ><span> {{ t('scheduling.wed') }} </span><span> {{ t('scheduling.thu') }} </span
+        ><span> {{ t('scheduling.fri') }} </span><span> {{ t('scheduling.sat') }} </span
+        ><span> {{ t('scheduling.sun') }} </span>
       </div>
       <div class="calendar-grid">
         @for (day of calendarDays(); track day.iso) {
@@ -109,7 +117,7 @@
                   (click)="openCalendarDay(day)"
                   [attr.aria-label]="calendarDayLabel(day)"
                 >
-                  Просрочено · {{ overdueCount }}
+                  {{ t('scheduling.overdueP0', { p0: overdueCount }) }}
                 </button>
               }
             } @else {
@@ -124,17 +132,21 @@
   <section class="panel upcoming-panel" aria-labelledby="upcoming-title">
     <div class="panel-heading">
       <div>
-        <p class="section-label">Сегодня и просроченные</p>
-        <h2 id="upcoming-title">Требуют внимания</h2>
-        <p>Будущие события остаются в календаре и не отвлекают от действий на сегодня.</p>
+        <p class="section-label">{{ t('home.todayAndOverdue') }}</p>
+        <h2 id="upcoming-title">{{ t('home.needsAttention') }}</h2>
+        <p>{{ t('scheduling.futureEventsStayInTheCalendarWithout') }}</p>
       </div>
-      <span class="count-pill">{{ upcoming().length }} из {{ upcomingTotal() }}</span>
+      <span class="count-pill">
+        {{ t('scheduling.p0OfP1', { p0: upcoming().length, p1: upcomingTotal() }) }}
+      </span>
     </div>
 
     @if (loading() && !upcoming().length) {
-      <p class="empty-state">Загружаем ожидаемые операции…</p>
+      <p class="empty-state">{{ t('scheduling.loadingPlannedOperations') }}</p>
     } @else if (!upcoming().length) {
-      <p class="empty-state attention-empty">На сегодня нет ожидаемых или просроченных операций.</p>
+      <p class="empty-state attention-empty">
+        {{ t('scheduling.noPendingOrOverdueOperationsToday') }}
+      </p>
     } @else {
       <div class="upcoming-list">
         @for (group of upcomingGroups(); track group.dueOn) {
@@ -152,7 +164,7 @@
                       >{{ sourceLabel(occurrence) }} · {{ typeLabel(occurrence.type) }}</span
                     >
                     @if (occurrence.overdue) {
-                      <strong>Просрочено</strong>
+                      <strong> {{ t('home.overdue') }} </strong>
                     } @else {
                       <span>{{ statusLabel(occurrence.status) }}</span>
                     }
@@ -160,13 +172,11 @@
                   <h3>{{ occurrenceTitle(occurrence) }}</h3>
                   <p>
                     {{ accountDirection(occurrence) }} ·
-                    {{ occurrence.category_name || 'Без категории' }}
+                    {{ occurrence.category_name || t('scheduling.noCategory') }}
                   </p>
                   @if (occurrence.allocate_to_funds) {
                     <p>
-                      <strong
-                        >После перевода сумма распределится по процентам активных фондов.</strong
-                      >
+                      <strong> {{ t('scheduling.afterTheTransferTheAmountIsAllocated') }} </strong>
                     </p>
                   }
                 </div>
@@ -184,10 +194,10 @@
                         class="secondary amount-edit-trigger"
                         (click)="editConfirmationAmount(occurrence)"
                         [attr.aria-label]="
-                          'Изменить сумму для «' + occurrenceTitle(occurrence) + '»'
+                          t('scheduling.changeAmountFor', { name: occurrenceTitle(occurrence) })
                         "
                       >
-                        Изменить
+                        {{ t('accounts.edit') }}
                       </button>
                     }
                   </div>
@@ -199,7 +209,7 @@
                       >
                         @if (editingConfirmationId() === occurrence.id) {
                           <label [for]="'confirm-amount-' + occurrence.id">
-                            Сумма подтверждения, {{ baseCurrency() }}
+                            {{ t('scheduling.confirmationAmountP0', { p0: baseCurrency() }) }}
                           </label>
                           <div class="confirmation-editor">
                             <input
@@ -221,7 +231,7 @@
                               class="secondary amount-edit-cancel"
                               (click)="cancelConfirmationAmountEdit()"
                             >
-                              Отмена
+                              {{ t('scheduling.cancel') }}
                             </button>
                           </div>
                         }
@@ -241,23 +251,25 @@
                         >
                           {{
                             occurrence.source_kind === 'one_off'
-                              ? 'Применить сегодня'
+                              ? t('operations.applyToday')
                               : occurrence.allocate_to_funds
-                                ? 'Перевести и распределить'
-                                : 'Подтвердить'
+                                ? t('funds.transferAndAllocate')
+                                : t('scheduling.confirm')
                           }}
                         </button>
                         @if (!validConfirmationAmount(occurrence)) {
                           <span class="field-error" [id]="'confirm-error-' + occurrence.id">
-                            Введите положительную сумму, не более четырёх знаков дроби.
+                            {{ t('scheduling.enterAPositiveAmountWithUpTo') }}
                           </span>
                         }
                       </div>
                       <details class="secondary-actions">
-                        <summary>Ещё</summary>
+                        <summary>{{ t('accounts.more') }}</summary>
                         <div class="secondary-actions-body">
                           <div class="postpone-action">
-                            <label [for]="'postpone-' + occurrence.id">Новая дата</label>
+                            <label [for]="'postpone-' + occurrence.id">
+                              {{ t('scheduling.newDate') }}
+                            </label>
                             <input
                               [id]="'postpone-' + occurrence.id"
                               type="date"
@@ -275,8 +287,8 @@
                             >
                               {{
                                 occurrenceRule(occurrence)?.shift_future_on_postpone
-                                  ? 'Перенести серию'
-                                  : 'Перенести'
+                                  ? t('scheduling.shiftSeries')
+                                  : t('scheduling.postpone')
                               }}
                             </button>
                             @if (postponeConsequence(occurrence); as consequence) {
@@ -289,15 +301,16 @@
                             (click)="cancel(occurrence)"
                             [disabled]="busyOccurrenceId() === occurrence.id"
                           >
-                            Отменить
+                            {{ t('scheduling.cancel0581') }}
                           </button>
                           @if (occurrence.source_kind === 'one_off') {
                             <a
                               class="secondary button-link"
                               routerLink="/operations"
                               [queryParams]="{ plan: occurrence.id }"
-                              >Изменить</a
                             >
+                              {{ t('accounts.edit') }}
+                            </a>
                           }
                         </div>
                       </details>
@@ -311,8 +324,7 @@
       </div>
       @if (upcomingTotal() > upcoming().length) {
         <p class="list-limit-note">
-          Показаны первые {{ upcoming().length }} событий. Остальные доступны по фильтрам и в
-          месячной сетке.
+          {{ t('scheduling.showingTheFirstP0EventsFindThe', { p0: upcoming().length }) }}
         </p>
       }
     }
@@ -322,15 +334,15 @@
     <section class="panel directory-list-panel" aria-labelledby="rules-title">
       <div class="panel-heading">
         <div>
-          <p class="section-label">Шаблоны</p>
-          <h2 id="rules-title">Регулярные правила</h2>
-          <p>Изменения применяются только к нетронутым ожидаемым экземплярам.</p>
+          <p class="section-label">{{ t('scheduling.templates') }}</p>
+          <h2 id="rules-title">{{ t('scheduling.recurringRules') }}</h2>
+          <p>{{ t('scheduling.changesApplyOnlyToUntouchedPlannedOccurrences') }}</p>
         </div>
         <span class="count-pill">{{ rules().length }}</span>
       </div>
 
       @if (!rules().length) {
-        <p class="empty-state">Создайте первое правило — экземпляры появятся на год вперёд.</p>
+        <p class="empty-state">{{ t('scheduling.createYourFirstRuleToGenerateOccurrences') }}</p>
       } @else {
         <div class="item-list">
           @for (rule of rules(); track rule.id) {
@@ -346,22 +358,26 @@
                     @if (rule.destination_account_name) {
                       → {{ rule.destination_account_name }}
                     }
-                    · с {{ rule.start_on | textDate }}
+                    {{ t('scheduling.fromP0', { p0: (rule.start_on | textDate) }) }}
                     @if (rule.end_on) {
-                      по {{ rule.end_on | textDate }}
+                      {{ t('operations.throughP0', { p0: (rule.end_on | textDate) }) }}
                     } @else {
-                      · без даты окончания
+                      {{ t('scheduling.noEndDate') }}
                     }
                   </p>
                   @if (rule.allocate_to_funds) {
-                    <p>После перевода сумма распределяется по процентам активных фондов.</p>
+                    <p>{{ t('scheduling.afterTheTransferTheAmountIsAllocated0589') }}</p>
                   }
                   @if (rule.shift_future_on_postpone) {
                     <p>
-                      Следующие события сдвигаются вместе с переносимым
+                      {{ t('scheduling.followingEventsShiftTogetherWithThePostponed') }}
                       @if (rule.series_shift_days) {
-                        · текущий сдвиг {{ rule.series_shift_days > 0 ? '+' : ''
-                        }}{{ rule.series_shift_days }} дн.
+                        {{
+                          t('scheduling.currentShiftP0P1Days', {
+                            p0: rule.series_shift_days > 0 ? '+' : '',
+                            p1: rule.series_shift_days,
+                          })
+                        }}
                       }
                     </p>
                   }
@@ -369,7 +385,9 @@
               </div>
               <div class="directory-item-side">
                 <strong>{{ rule.amount | money }} {{ baseCurrency() }}</strong>
-                <span class="badge">{{ rule.active ? 'Активно' : 'Отключено' }}</span>
+                <span class="badge">{{
+                  rule.active ? t('scheduling.active') : t('scheduling.disabled')
+                }}</span>
                 <div class="item-actions">
                   <button
                     type="button"
@@ -377,10 +395,10 @@
                     (click)="editRule(rule)"
                     [disabled]="saving()"
                   >
-                    Изменить
+                    {{ t('accounts.edit') }}
                   </button>
                   <details class="secondary-actions rule-secondary-actions">
-                    <summary>Ещё</summary>
+                    <summary>{{ t('accounts.more') }}</summary>
                     <div class="secondary-actions-body">
                       <button
                         type="button"
@@ -389,7 +407,7 @@
                         (click)="toggleRule(rule)"
                         [disabled]="saving()"
                       >
-                        {{ rule.active ? 'Отключить' : 'Включить' }}
+                        {{ rule.active ? t('scheduling.disable') : t('scheduling.enable') }}
                       </button>
                     </div>
                   </details>
@@ -412,14 +430,14 @@
       >
         <div class="modal-header">
           <div>
-            <p class="section-label">События дня</p>
+            <p class="section-label">{{ t('scheduling.dayEvents') }}</p>
             <h2 id="calendar-day-dialog-title">{{ selectedDay.iso | textDate }}</h2>
           </div>
           <button
             type="button"
             class="modal-close"
             (click)="closeCalendarDay()"
-            aria-label="Закрыть"
+            [attr.aria-label]="t('accounts.close')"
           >
             ×
           </button>
@@ -450,10 +468,10 @@
                   <strong>{{ occurrenceTitle(occurrence) }}</strong>
                   <small>
                     {{ typeLabel(occurrence.type) }} ·
-                    {{ occurrence.overdue ? 'Просрочено' : statusLabel(occurrence.status) }}
+                    {{ occurrence.overdue ? t('home.overdue') : statusLabel(occurrence.status) }}
                   </small>
                   @if (occurrence.preserve_from_series_shift) {
-                    <small>Сохранено при сдвиге серии</small>
+                    <small> {{ t('scheduling.preservedDuringSeriesShift') }} </small>
                   }
                 </span>
                 <strong>{{ occurrence.amount | money }} {{ baseCurrency() }}</strong>
@@ -476,32 +494,41 @@
       >
         <div class="modal-header">
           <div>
-            <p class="section-label">{{ editingId() ? 'Изменение' : 'Новое правило' }}</p>
+            <p class="section-label">
+              {{ editingId() ? t('accounts.editing') : t('scheduling.newRule') }}
+            </p>
             <h2 id="rule-editor-title">
-              {{ editingId() ? 'Обновить расписание' : 'Добавить регулярную операцию' }}
+              {{
+                editingId() ? t('scheduling.updateSchedule') : t('scheduling.addRecurringOperation')
+              }}
             </h2>
           </div>
-          <button type="button" class="modal-close" (click)="cancelEdit()" aria-label="Закрыть">
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelEdit()"
+            [attr.aria-label]="t('accounts.close')"
+          >
             ×
           </button>
         </div>
 
         <form [formGroup]="ruleForm" (ngSubmit)="submitRule()">
           <label>
-            Тип операции
+            {{ t('scheduling.operationType') }}
             <select formControlName="type">
-              <option value="income">Доход</option>
-              <option value="expense">Расход</option>
-              <option value="transfer">Перевод</option>
+              <option value="income">{{ t('operation-create-menu.income') }}</option>
+              <option value="expense">{{ t('operation-create-menu.expense') }}</option>
+              <option value="transfer">{{ t('operation-create-menu.transfer') }}</option>
             </select>
           </label>
           <label>
-            Периодичность
+            {{ t('scheduling.frequency') }}
             <select formControlName="frequency">
-              <option value="daily">Ежедневно</option>
-              <option value="weekly">Еженедельно</option>
-              <option value="monthly">Ежемесячно</option>
-              <option value="yearly">Ежегодно</option>
+              <option value="daily">{{ t('scheduling.daily') }}</option>
+              <option value="weekly">{{ t('scheduling.weekly') }}</option>
+              <option value="monthly">{{ t('scheduling.monthly') }}</option>
+              <option value="yearly">{{ t('scheduling.yearly') }}</option>
             </select>
           </label>
           @if (
@@ -509,60 +536,72 @@
             ruleForm.controls.frequency.value === 'monthly'
           ) {
             <label>
-              Частота повторения
+              {{ t('scheduling.repeatInterval') }}
               <select formControlName="interval">
                 @if (ruleForm.controls.frequency.value === 'weekly') {
-                  <option [ngValue]="1">Каждую неделю</option>
-                  <option [ngValue]="2">Каждую 2-ю неделю</option>
-                  <option [ngValue]="3">Каждую 3-ю неделю</option>
+                  <option [ngValue]="1">{{ t('scheduling.everyWeek') }}</option>
+                  <option [ngValue]="2">{{ t('scheduling.every2Weeks') }}</option>
+                  <option [ngValue]="3">{{ t('scheduling.every3Weeks') }}</option>
                 } @else {
-                  <option [ngValue]="1">Каждый месяц</option>
-                  <option [ngValue]="2">Каждый 2-й месяц</option>
-                  <option [ngValue]="3">Каждый 3-й месяц</option>
+                  <option [ngValue]="1">{{ t('scheduling.everyMonth') }}</option>
+                  <option [ngValue]="2">{{ t('scheduling.every2Months') }}</option>
+                  <option [ngValue]="3">{{ t('scheduling.every3Months') }}</option>
                 }
               </select>
             </label>
           }
           @if (ruleForm.controls.frequency.value === 'weekly') {
             <fieldset class="weekday-picker">
-              <legend>Дни недели</legend>
-              <label><input type="checkbox" formControlName="monday" />Пн</label>
-              <label><input type="checkbox" formControlName="tuesday" />Вт</label>
-              <label><input type="checkbox" formControlName="wednesday" />Ср</label>
-              <label><input type="checkbox" formControlName="thursday" />Чт</label>
-              <label><input type="checkbox" formControlName="friday" />Пт</label>
-              <label><input type="checkbox" formControlName="saturday" />Сб</label>
-              <label><input type="checkbox" formControlName="sunday" />Вс</label>
+              <legend>{{ t('scheduling.weekdays') }}</legend>
+              <label
+                ><input type="checkbox" formControlName="monday" /> {{ t('scheduling.mon') }}
+              </label>
+              <label
+                ><input type="checkbox" formControlName="tuesday" /> {{ t('scheduling.tue') }}
+              </label>
+              <label
+                ><input type="checkbox" formControlName="wednesday" /> {{ t('scheduling.wed') }}
+              </label>
+              <label
+                ><input type="checkbox" formControlName="thursday" /> {{ t('scheduling.thu') }}
+              </label>
+              <label
+                ><input type="checkbox" formControlName="friday" /> {{ t('scheduling.fri') }}
+              </label>
+              <label
+                ><input type="checkbox" formControlName="saturday" /> {{ t('scheduling.sat') }}
+              </label>
+              <label
+                ><input type="checkbox" formControlName="sunday" /> {{ t('scheduling.sun') }}
+              </label>
             </fieldset>
             @if (ruleForm.touched && !selectedWeekdays().length) {
-              <p class="field-error">Выберите хотя бы один день недели.</p>
+              <p class="field-error">{{ t('scheduling.selectAtLeastOneWeekday') }}</p>
             }
           }
           <div class="date-fields">
             <label>
               {{
                 ruleForm.controls.frequency.value === 'monthly'
-                  ? 'Дата первого события (число месяца)'
+                  ? t('scheduling.firstEventDateDayOfMonth')
                   : ruleForm.controls.frequency.value === 'yearly'
-                    ? 'Дата ежегодного события'
-                    : 'Дата начала'
+                    ? t('scheduling.annualEventDate')
+                    : t('scheduling.startDate')
               }}
               <input type="date" formControlName="startOn" />
             </label>
             <label>
-              Дата окончания
-              <input type="date" formControlName="endOn" />
+              {{ t('scheduling.endDate') }} <input type="date" formControlName="endOn" />
             </label>
           </div>
           <p class="hint">
-            Без даты окончания правило продолжится бессрочно; события создаются скользящим окном на
-            год вперёд.
+            {{ t('scheduling.withoutAnEndDateTheRuleContinues') }}
           </p>
           @if (ruleForm.controls.frequency.value === 'monthly') {
-            <p class="hint">Для ежемесячного правила доступны дни с 1 по 28.</p>
+            <p class="hint">{{ t('scheduling.monthlyRulesSupportDays1Through28') }}</p>
           }
           <label>
-            Сумма, {{ baseCurrency() }}
+            {{ t('scheduling.amountP0', { p0: baseCurrency() }) }}
             <input
               appDecimalInput="expression"
               type="text"
@@ -570,87 +609,90 @@
               formControlName="amount"
               autocomplete="off"
             />
-            <span class="hint">Можно сложить или вычесть: 354,23 + 234,54 - 23,32.</span>
+            <span class="hint"> {{ t('scheduling.addOrSubtract3542323454') }} </span>
           </label>
           @if (ruleForm.controls.amount.touched && ruleForm.controls.amount.invalid) {
-            <p class="field-error">Введите положительную сумму, не более четырёх знаков дроби.</p>
+            <p class="field-error">{{ t('scheduling.enterAPositiveAmountWithUpTo') }}</p>
           }
           <fieldset class="weekday-picker allocation-choice">
-            <legend>Перенос события</legend>
+            <legend>{{ t('scheduling.postponingAnEvent') }}</legend>
             <label>
               <input type="checkbox" formControlName="shiftFutureOnPostpone" />
-              Сдвигать следующие события при переносе текущего
+              {{ t('scheduling.shiftFollowingEventsWhenPostponingThisOne') }}
             </label>
           </fieldset>
           <p class="hint">
-            Подтверждённые, отменённые и ранее перенесённые вручную события не изменятся.
+            {{ t('scheduling.confirmedCancelledAndPreviouslyManuallyPostponedEvents') }}
           </p>
           @if (editingRule()?.series_shift_days; as shiftDays) {
             <p class="hint">
-              Текущий накопленный сдвиг серии: {{ shiftDays > 0 ? '+' : '' }}{{ shiftDays }} дн.
+              {{
+                t('scheduling.currentAccumulatedSeriesShiftP0P1Days', {
+                  p0: shiftDays > 0 ? '+' : '',
+                  p1: shiftDays,
+                })
+              }}
             </p>
           }
           <div class="control-label">
-            Счёт
+            {{ t('forecast.account') }}
             <app-entity-combobox
               formControlName="accountId"
-              accessibleLabel="Счёт"
+              [accessibleLabel]="t('forecast.account')"
               [options]="ruleAccountOptions()"
               recentKey="accounts"
-              placeholder="Введите название счёта"
+              [placeholder]="t('funds.typeAnAccountName')"
             />
           </div>
           @if (ruleForm.controls.type.value === 'transfer') {
             <div class="control-label">
-              Счёт зачисления
+              {{ t('operations.creditAccount') }}
               <app-entity-combobox
                 formControlName="destinationAccountId"
-                accessibleLabel="Счёт зачисления"
+                [accessibleLabel]="t('operations.creditAccount')"
                 [options]="ruleAccountOptions(ruleForm.controls.accountId.value)"
                 recentKey="accounts"
-                placeholder="Введите название счёта"
+                [placeholder]="t('funds.typeAnAccountName')"
               />
             </div>
             <fieldset class="weekday-picker allocation-choice">
-              <legend>После перевода</legend>
+              <legend>{{ t('operations.afterTransfer') }}</legend>
               <label>
                 <input type="checkbox" formControlName="allocateToFunds" />
-                Распределить сумму по активным фондам согласно их процентам
+                {{ t('scheduling.allocateTheAmountAmongActiveFundsBy') }}
               </label>
             </fieldset>
             @if (ruleForm.controls.allocateToFunds.value) {
               <p class="hint">
-                Будут использованы проценты активных фондов на момент подтверждения операции.
+                {{ t('scheduling.activeFundPercentagesAtTheTimeOf') }}
               </p>
             }
           } @else {
             <div class="control-label">
-              Категория
+              {{ t('operations.category') }}
               <app-entity-combobox
                 formControlName="categoryId"
-                accessibleLabel="Категория"
+                [accessibleLabel]="t('operations.category')"
                 [options]="ruleCategoryOptions()"
                 [recentKey]="'categories-' + ruleForm.controls.type.value"
-                placeholder="Введите название категории"
+                [placeholder]="t('operations.typeACategoryName')"
               />
             </div>
             @if (editingId() && hasUnavailableReference()) {
               <p class="hint">
-                Для активного правила выберите действующие счёт и категорию. Архивные ссылки
-                показаны только для объяснения текущего состояния.
+                {{ t('scheduling.chooseAnActiveAccountAndCategoryFor') }}
               </p>
             }
           }
           <label>
-            Описание
-            <textarea formControlName="description"></textarea>
+            {{ t('accounts.description') }} <textarea formControlName="description"></textarea>
           </label>
           <button type="submit" [disabled]="saving() || !canSaveRule()">
-            {{ editingId() ? 'Сохранить изменения' : 'Создать правило' }}
+            {{ editingId() ? t('accounts.saveChanges') : t('scheduling.createRule') }}
           </button>
           @if (editingId()) {
             <button type="button" class="secondary" (click)="cancelEdit()">
-              Отменить изменение
+              {{ t('accounts.cancelChanges') }}
             </button>
           }
         </form>

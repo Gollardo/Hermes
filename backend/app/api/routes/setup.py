@@ -21,11 +21,12 @@ from app.modules.backup.contracts import (
     InvalidKdfParameters,
     UnsupportedHermesVersion,
 )
-from app.modules.categories.contracts import OnboardingExpenseGroup
+from app.modules.categories.contracts import CategoryTemplateLanguage, OnboardingExpenseGroup
 
 
 class FreshSetupRequest(SetupRequest):
     create_default_categories: bool = False
+    category_template_language: CategoryTemplateLanguage = CategoryTemplateLanguage.RU
     onboarding_expense_groups: list[OnboardingExpenseGroup] = Field(default_factory=list)
 
     @model_validator(mode="after")
@@ -74,6 +75,7 @@ def fresh_setup(payload: FreshSetupRequest, request: Request, session: DatabaseS
             timezone=payload.timezone,
             create_default_categories=payload.create_default_categories,
             onboarding_expense_groups=payload.onboarding_expense_groups,
+            category_template_language=payload.category_template_language,
         )
     except AlreadyInitializedError as error:
         raise already_initialized() from error

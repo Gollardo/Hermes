@@ -56,3 +56,13 @@ These behaviours have not been confirmed by the owner.
 - Merge and reassignment behavior.
 - Category ordering, icons and colors; these are presentation concerns and not
   part of the current foundation.
+
+## Localized first-run templates
+
+Fresh setup accepts `category_template_language` (`ru` or `en`, default `ru`).
+Categories owns both template catalogs; the application setup use case invokes
+its public creation contract in the same transaction as owner/settings/session
+creation. Unsupported languages fail validation before writes. Template language
+is not persisted as a category property. Created, edited and restored names are
+ordinary user data and are never renamed by interface-language changes. No
+financial values, category identities or tree rules depend on language.

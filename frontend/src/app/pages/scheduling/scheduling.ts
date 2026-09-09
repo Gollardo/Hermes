@@ -1,3 +1,4 @@
+import { t, localizedSignal, locale, plural } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -12,7 +13,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EMPTY, Observable, expand, forkJoin, reduce } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { apiErrorMessage } from '../../core/auth.service';
+import { apiErrorMessage } from '../../core/api-error';
 import { DateTextPipe, formatTextDate } from '../../shared/date-text.pipe';
 import { currencySymbol, formatMoney, MoneyPipe } from '../../shared/money.pipe';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
@@ -136,6 +137,7 @@ interface UpcomingGroup {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SchedulingPage implements OnInit {
+  protected readonly t = t;
   private readonly http = inject(HttpClient);
   private readonly builder = inject(NonNullableFormBuilder);
   private readonly route = inject(ActivatedRoute);
@@ -153,14 +155,14 @@ export class SchedulingPage implements OnInit {
   protected readonly baseCurrency = signal('RUB');
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly error = localizedSignal();
   protected readonly editingId = signal<string | null>(null);
   protected readonly ruleFormOpen = signal(false);
   protected readonly busyOccurrenceId = signal<string | null>(null);
   protected readonly postponeDates = signal<Record<string, string>>({});
   protected readonly editingConfirmationId = signal<string | null>(null);
   protected readonly selectedCalendarDay = signal<CalendarDay | null>(null);
-  protected readonly actionNotice = signal<string | null>(null);
+  protected readonly actionNotice = localizedSignal();
 
   protected readonly filters = this.builder.group({
     accountId: [''],
@@ -197,7 +199,7 @@ export class SchedulingPage implements OnInit {
     const value = this.selectedMonth();
     if (!value) return '';
     const parsed = parseIsoDate(value);
-    return new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' }).format(
+    return new Intl.DateTimeFormat(locale(), { month: 'long', year: 'numeric' }).format(
       new Date(parsed.year, parsed.month - 1, 1),
     );
   });
@@ -253,7 +255,7 @@ export class SchedulingPage implements OnInit {
   }
 
   protected accountLabel(account: Account): string {
-    return `${account.name}${account.archived ? ' · в архиве' : ''}`;
+    return `${account.name}${account.archived ? ' ' + t('funds.archived') : ''}`;
   }
 
   protected availableCategories(): Category[] {
@@ -267,14 +269,14 @@ export class SchedulingPage implements OnInit {
   }
 
   protected categoryLabel(category: Category): string {
-    return `${category.name}${category.archived ? ' · в архиве' : ''}`;
+    return `${category.name}${category.archived ? ' ' + t('funds.archived') : ''}`;
   }
 
   protected accountOptions(accounts = this.accounts()): EntityOption[] {
     return accounts.map((account) => ({
       id: account.id,
       label: account.name,
-      detail: account.archived ? 'В архиве' : undefined,
+      detail: account.archived ? t('forecast.archived') : undefined,
     }));
   }
 
@@ -284,7 +286,7 @@ export class SchedulingPage implements OnInit {
       .map((account) => ({
         id: account.id,
         label: account.name,
-        detail: account.archived ? 'В архиве' : undefined,
+        detail: account.archived ? t('forecast.archived') : undefined,
         disabled: account.archived && this.ruleWillBeActive(),
       }));
   }
@@ -297,7 +299,7 @@ export class SchedulingPage implements OnInit {
       return {
         id: category.id,
         label: category.name,
-        detail: `${category.type === 'income' ? 'Доход' : 'Расход'}${parent ? ` · ${parent.name}` : ''}${category.archived ? ' · в архиве' : ''}`,
+        detail: `${category.type === 'income' ? t('operation-create-menu.income') : t('operation-create-menu.expense')}${parent ? ` · ${parent.name}` : ''}${category.archived ? ' ' + t('funds.archived') : ''}`,
         disabled: category.archived && this.ruleWillBeActive(),
       };
     });
@@ -343,7 +345,7 @@ export class SchedulingPage implements OnInit {
       },
       error: (error: unknown) => {
         this.saving.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось сохранить регулярное правило.'));
+        this.error.set(() => apiErrorMessage(error, t('scheduling.couldNotSaveTheRecurringRule')));
       },
     });
   }
@@ -409,8 +411,8 @@ export class SchedulingPage implements OnInit {
     if (
       rule.active &&
       !window.confirm(
-        `Отключить правило «${this.ruleTitle(rule)}»? ` +
-          'Нетронутые будущие события будут отменены. Подтверждённые и изменённые вручную сохранятся.',
+        t('scheduling.disableRuleP0', { p0: this.ruleTitle(rule) }) +
+          t('scheduling.untouchedFutureEventsWillBeCancelledConfirmed'),
       )
     )
       return;
@@ -440,7 +442,7 @@ export class SchedulingPage implements OnInit {
         },
         error: (error: unknown) => {
           this.saving.set(false);
-          this.error.set(apiErrorMessage(error, 'Не удалось изменить состояние правила.'));
+          this.error.set(() => apiErrorMessage(error, t('scheduling.couldNotChangeTheRuleStatus')));
         },
       });
   }
@@ -463,7 +465,9 @@ export class SchedulingPage implements OnInit {
   }
 
   protected sourceLabel(occurrence: ExpectedOccurrence): string {
-    return occurrence.source_kind === 'one_off' ? 'Разовая' : 'Повторяющаяся';
+    return occurrence.source_kind === 'one_off'
+      ? t('scheduling.oneOff')
+      : t('scheduling.recurring');
   }
 
   protected ruleTitle(rule: RecurringRule): string {
@@ -471,34 +475,54 @@ export class SchedulingPage implements OnInit {
   }
 
   protected typeLabel(type: OperationType): string {
-    return { income: 'Доход', expense: 'Расход', transfer: 'Перевод' }[type];
+    return {
+      income: t('operation-create-menu.income'),
+      expense: t('operation-create-menu.expense'),
+      transfer: t('operation-create-menu.transfer'),
+    }[type];
   }
 
   protected frequencyLabel(frequency: Frequency): string {
-    return { daily: 'Ежедневно', weekly: 'Еженедельно', monthly: 'Ежемесячно', yearly: 'Ежегодно' }[
-      frequency
-    ];
+    return {
+      daily: t('scheduling.daily'),
+      weekly: t('scheduling.weekly'),
+      monthly: t('scheduling.monthly'),
+      yearly: t('scheduling.yearly'),
+    }[frequency];
   }
 
   protected recurrenceLabel(rule: RecurringRule): string {
     if (rule.frequency === 'weekly') {
-      const weekdayLabels = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
+      const weekdayLabels = [
+        t('scheduling.mon0638'),
+        t('scheduling.tue0639'),
+        t('scheduling.wed0640'),
+        t('scheduling.thu0641'),
+        t('scheduling.fri0642'),
+        t('scheduling.sat0643'),
+        t('scheduling.sun0644'),
+      ];
       const days = (rule.weekdays ?? []).map((day) => weekdayLabels[day - 1]).join(', ');
-      const interval = rule.interval === 1 ? 'каждую неделю' : `каждую ${rule.interval}-ю неделю`;
+      const interval =
+        rule.interval === 1
+          ? t('scheduling.everyWeek0645')
+          : t('scheduling.everyP0Weeks', { p0: rule.interval });
       return `${interval}${days ? ` · ${days}` : ''}`;
     }
     if (rule.frequency === 'monthly') {
-      return rule.interval === 1 ? 'каждый месяц' : `каждый ${rule.interval}-й месяц`;
+      return rule.interval === 1
+        ? t('scheduling.everyMonth0647')
+        : t('scheduling.everyP0Months', { p0: rule.interval });
     }
     return this.frequencyLabel(rule.frequency).toLowerCase();
   }
 
   protected statusLabel(status: OccurrenceStatus): string {
     return {
-      pending: 'Ожидается',
-      confirmed: 'Подтверждено',
-      postponed: 'Перенесено',
-      cancelled: 'Отменено',
+      pending: t('scheduling.pending'),
+      confirmed: t('scheduling.confirmed'),
+      postponed: t('scheduling.postponed'),
+      cancelled: t('scheduling.cancelled'),
     }[status];
   }
 
@@ -523,9 +547,10 @@ export class SchedulingPage implements OnInit {
 
   protected calendarDayLabel(day: CalendarDay, summary?: string): string {
     const overdueCount = this.calendarDayOverdueCount(day);
-    const parts = [`Открыть события за ${day.iso}: ${day.occurrences.length}`];
-    if (summary) parts.push(`итог ${formatMoney(summary)} ${this.baseCurrency()}`);
-    if (overdueCount) parts.push(`просрочено: ${overdueCount}`);
+    const parts = [t('scheduling.openEventsForP0P1', { p0: day.iso, p1: day.occurrences.length })];
+    if (summary)
+      parts.push(t('scheduling.totalP0P1', { p0: formatMoney(summary), p1: this.baseCurrency() }));
+    if (overdueCount) parts.push(t('scheduling.overdueP00655', { p0: overdueCount }));
     return parts.join(', ');
   }
 
@@ -572,7 +597,7 @@ export class SchedulingPage implements OnInit {
       occurrence,
       'confirm',
       { version: occurrence.version, amount: normalized },
-      'Не удалось подтвердить ожидаемую операцию.',
+      () => t('scheduling.couldNotConfirmThePlannedOperation'),
     );
   }
 
@@ -605,24 +630,36 @@ export class SchedulingPage implements OnInit {
     const next = this.postponeDate(occurrence);
     if (!rule?.shift_future_on_postpone || !next || next === occurrence.due_on) return null;
     const days = daysBetween(occurrence.due_on, next);
-    return `Текущая дата и следующие нетронутые события сдвинутся на ${signedDays(days)}.`;
+    return t('scheduling.theCurrentDateAndFollowingUntouchedEvents', { p0: signedDays(days) });
   }
 
   protected earlyApplicationWarning(occurrence: ExpectedOccurrence): string | null {
     if (occurrence.source_kind !== 'one_off' || occurrence.due_on <= this.today()) return null;
-    return `Плановая дата — ${formatTextDate(occurrence.due_on)}. Вы применяете операцию раньше срока.`;
+    return t('scheduling.plannedDateP0YouAreApplyingThis', {
+      p0: formatTextDate(occurrence.due_on),
+    });
   }
 
   protected oneOffConfirmationConsequence(occurrence: ExpectedOccurrence): string | null {
     if (occurrence.source_kind !== 'one_off') return null;
     const amount = `${formatMoney(occurrence.amount)} ${this.baseCurrency()}`;
     if (occurrence.type === 'expense') {
-      return `Сегодня со счёта «${occurrence.account_name}» будет списано ${amount}.`;
+      return t('scheduling.todayP1WillBeDebitedFromAccount', {
+        p0: occurrence.account_name,
+        p1: amount,
+      });
     }
     if (occurrence.type === 'income') {
-      return `Сегодня на счёт «${occurrence.account_name}» будет зачислено ${amount}.`;
+      return t('scheduling.todayP1WillBeCreditedToAccount', {
+        p0: occurrence.account_name,
+        p1: amount,
+      });
     }
-    return `Сегодня ${amount} будет переведено со счёта «${occurrence.account_name}» на счёт «${occurrence.destination_account_name ?? '—'}».`;
+    return t('scheduling.todayP0WillBeTransferredFromAccount', {
+      p0: amount,
+      p1: occurrence.account_name,
+      p2: occurrence.destination_account_name ?? '—',
+    });
   }
 
   protected postpone(occurrence: ExpectedOccurrence): void {
@@ -637,18 +674,19 @@ export class SchedulingPage implements OnInit {
         due_on: dueOn,
         ...(rule?.shift_future_on_postpone ? { rule_version: rule.version } : {}),
       },
-      'Не удалось перенести ожидаемую операцию.',
+      () => t('scheduling.couldNotPostponeThePlannedOperation'),
     );
   }
 
   protected cancel(occurrence: ExpectedOccurrence): void {
-    if (!window.confirm(`Отменить ожидаемую операцию «${this.occurrenceTitle(occurrence)}»?`))
+    if (
+      !window.confirm(
+        t('scheduling.cancelPlannedOperationP0', { p0: this.occurrenceTitle(occurrence) }),
+      )
+    )
       return;
-    this.runOccurrenceAction(
-      occurrence,
-      'cancel',
-      { version: occurrence.version },
-      'Не удалось отменить ожидаемую операцию.',
+    this.runOccurrenceAction(occurrence, 'cancel', { version: occurrence.version }, () =>
+      t('scheduling.couldNotCancelThePlannedOperation'),
     );
   }
 
@@ -670,7 +708,7 @@ export class SchedulingPage implements OnInit {
         },
         error: (error: unknown) => {
           this.loading.set(false);
-          this.error.set(apiErrorMessage(error, 'Не удалось подготовить календарь.'));
+          this.error.set(() => apiErrorMessage(error, t('scheduling.couldNotPrepareTheCalendar')));
         },
       });
   }
@@ -691,7 +729,7 @@ export class SchedulingPage implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить данные календаря.'));
+        this.error.set(() => apiErrorMessage(error, t('scheduling.couldNotLoadCalendarData')));
       },
     });
   }
@@ -704,7 +742,7 @@ export class SchedulingPage implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось обновить расписание.'));
+        this.error.set(() => apiErrorMessage(error, t('scheduling.couldNotUpdateTheSchedule')));
       },
     });
   }
@@ -749,7 +787,7 @@ export class SchedulingPage implements OnInit {
       error: (error: unknown) => {
         if (requestId !== this.occurrenceRequestId) return;
         this.loading.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить ожидаемые операции.'));
+        this.error.set(() => apiErrorMessage(error, t('scheduling.couldNotLoadPlannedOperations')));
       },
     });
   }
@@ -810,7 +848,7 @@ export class SchedulingPage implements OnInit {
     occurrence: ExpectedOccurrence,
     action: 'confirm' | 'postpone' | 'cancel',
     body: Record<string, string | number>,
-    fallback: string,
+    fallback: () => string,
   ): void {
     this.busyOccurrenceId.set(occurrence.id);
     this.error.set(null);
@@ -824,10 +862,14 @@ export class SchedulingPage implements OnInit {
         next: (result) => {
           this.busyOccurrenceId.set(null);
           if (action === 'postpone' && 'series_shift_applied' in result) {
-            this.actionNotice.set(
+            this.actionNotice.set(() =>
               result.series_shift_applied
-                ? `Серия сдвинута на ${signedDays(result.shift_days)}. Обновлено следующих событий: ${result.shifted_occurrences}; сохранено исключений: ${result.preserved_occurrences}.`
-                : 'Перенесено только выбранное событие.',
+                ? t('scheduling.seriesShiftedByP0FollowingEventsUpdated', {
+                    p0: signedDays(result.shift_days),
+                    p1: result.shifted_occurrences,
+                    p2: result.preserved_occurrences,
+                  })
+                : t('scheduling.onlyTheSelectedEventWasPostponed'),
             );
             this.loadSchedule();
           } else {
@@ -836,7 +878,7 @@ export class SchedulingPage implements OnInit {
         },
         error: (error: unknown) => {
           this.busyOccurrenceId.set(null);
-          this.error.set(apiErrorMessage(error, fallback));
+          this.error.set(() => apiErrorMessage(error, fallback));
           if (this.isSchedulingConflict(error)) this.loadOccurrences();
         },
       });
@@ -931,8 +973,13 @@ function daysBetween(from: string, to: string): number {
 
 function signedDays(days: number): string {
   const absolute = Math.abs(days);
-  const suffix = absolute % 10 === 1 && absolute % 100 !== 11 ? 'день' : 'дн.';
-  return `${days > 0 ? '+' : ''}${days} ${suffix}`;
+  const text = plural(absolute, {
+    one: 'common.daysOne',
+    few: 'common.daysFew',
+    many: 'common.daysMany',
+    other: 'common.daysOther',
+  });
+  return `${days > 0 ? '+' : days < 0 ? '-' : ''}${text}`;
 }
 
 function calendarGridRange(month: string): { start: string; end: string } {

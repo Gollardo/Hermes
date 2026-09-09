@@ -130,3 +130,12 @@ composed by `app.api`, so the settings module does not depend on auth internals.
   application/read-side use case around a pure Forecasting projection.
 - How the optional local assistant is packaged without making model runtime,
   vector storage or external infrastructure mandatory for core operation.
+
+## Multilingual foundation ownership
+
+Frontend `i18n` owns catalogs and browser-local presentation state; Core owns the
+shared error adapter. API composition sanitizes framework validation metadata.
+Categories owns RU/EN first-run templates, invoked by the existing atomic setup
+application use case through its public contract. Neither Settings persistence
+nor financial-domain ownership changes. See the
+[internationalization contract](../ui-ux/internationalization.md).

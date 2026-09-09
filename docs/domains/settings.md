@@ -51,3 +51,10 @@ change the base currency only while it is unlocked.
   rates remain outside this release.
 - Browser timezone suggestions are convenience only; backend validation is
   authoritative.
+
+## Browser language preference
+
+RU/EN interface language is browser-local presentation state, not a persisted
+Application Settings field. It changes neither the currency nor timezone locks.
+No settings migration or language backup field is introduced. See the
+[internationalization contract](../ui-ux/internationalization.md).

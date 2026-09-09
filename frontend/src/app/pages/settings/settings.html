@@ -1,14 +1,15 @@
 <section class="settings-page">
   <header class="page-header">
     <div class="page-header-copy">
-      <p class="eyebrow">Управление экземпляром</p>
-      <h1>Настройки</h1>
-      <p>Базовые финансовые параметры, локальная безопасность и активные сессии.</p>
+      <p class="eyebrow">{{ t('settings.instanceManagement') }}</p>
+      <h1>{{ t('settings.settings') }}</h1>
+      <p>{{ t('settings.baseFinancialSettingsLocalSecurityAndActive') }}</p>
     </div>
   </header>
+  <app-language-select />
 
   @if (loading()) {
-    <p class="empty-state" aria-live="polite">Загружаем настройки…</p>
+    <p class="empty-state" aria-live="polite">{{ t('settings.loadingSettings') }}</p>
   } @else {
     <div class="settings-grid">
       <section class="panel preferences-panel" aria-labelledby="preferences-title">
@@ -21,13 +22,13 @@
             </svg>
           </span>
           <div>
-            <p class="section-label">Финансовая основа</p>
-            <h2 id="preferences-title">Основные параметры</h2>
-            <p>Валюта отчётности и календарный контекст приложения.</p>
+            <p class="section-label">{{ t('settings.financialFoundation') }}</p>
+            <h2 id="preferences-title">{{ t('settings.generalSettings') }}</h2>
+            <p>{{ t('settings.reportingCurrencyAndTheApplicationSCalendar') }}</p>
           </div>
         </div>
         <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()">
-          <label for="settings-currency">Основная валюта</label>
+          <label for="settings-currency"> {{ t('settings.baseCurrency') }} </label>
           <input
             id="settings-currency"
             formControlName="baseCurrency"
@@ -43,36 +44,38 @@
           @if (currencyLocked()) {
             <p class="locked-note">
               <span aria-hidden="true">✓</span>
-              Валюта зафиксирована после появления финансовых данных.
+              {{ t('settings.currencyIsLockedAfterFinancialDataHas') }}
             </p>
           }
 
           <div class="control-label">
-            Часовой пояс
+            {{ t('settings.timezone') }}
             <app-entity-combobox
               inputId="settings-timezone"
+              [accessibleLabel]="t('settings.timezone')"
               formControlName="timezone"
               [options]="timezoneOptions"
               recentKey="timezones"
               matchMode="contains"
-              placeholder="Начните вводить город или регион"
-              emptyLabel="Часовой пояс не найден"
+              [placeholder]="t('settings.startTypingACityOrRegion')"
+              [emptyLabel]="t('settings.timezoneNotFound')"
             />
           </div>
 
           <div class="control-label">
-            Счёт по умолчанию
+            {{ t('settings.defaultAccount') }}
             <app-entity-combobox
               inputId="settings-default-account"
+              [accessibleLabel]="t('settings.defaultAccount')"
               formControlName="defaultAccountId"
               [options]="accountOptions()"
               recentKey="accounts"
-              placeholder="Не выбран"
+              [placeholder]="t('settings.notSelected')"
               [allowEmpty]="true"
             />
           </div>
           <p class="field-hint">
-            Подставляется только при создании дохода или расхода и всегда остаётся изменяемым.
+            {{ t('settings.prefilledOnlyForNewIncomeOrExpenses') }}
           </p>
           @if (accountsError(); as message) {
             <p class="form-error" role="alert">{{ message }}</p>
@@ -85,7 +88,7 @@
             <p class="form-success" role="status">{{ message }}</p>
           }
           <button type="submit" [disabled]="savingSettings()">
-            {{ savingSettings() ? 'Сохраняем…' : 'Сохранить настройки' }}
+            {{ savingSettings() ? t('accounts.saving') : t('settings.saveSettings') }}
           </button>
         </form>
       </section>
@@ -101,28 +104,28 @@
             </svg>
           </span>
           <div>
-            <p class="section-label">Безопасность</p>
-            <h2 id="password-title">Мастер-пароль</h2>
-            <p>Изменение пароля завершит все остальные сессии.</p>
+            <p class="section-label">{{ t('settings.security') }}</p>
+            <h2 id="password-title">{{ t('login.masterPassword') }}</h2>
+            <p>{{ t('settings.changingThePasswordEndsAllOtherSessions') }}</p>
           </div>
         </div>
         <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
-          <label for="current-password">Текущий пароль</label>
+          <label for="current-password"> {{ t('settings.currentPassword') }} </label>
           <input
             id="current-password"
             type="password"
             formControlName="currentPassword"
             autocomplete="current-password"
           />
-          <label for="new-password">Новый пароль</label>
+          <label for="new-password"> {{ t('settings.newPassword') }} </label>
           <input
             id="new-password"
             type="password"
             formControlName="newPassword"
             autocomplete="new-password"
-            placeholder="Не менее 12 символов"
+            [placeholder]="t('settings.atLeast12Characters')"
           />
-          <label for="new-password-confirmation">Повторите новый пароль</label>
+          <label for="new-password-confirmation"> {{ t('settings.repeatNewPassword') }} </label>
           <input
             id="new-password-confirmation"
             type="password"
@@ -136,7 +139,7 @@
             <p class="form-success" role="status">{{ message }}</p>
           }
           <button type="submit" class="secondary" [disabled]="changingPassword()">
-            {{ changingPassword() ? 'Изменяем…' : 'Изменить пароль' }}
+            {{ changingPassword() ? t('settings.changing') : t('settings.changePassword') }}
           </button>
         </form>
       </section>
@@ -150,40 +153,32 @@
           </svg>
         </span>
         <div>
-          <p class="section-label">Фонды</p>
-          <h2 id="fund-policy-title">Режим распределения</h2>
-          <p>Определяет, как рассчитываются доли при следующем пополнении фондов.</p>
+          <p class="section-label">{{ t('funds.funds') }}</p>
+          <h2 id="fund-policy-title">{{ t('settings.allocationMode') }}</h2>
+          <p>{{ t('settings.determinesSharesForTheNextFundContribution') }}</p>
         </div>
       </div>
       <form [formGroup]="fundModeForm" (ngSubmit)="saveFundMode()">
         <fieldset class="mode-options">
-          <legend>Расчёт процентов</legend>
+          <legend>{{ t('settings.percentageCalculation') }}</legend>
           <label class="mode-option">
             <input type="radio" formControlName="mode" value="dynamic" />
             <span>
-              <strong>Динамически по целям</strong>
-              <small>
-                Чем меньше заполнена цель фонда, тем больше его доля сверх гарантированного
-                минимума. Если активных целей 20 или больше, гарантированные доли занимают весь
-                процент и становятся равными. После каждого пополнения проценты пересчитываются.
-              </small>
+              <strong> {{ t('funds.dynamicByTarget') }} </strong>
+              <small> {{ t('settings.theLessCompleteAFundTargetIs') }} </small>
             </span>
           </label>
           <label class="mode-option">
             <input type="radio" formControlName="mode" value="manual" />
             <span>
-              <strong>Вручную</strong>
-              <small>
-                Процент задаётся в каждом фонде. При переходе из динамического режима текущие
-                вычисленные проценты будут зафиксированы без изменения уже накопленных сумм.
-              </small>
+              <strong> {{ t('settings.manual') }} </strong>
+              <small> {{ t('settings.eachFundHasItsOwnPercentageSwitching') }} </small>
             </span>
           </label>
         </fieldset>
         @if (fundModeForm.controls.mode.value === 'dynamic') {
           <p class="field-hint">
-            У каждого неархивного фонда должна быть положительная целевая сумма. Архивные и
-            заполненные фонды не участвуют в расчёте.
+            {{ t('settings.everyNonArchivedFundMustHaveA') }}
           </p>
         }
         @if (fundModeError(); as message) {
@@ -199,10 +194,10 @@
         >
           {{
             savingFundMode()
-              ? 'Сохраняем…'
+              ? t('accounts.saving')
               : fundModeForm.controls.mode.value === 'manual' && currentFundMode() === 'dynamic'
-                ? 'Зафиксировать текущие проценты'
-                : 'Применить режим'
+                ? t('settings.saveCurrentPercentages')
+                : t('settings.applyMode')
           }}
         </button>
       </form>
@@ -216,17 +211,17 @@
           </svg>
         </span>
         <div>
-          <p class="section-label">Резервная копия</p>
-          <h2 id="backup-title">Экспорт и восстановление</h2>
-          <p>Защищённый Hermes-файл шифрует данные. Открытый JSON доступен для совместимости.</p>
+          <p class="section-label">{{ t('settings.backup') }}</p>
+          <h2 id="backup-title">{{ t('settings.exportAndRestore') }}</h2>
+          <p>{{ t('settings.aProtectedHermesFileEncryptsYourData') }}</p>
         </div>
       </div>
       <div class="backup-actions">
         <div>
-          <h3>Создать копию</h3>
-          <p>Рекомендуемый формат требует мастер-пароль при создании и восстановлении.</p>
+          <h3>{{ t('settings.createBackup') }}</h3>
+          <p>{{ t('settings.theRecommendedFormatRequiresTheMasterPassword') }}</p>
           <form [formGroup]="hermesExportForm" (ngSubmit)="exportHermesBackup()">
-            <label for="hermes-export-password">Текущий мастер-пароль</label>
+            <label for="hermes-export-password"> {{ t('settings.currentMasterPassword') }} </label>
             <input
               id="hermes-export-password"
               type="password"
@@ -234,23 +229,23 @@
               autocomplete="current-password"
             />
             <button type="submit" [disabled]="backupBusy() || hermesExportForm.invalid">
-              Скачать защищённый .hermes
+              {{ t('settings.downloadProtectedHermes') }}
             </button>
           </form>
-          <p>JSON не зашифрован: любой получивший файл сможет прочитать финансовые данные.</p>
+          <p>{{ t('settings.jsonIsNotEncryptedAnyoneWithThe') }}</p>
           <button
             type="button"
             class="secondary"
             (click)="exportJsonBackup()"
             [disabled]="backupBusy()"
           >
-            Скачать открытый .json
+            {{ t('settings.downloadPlaintextJson') }}
           </button>
         </div>
         <div>
-          <h3>Проверить и восстановить</h3>
-          <p>Сначала выберите файл: данные не изменятся до отдельного подтверждения.</p>
-          <label for="backup-file">Выберите .hermes или JSON-backup</label>
+          <h3>{{ t('settings.validateAndRestore') }}</h3>
+          <p>{{ t('settings.chooseAFileFirstDataStaysUnchanged') }}</p>
+          <label for="backup-file"> {{ t('settings.chooseAHermesOrJsonBackup') }} </label>
           <input
             id="backup-file"
             type="file"
@@ -262,7 +257,7 @@
       </div>
       @if (backupRequiresPassword() && !backupPreview()) {
         <form [formGroup]="restoreForm" (ngSubmit)="previewEncryptedBackup()" class="restore-form">
-          <label for="backup-password-preview">Пароль защищённого backup</label>
+          <label for="backup-password-preview"> {{ t('settings.protectedBackupPassword') }} </label>
           <input
             id="backup-password-preview"
             type="password"
@@ -270,42 +265,69 @@
             autocomplete="current-password"
           />
           <button type="submit" class="secondary" [disabled]="backupBusy()">
-            Проверить защищённый backup
+            {{ t('settings.validateProtectedBackup') }}
           </button>
         </form>
       }
       @if (backupPreview(); as preview) {
         <div class="backup-summary" role="status">
-          <strong>Целостность подтверждена</strong>
+          <strong> {{ t('settings.integrityConfirmed') }} </strong>
           <span>{{ formatTimestamp(preview.exported_at) }} · Hermes {{ preview.app_version }}</span>
           <span>{{ currencyLabel(preview.base_currency) }} · {{ preview.timezone }}</span>
-          <span
-            >{{ preview.counts['operations'] }} операций ·
-            {{ preview.counts['account_movements'] }} физических движений</span
-          >
-          <span
-            >{{ preview.counts['accounts'] }} счетов · {{ preview.counts['categories'] }} категорий
-            · {{ preview.counts['funds'] }} фондов</span
-          >
-          <span
-            >{{ preview.counts['fund_events'] }} событий фондов ·
-            {{ preview.counts['fund_movements'] }} виртуальных движений</span
-          ><span>{{ preview.counts['fund_reserve_movements'] || 0 }} движений резерва</span>
-          <span
-            >{{ preview.counts['recurring_rules'] }} регулярных правил ·
-            {{ preview.counts['expected_occurrences'] }} ожидаемых операций</span
-          >
+          <span>
+            {{
+              t('settings.p0OperationsP1PhysicalMovements', {
+                p0: preview.counts['operations'],
+                p1: preview.counts['account_movements'],
+              })
+            }}
+          </span>
+          <span>
+            {{
+              t('settings.p0AccountsP1CategoriesP2Funds', {
+                p0: preview.counts['accounts'],
+                p1: preview.counts['categories'],
+                p2: preview.counts['funds'],
+              })
+            }}
+          </span>
+          <span>
+            {{
+              t('settings.p0FundEventsP1VirtualMovements', {
+                p0: preview.counts['fund_events'],
+                p1: preview.counts['fund_movements'],
+              })
+            }} </span
+          ><span>
+            {{
+              t('settings.p0ReserveMovements', {
+                p0: preview.counts['fund_reserve_movements'] || 0,
+              })
+            }}
+          </span>
+          <span>
+            {{
+              t('settings.p0RecurringRulesP1PlannedOperations', {
+                p0: preview.counts['recurring_rules'],
+                p1: preview.counts['expected_occurrences'],
+              })
+            }}
+          </span>
         </div>
         <form [formGroup]="restoreForm" (ngSubmit)="restoreBackup()" class="restore-form">
           <p class="form-warning">
-            Будут заменены {{ preview.counts['accounts'] }} счетов,
-            {{ preview.counts['operations'] }} операций, {{ preview.counts['funds'] }} фондов и
-            {{ preview.counts['expected_occurrences'] }} ожидаемых операций. Остальные сессии
-            завершатся. Ошибка откатит всю замену.
+            {{
+              t('settings.thisReplacesP0AccountsP1OperationsP2', {
+                p0: preview.counts['accounts'],
+                p1: preview.counts['operations'],
+                p2: preview.counts['funds'],
+                p3: preview.counts['expected_occurrences'],
+              })
+            }}
           </p>
-          <label for="restore-confirmation">Введите «ЗАМЕНИТЬ ВСЕ ДАННЫЕ»</label>
+          <label for="restore-confirmation"> {{ t('settings.typeReplaceAllData') }} </label>
           <input id="restore-confirmation" formControlName="confirmation" autocomplete="off" />
-          <label for="restore-password">Текущий мастер-пароль</label>
+          <label for="restore-password"> {{ t('settings.currentMasterPassword') }} </label>
           <input
             id="restore-password"
             type="password"
@@ -313,7 +335,9 @@
             autocomplete="current-password"
           />
           @if (backupRequiresPassword()) {
-            <label for="restore-backup-password">Пароль защищённого backup</label>
+            <label for="restore-backup-password">
+              {{ t('settings.protectedBackupPassword') }}
+            </label>
             <input
               id="restore-backup-password"
               type="password"
@@ -330,7 +354,7 @@
               restoreForm.controls.masterPassword.invalid
             "
           >
-            Восстановить и заменить данные
+            {{ t('settings.restoreAndReplaceData') }}
           </button>
         </form>
       }
@@ -344,11 +368,13 @@
 
     <section class="panel danger-zone" aria-labelledby="sessions-title">
       <div class="danger-copy">
-        <p class="section-label danger-section-label">Сессии</p>
-        <h2 id="sessions-title">Завершить все активные входы</h2>
-        <p>Текущая сессия тоже завершится. Для продолжения потребуется мастер-пароль.</p>
+        <p class="section-label danger-section-label">{{ t('settings.sessions') }}</p>
+        <h2 id="sessions-title">{{ t('settings.endAllActiveSessions') }}</h2>
+        <p>{{ t('settings.thisSessionWillAlsoEndYouWill') }}</p>
       </div>
-      <button type="button" class="danger" (click)="logoutAll()">Завершить все сессии</button>
+      <button type="button" class="danger" (click)="logoutAll()">
+        {{ t('settings.endAllSessions') }}
+      </button>
     </section>
   }
 </section>

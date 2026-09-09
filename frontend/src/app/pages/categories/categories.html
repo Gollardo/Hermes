@@ -1,12 +1,12 @@
 <section class="directory-page">
   <header class="page-header">
     <div class="page-header-copy">
-      <p class="eyebrow">Финансовая структура</p>
-      <h1>Категории</h1>
-      <p>Понятная классификация доходов и расходов в два уровня — категория и подкатегория.</p>
+      <p class="eyebrow">{{ t('accounts.financialStructure') }}</p>
+      <h1>{{ t('categories.categories') }}</h1>
+      <p>{{ t('categories.aClearTwoLevelClassificationOfIncome') }}</p>
     </div>
     <div class="page-actions">
-      <button type="button" (click)="openCreate()">Добавить категорию</button>
+      <button type="button" (click)="openCreate()">{{ t('categories.addCategory') }}</button>
     </div>
   </header>
 
@@ -14,29 +14,31 @@
     <section class="directory-list-panel" aria-labelledby="categories-list-title">
       <div class="panel-heading">
         <div>
-          <h2 id="categories-list-title">Дерево категорий</h2>
-          <p>Архивирование сохраняет названия для будущей истории операций.</p>
+          <h2 id="categories-list-title">{{ t('categories.categoryTree') }}</h2>
+          <p>{{ t('categories.archivingPreservesNamesInOperationHistory') }}</p>
         </div>
-        <span class="count-pill">Категорий: {{ categories().length }}</span>
+        <span class="count-pill">
+          {{ t('categories.categoriesP0', { p0: categories().length }) }}
+        </span>
       </div>
 
       @if (loading()) {
-        <p class="empty-state" aria-live="polite">Загружаем категории…</p>
+        <p class="empty-state" aria-live="polite">{{ t('categories.loadingCategories') }}</p>
       } @else if (categories().length === 0) {
         <div class="empty-state">
-          <strong>Категорий пока нет</strong>
-          <p>Начните с одной понятной категории дохода или расхода.</p>
+          <strong> {{ t('categories.noCategoriesYet') }} </strong>
+          <p>{{ t('categories.startWithOneMeaningfulIncomeOrExpense') }}</p>
         </div>
       } @else {
         <div class="category-groups">
           <section class="panel category-group" aria-labelledby="expense-categories-title">
             <div class="category-group-heading">
               <div>
-                <p class="section-label">Расходы</p>
-                <h3 id="expense-categories-title">На что уходят деньги</h3>
+                <p class="section-label">{{ t('categories.expenses') }}</p>
+                <h3 id="expense-categories-title">{{ t('categories.whereMoneyGoes') }}</h3>
               </div>
               <button type="button" class="secondary" (click)="openCreate('expense')">
-                Добавить расход
+                {{ t('categories.addExpense') }}
               </button>
             </div>
             <div class="item-list">
@@ -62,8 +64,10 @@
                             >
                               {{
                                 expanded(category)
-                                  ? 'Свернуть'
-                                  : 'Подкатегории · ' + children(category.id).length
+                                  ? t('categories.collapse')
+                                  : t('categories.subcategories') +
+                                    ' ' +
+                                    children(category.id).length
                               }}
                             </button>
                           }
@@ -75,19 +79,19 @@
                     </div>
                     <div class="item-actions">
                       <button type="button" class="secondary" (click)="edit(category)">
-                        Изменить
+                        {{ t('accounts.edit') }}
                       </button>
                       <details class="item-more-actions">
                         <summary
                           [attr.aria-label]="
-                            'Дополнительные действия для категории ' + category.name
+                            t('categories.moreCategoryActions') + ' ' + category.name
                           "
                         >
-                          Ещё
+                          {{ t('accounts.more') }}
                         </summary>
                         <div class="item-actions-popover">
                           <button type="button" class="secondary" (click)="toggleArchive(category)">
-                            {{ category.archived ? 'Восстановить' : 'Архивировать' }}
+                            {{ category.archived ? t('accounts.restore') : t('accounts.archive') }}
                           </button>
                         </div>
                       </details>
@@ -101,15 +105,15 @@
                           <span><i aria-hidden="true"></i>{{ child.name }}</span>
                           <div class="item-actions">
                             <button type="button" class="secondary" (click)="edit(child)">
-                              Изменить
+                              {{ t('accounts.edit') }}
                             </button>
                             <details class="item-more-actions">
                               <summary
                                 [attr.aria-label]="
-                                  'Дополнительные действия для подкатегории ' + child.name
+                                  t('categories.moreSubcategoryActions') + ' ' + child.name
                                 "
                               >
-                                Ещё
+                                {{ t('accounts.more') }}
                               </summary>
                               <div class="item-actions-popover">
                                 <button
@@ -117,7 +121,9 @@
                                   class="secondary"
                                   (click)="toggleArchive(child)"
                                 >
-                                  {{ child.archived ? 'Восстановить' : 'Архивировать' }}
+                                  {{
+                                    child.archived ? t('accounts.restore') : t('accounts.archive')
+                                  }}
                                 </button>
                               </div>
                             </details>
@@ -133,11 +139,11 @@
           <section class="panel category-group" aria-labelledby="income-categories-title">
             <div class="category-group-heading">
               <div>
-                <p class="section-label">Доходы</p>
-                <h3 id="income-categories-title">Откуда приходят деньги</h3>
+                <p class="section-label">{{ t('categories.income') }}</p>
+                <h3 id="income-categories-title">{{ t('categories.whereMoneyComesFrom') }}</h3>
               </div>
               <button type="button" class="secondary" (click)="openCreate('income')">
-                Добавить доход
+                {{ t('categories.addIncome') }}
               </button>
             </div>
             <div class="item-list">
@@ -163,8 +169,10 @@
                             >
                               {{
                                 expanded(category)
-                                  ? 'Свернуть'
-                                  : 'Подкатегории · ' + children(category.id).length
+                                  ? t('categories.collapse')
+                                  : t('categories.subcategories') +
+                                    ' ' +
+                                    children(category.id).length
                               }}
                             </button>
                           }
@@ -176,19 +184,19 @@
                     </div>
                     <div class="item-actions">
                       <button type="button" class="secondary" (click)="edit(category)">
-                        Изменить
+                        {{ t('accounts.edit') }}
                       </button>
                       <details class="item-more-actions">
                         <summary
                           [attr.aria-label]="
-                            'Дополнительные действия для категории ' + category.name
+                            t('categories.moreCategoryActions') + ' ' + category.name
                           "
                         >
-                          Ещё
+                          {{ t('accounts.more') }}
                         </summary>
                         <div class="item-actions-popover">
                           <button type="button" class="secondary" (click)="toggleArchive(category)">
-                            {{ category.archived ? 'Восстановить' : 'Архивировать' }}
+                            {{ category.archived ? t('accounts.restore') : t('accounts.archive') }}
                           </button>
                         </div>
                       </details>
@@ -201,15 +209,15 @@
                           <span><i aria-hidden="true"></i>{{ child.name }}</span>
                           <div class="item-actions">
                             <button type="button" class="secondary" (click)="edit(child)">
-                              Изменить
+                              {{ t('accounts.edit') }}
                             </button>
                             <details class="item-more-actions">
                               <summary
                                 [attr.aria-label]="
-                                  'Дополнительные действия для подкатегории ' + child.name
+                                  t('categories.moreSubcategoryActions') + ' ' + child.name
                                 "
                               >
-                                Ещё
+                                {{ t('accounts.more') }}
                               </summary>
                               <div class="item-actions-popover">
                                 <button
@@ -217,7 +225,9 @@
                                   class="secondary"
                                   (click)="toggleArchive(child)"
                                 >
-                                  {{ child.archived ? 'Восстановить' : 'Архивировать' }}
+                                  {{
+                                    child.archived ? t('accounts.restore') : t('accounts.archive')
+                                  }}
                                 </button>
                               </div>
                             </details>
@@ -245,55 +255,66 @@
       >
         <div class="modal-header">
           <div>
-            <p class="section-label">{{ editingId() ? 'Изменение' : 'Новое' }}</p>
+            <p class="section-label">
+              {{ editingId() ? t('accounts.editing') : t('accounts.new') }}
+            </p>
             <h2 id="category-form-title">
-              {{ editingId() ? 'Редактировать' : 'Добавить категорию' }}
+              {{ editingId() ? t('categories.edit') : t('categories.addCategory') }}
             </h2>
           </div>
-          <button type="button" class="modal-close" (click)="cancelEdit()" aria-label="Закрыть">
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelEdit()"
+            [attr.aria-label]="t('accounts.close')"
+          >
             ×
           </button>
         </div>
         <form [formGroup]="form" (ngSubmit)="submit()">
-          <label for="category-name">Название</label>
+          <label for="category-name"> {{ t('accounts.name') }} </label>
           <input
             id="category-name"
             formControlName="name"
             maxlength="120"
-            placeholder="Например, Продукты"
+            [placeholder]="t('categories.forExampleGroceries')"
           />
-          <label for="category-type">Назначение</label>
+          <label for="category-type"> {{ t('categories.purpose') }} </label>
           <select id="category-type" formControlName="type">
-            <option value="expense">Расход</option>
-            <option value="income">Доход</option>
+            <option value="expense">{{ t('operation-create-menu.expense') }}</option>
+            <option value="income">{{ t('operation-create-menu.income') }}</option>
           </select>
-          <label for="category-parent">Родительская категория</label>
+          <label for="category-parent"> {{ t('categories.parentCategory') }} </label>
           <app-entity-combobox
             inputId="category-parent"
             formControlName="parentId"
             [options]="parentOptions()"
             [recentKey]="'category-parents-' + form.controls.type.value"
-            placeholder="Нет — верхний уровень"
+            [placeholder]="t('categories.noneTopLevel')"
             [allowEmpty]="true"
           />
-          <label for="category-description">Описание</label>
+          <label for="category-description"> {{ t('accounts.description') }} </label>
           <textarea
             id="category-description"
             formControlName="description"
             maxlength="2000"
-            placeholder="Необязательное пояснение"
+            [placeholder]="t('categories.optionalExplanation')"
           ></textarea>
           @if (error(); as message) {
             <p class="form-error" role="alert">{{ message }}</p>
           }
           <button type="submit" [disabled]="saving()">
             {{
-              saving() ? 'Сохраняем…' : editingId() ? 'Сохранить изменения' : 'Создать категорию'
+              saving()
+                ? t('accounts.saving')
+                : editingId()
+                  ? t('accounts.saveChanges')
+                  : t('categories.createCategory')
             }}
           </button>
           @if (editingId()) {
             <button type="button" class="secondary" (click)="cancelEdit()">
-              Отменить изменение
+              {{ t('accounts.cancelChanges') }}
             </button>
           }
         </form>

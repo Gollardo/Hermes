@@ -230,3 +230,11 @@ glow from conceptual references.
 - specific typography and neutral/green palette values;
 - the role of illustrations, category/fund icons, and personalization;
 - target screen sizes and priority of touch/mobile workflows.
+
+## Multilingual shared pattern
+
+The RU/EN foundation retains existing surfaces, navigation and composers.
+A labelled native language select wraps within the available width. Runtime
+copy, accessible names, validation and dates follow the
+[internationalization contract](internationalization.md); stored names and
+canonical financial formatting remain unchanged.

@@ -1,9 +1,9 @@
 <section>
   <header class="page-header">
     <div class="page-header-copy">
-      <p class="eyebrow">Финансовое ядро</p>
-      <h1>Журнал операций</h1>
-      <p>Фактические остатки полностью складываются из движений этого журнала.</p>
+      <p class="eyebrow">{{ t('operations.financialCore') }}</p>
+      <h1>{{ t('operations.operationJournal') }}</h1>
+      <p>{{ t('operations.actualBalancesAreDerivedEntirelyFromMovements') }}</p>
     </div>
     <app-operation-create-menu (selected)="openCreate($event)" />
   </header>
@@ -13,22 +13,26 @@
   }
   @if (scheduledNotice(); as message) {
     <p class="status-note" role="status">
-      {{ message }} <a routerLink="/calendar">Открыть календарь</a>
+      {{ message }} <a routerLink="/calendar"> {{ t('forecast.openCalendar') }} </a>
     </p>
   }
 
   @if (focusedOperation(); as operation) {
     <section class="panel focused-operation" aria-labelledby="focused-operation-title">
       <div>
-        <p class="section-label">Связь с календарём</p>
+        <p class="section-label">{{ t('operations.calendarLink') }}</p>
         <h2 id="focused-operation-title">
           {{
             operation.description || operation.category_name || operationTypeLabel(operation.type)
           }}
         </h2>
         <p>
-          Фактическая операция от {{ operation.occurred_on | textDate }} ·
-          {{ transferDirection(operation) }}
+          {{
+            t('operations.postedOperationOnP0P1', {
+              p0: (operation.occurred_on | textDate),
+              p1: transferDirection(operation),
+            })
+          }}
         </p>
       </div>
       <strong>{{ signedAmount(operation) | money }} {{ baseCurrency() }}</strong>
@@ -48,25 +52,30 @@
             <p class="section-label">
               {{
                 isOccurrenceConfirmationMode()
-                  ? 'Плановый экземпляр'
+                  ? t('operations.plannedOccurrence')
                   : editingId() || editingPlan()
-                    ? 'Изменение'
-                    : 'Новая запись'
+                    ? t('accounts.editing')
+                    : t('operations.newEntry')
               }}
             </p>
             <h2 id="entry-title">
               {{
                 isOccurrenceConfirmationMode()
-                  ? 'Принять плановую операцию'
+                  ? t('operations.confirmPlannedOperation')
                   : editingPlan()
-                    ? 'Редактировать разовый план'
+                    ? t('operations.editOneOffPlan')
                     : editingId()
-                      ? 'Редактировать операцию'
-                      : 'Добавить операцию'
+                      ? t('operations.editOperation')
+                      : t('operation-create-menu.addOperation')
               }}
             </h2>
           </div>
-          <button type="button" class="modal-close" (click)="cancelEdit()" aria-label="Закрыть">
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelEdit()"
+            [attr.aria-label]="t('accounts.close')"
+          >
             ×
           </button>
         </div>
@@ -74,14 +83,16 @@
           <div class="entry-form-body">
             <div class="entry-form-grid">
               <div class="form-field form-field-wide operation-type-field">
-                <label for="operation-type">Тип</label>
+                <label for="operation-type"> {{ t('operations.type') }} </label>
                 <select id="operation-type" formControlName="type">
-                  <option value="">Выберите тип</option>
-                  <option value="expense">Расход</option>
-                  <option value="income">Доход</option>
-                  <option value="transfer">Перевод</option>
+                  <option value="">{{ t('operations.chooseType') }}</option>
+                  <option value="expense">{{ t('operation-create-menu.expense') }}</option>
+                  <option value="income">{{ t('operation-create-menu.income') }}</option>
+                  <option value="transfer">{{ t('operation-create-menu.transfer') }}</option>
                   @if (!usesExpectedOperationFields()) {
-                    <option value="balance_adjustment">Корректировка</option>
+                    <option value="balance_adjustment">
+                      {{ t('operation-create-menu.adjustment') }}
+                    </option>
                   }
                 </select>
               </div>
@@ -90,13 +101,13 @@
                 form.controls.type.value === 'income' || form.controls.type.value === 'expense'
               ) {
                 <div class="form-field form-field-wide">
-                  <label for="operation-category">Категория</label>
+                  <label for="operation-category"> {{ t('operations.category') }} </label>
                   <app-entity-combobox
                     inputId="operation-category"
                     formControlName="categoryId"
                     [options]="categoryOptions(availableCategories())"
                     [recentKey]="'categories-' + form.controls.type.value"
-                    placeholder="Введите название категории"
+                    [placeholder]="t('operations.typeACategoryName')"
                   />
                 </div>
               }
@@ -105,8 +116,8 @@
                 <label for="operation-amount">
                   {{
                     form.controls.type.value === 'balance_adjustment'
-                      ? 'Новый ожидаемый остаток'
-                      : 'Сумма'
+                      ? t('operations.newExpectedBalance')
+                      : t('funds.amount')
                   }}
                   · {{ baseCurrency() }}
                 </label>
@@ -118,19 +129,23 @@
                   placeholder="0.00"
                 />
                 <p class="hint" id="operation-amount-hint">
-                  Можно сложить или вычесть: 354,23 + 234,54 − 23,32.
+                  {{ t('operations.addOrSubtract3542323454') }}
                 </p>
               </div>
               <div class="form-field">
                 <label for="operation-account">
-                  {{ form.controls.type.value === 'transfer' ? 'Счёт списания' : 'Счёт' }}
+                  {{
+                    form.controls.type.value === 'transfer'
+                      ? t('operations.debitAccount')
+                      : t('forecast.account')
+                  }}
                 </label>
                 <app-entity-combobox
                   inputId="operation-account"
                   formControlName="accountId"
                   [options]="accountOptions(activeAccounts(currentOperation()))"
                   recentKey="accounts"
-                  placeholder="Введите название счёта"
+                  [placeholder]="t('funds.typeAnAccountName')"
                 />
               </div>
 
@@ -139,26 +154,40 @@
                 as base
               ) {
                 <div class="impact-preview form-field-wide">
-                  <span>Исходный остаток: {{ base | money }} {{ baseCurrency() }}</span>
+                  <span>
+                    {{
+                      t('operations.originalBalanceP0P1', {
+                        p0: (base | money),
+                        p1: baseCurrency(),
+                      })
+                    }}
+                  </span>
                   @if (adjustmentDelta(); as delta) {
-                    <span>Изменение журнала: {{ delta | money }} {{ baseCurrency() }}</span>
+                    <span>
+                      {{
+                        t('operations.journalChangeP0P1', {
+                          p0: (delta | money),
+                          p1: baseCurrency(),
+                        })
+                      }}
+                    </span>
                   }
                 </div>
               }
 
               @if (form.controls.type.value === 'transfer') {
                 <div class="form-field form-field-wide">
-                  <label for="destination-account">Счёт зачисления</label>
+                  <label for="destination-account"> {{ t('operations.creditAccount') }} </label>
                   <app-entity-combobox
                     inputId="destination-account"
                     formControlName="destinationAccountId"
                     [options]="destinationAccountOptions()"
                     recentKey="accounts"
-                    placeholder="Введите название счёта"
+                    [placeholder]="t('funds.typeAnAccountName')"
                   />
                 </div>
                 <p class="impact-preview form-field-wide">
-                  Одна операция: списание и зачисление сохранятся вместе.
+                  {{ t('operations.oneOperationDebitAndCreditAreSaved') }}
                 </p>
               }
 
@@ -167,9 +196,9 @@
                 (form.controls.type.value === 'expense' || form.controls.type.value === 'transfer')
               ) {
                 <div class="form-field">
-                  <label for="operation-fund">Фонд</label>
+                  <label for="operation-fund"> {{ t('funds.fund') }} </label>
                   <select id="operation-fund" formControlName="fundId">
-                    <option value="">Без фонда</option>
+                    <option value="">{{ t('operations.noFund') }}</option>
                     @for (fund of availableFunds(); track fund.id) {
                       <option [value]="fund.id">{{ fundPositionLabel(fund) }}</option>
                     }
@@ -177,12 +206,14 @@
                 </div>
                 @if (form.controls.type.value === 'expense' && form.controls.fundId.value) {
                   <p class="impact-preview form-field-wide">
-                    Расход полностью уменьшит выбранный фонд на этом счёте.
+                    {{ t('operations.theFullExpenseReducesTheSelectedFund') }}
                   </p>
                 }
                 @if (form.controls.type.value === 'transfer' && form.controls.fundId.value) {
                   <div class="form-field">
-                    <label for="operation-fund-amount">Виртуальная часть перевода</label>
+                    <label for="operation-fund-amount">
+                      {{ t('operations.virtualPortionOfTheTransfer') }}
+                    </label>
                     <input
                       id="operation-fund-amount"
                       appDecimalInput="expression"
@@ -192,14 +223,14 @@
                     />
                   </div>
                   <p class="impact-preview form-field-wide">
-                    Эта часть фонда сменит физический счёт, но общий остаток фонда не изменится.
+                    {{ t('operations.thisPortionOfTheFundMovesTo') }}
                   </p>
                 }
               }
 
               @if (usesExpectedOperationFields() && form.controls.type.value === 'transfer') {
                 <fieldset class="form-field form-field-wide">
-                  <legend>После перевода</legend>
+                  <legend>{{ t('operations.afterTransfer') }}</legend>
                   <label
                     ><input
                       type="checkbox"
@@ -208,17 +239,17 @@
                         form.controls.fundId.setValue($any($event.target).checked ? 'allocate' : '')
                       "
                     />
-                    Распределить сумму по активным фондам</label
-                  >
+                    {{ t('operations.allocateTheAmountAmongActiveFunds') }}
+                  </label>
                   <p class="hint">
-                    Проценты фондов будут применены только в момент принятия операции.
+                    {{ t('operations.fundPercentagesAreAppliedOnlyWhenThe') }}
                   </p>
                 </fieldset>
               }
 
               <div class="form-field">
                 <label for="operation-date">{{
-                  isPlanMode() ? 'Плановая дата' : 'Дата факта'
+                  isPlanMode() ? t('operations.plannedDate') : t('operations.postingDate')
                 }}</label>
                 <input
                   id="operation-date"
@@ -229,19 +260,21 @@
               </div>
               @if (isOccurrenceConfirmationMode()) {
                 <p class="impact-preview form-field-wide">
-                  Плановая дата — {{ confirmingOccurrence()!.due_on | textDate }}. Факт будет
-                  проведён текущим днём Hermes. Изменения затронут только этот экземпляр.
+                  {{
+                    t('operations.plannedDateP0PostingUsesTheCurrent', {
+                      p0: (confirmingOccurrence()!.due_on | textDate),
+                    })
+                  }}
                 </p>
               } @else if (isPlanMode()) {
                 <p class="impact-preview form-field-wide">
-                  Операция будет добавлена в план и прогноз. Баланс изменится только после
-                  применения.
+                  {{ t('operations.theOperationWillAppearInPlansAnd') }}
                 </p>
               }
 
               @if (form.controls.type.value === 'balance_adjustment') {
                 <div class="form-field form-field-wide">
-                  <label for="operation-reason">Причина корректировки</label>
+                  <label for="operation-reason"> {{ t('operations.reasonForAdjustment') }} </label>
                   <textarea
                     id="operation-reason"
                     formControlName="reason"
@@ -252,15 +285,17 @@
                 <details class="optional-field form-field-wide">
                   <summary>
                     {{
-                      form.controls.description.value ? 'Описание добавлено' : 'Добавить описание'
+                      form.controls.description.value
+                        ? t('operations.descriptionAdded')
+                        : t('operations.addDescription')
                     }}
                   </summary>
-                  <label for="operation-description">Описание</label>
+                  <label for="operation-description"> {{ t('accounts.description') }} </label>
                   <textarea
                     id="operation-description"
                     formControlName="description"
                     maxlength="2000"
-                    placeholder="Необязательно"
+                    [placeholder]="t('funds.optional')"
                   ></textarea>
                 </details>
               }
@@ -269,7 +304,7 @@
 
           <div class="modal-actions">
             @if (form.touched && !canSubmit()) {
-              <p class="field-error">Заполните обязательные поля и проверьте финансовый эффект.</p>
+              <p class="field-error">{{ t('operations.completeTheRequiredFieldsAndCheckThe') }}</p>
             }
             <div class="modal-action-buttons">
               @if (editingPlan(); as plan) {
@@ -279,27 +314,27 @@
                   [disabled]="saving()"
                   (click)="removePlan(plan)"
                 >
-                  Отменить план
+                  {{ t('operations.cancelPlan') }}
                 </button>
               }
               @if (editingId() || editingPlan() || isOccurrenceConfirmationMode()) {
                 <button type="button" class="secondary" (click)="cancelEdit()">
-                  Отменить изменение
+                  {{ t('accounts.cancelChanges') }}
                 </button>
               }
               <button type="submit" [disabled]="saving() || !canSubmit()">
                 {{
                   saving()
-                    ? 'Сохраняем…'
+                    ? t('accounts.saving')
                     : isOccurrenceConfirmationMode()
-                      ? 'Принять сегодня'
+                      ? t('operations.confirmToday')
                       : editingPlan()
-                        ? 'Сохранить план'
+                        ? t('operations.savePlan')
                         : editingId()
-                          ? 'Сохранить изменения'
+                          ? t('accounts.saveChanges')
                           : isPlanMode()
-                            ? 'Запланировать'
-                            : 'Добавить в журнал'
+                            ? t('operations.schedule')
+                            : t('operations.addToJournal')
                 }}
               </button>
             </div>
@@ -313,12 +348,12 @@
     <section class="panel journal-panel" aria-labelledby="journal-title">
       <div class="journal-heading">
         <div class="journal-title">
-          <h2 id="journal-title">Операции</h2>
+          <h2 id="journal-title">{{ t('operations.operations') }}</h2>
           <span class="count-pill">{{ total() }}</span>
         </div>
         <div class="journal-tools">
           <div class="selection-total">
-            <span>По всей выборке</span>
+            <span> {{ t('operations.entireSelection') }} </span>
             <strong>{{ totalAmount() | money }} {{ baseCurrency() }}</strong>
           </div>
           <button
@@ -328,11 +363,11 @@
             [attr.aria-expanded]="filtersOpen()"
             aria-controls="operation-filters"
           >
-            {{ filtersOpen() ? 'Скрыть фильтры' : 'Фильтры' }}
+            {{ filtersOpen() ? t('operations.hideFilters') : t('operations.filters') }}
           </button>
         </div>
       </div>
-      <div class="filters-panel" aria-label="Фильтры операций">
+      <div class="filters-panel" [attr.aria-label]="t('operations.operationFilters')">
         @if (filtersOpen()) {
           <form
             id="operation-filters"
@@ -340,66 +375,76 @@
             [formGroup]="filters"
             (ngSubmit)="applyFilters()"
           >
-            <label>С даты <input type="date" formControlName="occurredFrom" /></label>
-            <label>По дату <input type="date" formControlName="occurredTo" /></label>
+            <label>
+              {{ t('operations.fromDate') }} <input type="date" formControlName="occurredFrom"
+            /></label>
+            <label>
+              {{ t('operations.throughDate') }} <input type="date" formControlName="occurredTo"
+            /></label>
             <div class="control-label">
-              Счёт
+              {{ t('forecast.account') }}
               <app-entity-combobox
                 formControlName="accountId"
-                accessibleLabel="Счёт"
+                [accessibleLabel]="t('forecast.account')"
                 [options]="accountOptions()"
                 recentKey="accounts"
-                placeholder="Все счета"
+                [placeholder]="t('accounts.allAccounts')"
                 [allowEmpty]="true"
               />
             </div>
-            <label
-              >Тип
+            <label>
+              {{ t('operations.type') }}
               <select formControlName="type">
-                <option value="">Все типы</option>
-                <option value="income">Доход</option>
-                <option value="expense">Расход</option>
-                <option value="transfer">Перевод</option>
-                <option value="balance_adjustment">Корректировка</option>
+                <option value="">{{ t('operations.allTypes') }}</option>
+                <option value="income">{{ t('operation-create-menu.income') }}</option>
+                <option value="expense">{{ t('operation-create-menu.expense') }}</option>
+                <option value="transfer">{{ t('operation-create-menu.transfer') }}</option>
+                <option value="balance_adjustment">
+                  {{ t('operation-create-menu.adjustment') }}
+                </option>
               </select>
             </label>
             <div class="control-label">
-              Категория
+              {{ t('operations.category') }}
               <app-entity-combobox
                 formControlName="categoryId"
-                accessibleLabel="Категория"
+                [accessibleLabel]="t('operations.category')"
                 [options]="categoryOptions()"
                 recentKey="categories"
-                placeholder="Все категории"
+                [placeholder]="t('operations.allCategories')"
                 [allowEmpty]="true"
               />
             </div>
             <div class="filter-actions">
-              <button type="submit">Применить</button
-              ><button type="button" class="secondary" (click)="clearFilters()">Сбросить</button>
+              <button type="submit">{{ t('operations.apply') }}</button
+              ><button type="button" class="secondary" (click)="clearFilters()">
+                {{ t('operations.reset') }}
+              </button>
             </div>
           </form>
         }
         @if (filterChips().length > 0) {
-          <div class="filter-chips" aria-label="Активные фильтры">
+          <div class="filter-chips" [attr.aria-label]="t('operations.activeFilters')">
             @for (chip of filterChips(); track chip) {
               <span>{{ chip }}</span>
             }
-            <button type="button" class="secondary" (click)="clearFilters()">Сбросить все</button>
+            <button type="button" class="secondary" (click)="clearFilters()">
+              {{ t('operations.resetAll') }}
+            </button>
           </div>
         }
       </div>
       @if (loading() && operations().length === 0) {
-        <p class="empty-state">Загружаем журнал…</p>
+        <p class="empty-state">{{ t('operations.loadingJournal') }}</p>
       } @else {
         @if (loading()) {
-          <p class="loading-note" role="status">Обновляем выборку…</p>
+          <p class="loading-note" role="status">{{ t('operations.updatingSelection') }}</p>
         }
         @if (operations().length === 0) {
-          <p class="empty-state">Операций по выбранным условиям нет.</p>
+          <p class="empty-state">{{ t('operations.noOperationsMatchTheseFilters') }}</p>
         }
         @if (loadingTodayPlans()) {
-          <p class="loading-note" role="status">Загружаем разовые планы на сегодня…</p>
+          <p class="loading-note" role="status">{{ t('operations.loadingTodaySOneOffPlans') }}</p>
         }
         @if (todayPlannedOperations().length > 0) {
           <section
@@ -408,10 +453,10 @@
           >
             <div class="planned-operation-heading">
               <div class="planned-operation-title">
-                <h3 id="today-plans-title">Разовые планы на сегодня</h3>
+                <h3 id="today-plans-title">{{ t('operations.todaySOneOffPlans') }}</h3>
                 <span class="count-pill">{{ todayPlannedOperations().length }}</span>
               </div>
-              <p>Пока не влияют на фактический остаток</p>
+              <p>{{ t('operations.doNotAffectActualBalancesYet') }}</p>
             </div>
             @for (plan of todayPlannedOperations(); track plan.id) {
               <article class="operation-row planned-operation-row today-planned-operation-row">
@@ -420,27 +465,35 @@
                     ><strong>{{
                       plan.description || plan.category_name || operationTypeLabel(plan.type)
                     }}</strong
-                    ><small
-                      >На сегодня · {{ operationTypeLabel(plan.type) }} ·
-                      {{ plannedOperationContext(plan) }}</small
-                    ></span
+                    ><small>
+                      {{
+                        t('operations.todayP0P1', {
+                          p0: operationTypeLabel(plan.type),
+                          p1: plannedOperationContext(plan),
+                        })
+                      }}
+                    </small></span
                   >
                   <span class="operation-amount"
                     >{{ signedAmount(plan) | money }} {{ baseCurrency() }}</span
                   >
                   <span class="operation-disclosure" aria-hidden="true">›</span>
-                  <span class="visually-hidden">Редактировать разовую плановую операцию</span>
+                  <span class="visually-hidden">
+                    {{ t('operations.editOneOffPlannedOperation') }}
+                  </span>
                 </button>
                 <div class="planned-row-actions">
                   <button type="button" class="secondary" (click)="editPlan(plan)">
-                    Редактировать
+                    {{ t('categories.edit') }}
                   </button>
                   <button
                     type="button"
                     (click)="applyPlanToday(plan)"
                     [disabled]="isConfirmingPlan(plan)"
                   >
-                    {{ isConfirmingPlan(plan) ? 'Применяем…' : 'Применить сегодня' }}
+                    {{
+                      isConfirmingPlan(plan) ? t('operations.applying') : t('operations.applyToday')
+                    }}
                   </button>
                 </div>
               </article>
@@ -451,10 +504,10 @@
           <section class="planned-operation-list" aria-labelledby="planned-operations-title">
             <div class="planned-operation-heading">
               <div class="planned-operation-title">
-                <h3 id="planned-operations-title">Другие разовые планы</h3>
+                <h3 id="planned-operations-title">{{ t('operations.otherOneOffPlans') }}</h3>
                 <span class="count-pill">{{ plannedOperations().length }}</span>
               </div>
-              <p>Не влияют на фактический остаток</p>
+              <p>{{ t('operations.doNotAffectActualBalances') }}</p>
             </div>
             @for (plan of plannedOperations(); track plan.id) {
               <article class="operation-row planned-operation-row">
@@ -473,7 +526,9 @@
                     >{{ signedAmount(plan) | money }} {{ baseCurrency() }}</span
                   >
                   <span class="operation-disclosure" aria-hidden="true">›</span>
-                  <span class="visually-hidden">Редактировать разовую плановую операцию</span>
+                  <span class="visually-hidden">
+                    {{ t('operations.editOneOffPlannedOperation') }}
+                  </span>
                 </button>
               </article>
             }
@@ -518,20 +573,24 @@
                     >›</span
                   >
                   <span class="visually-hidden">
-                    {{ expandedId() === operation.id ? 'Свернуть детали' : 'Показать детали' }}
+                    {{
+                      expandedId() === operation.id
+                        ? t('operations.collapseDetails')
+                        : t('operations.showDetails')
+                    }}
                   </span>
                 </button>
                 @if (expandedId() === operation.id) {
                   <div class="operation-details">
                     <dl class="detail-type">
                       <div>
-                        <dt>Тип</dt>
+                        <dt>{{ t('operations.type') }}</dt>
                         <dd>{{ operationTypeLabel(operation.type) }}</dd>
                       </div>
                     </dl>
                     <div class="detail-effects">
                       <div class="detail-effect">
-                        <p class="detail-label">Физическое движение</p>
+                        <p class="detail-label">{{ t('operations.physicalMovement') }}</p>
                         <div class="movement-list">
                           @for (movement of operation.movements; track movement.account_id) {
                             <span
@@ -545,14 +604,19 @@
                       </div>
                       @if (operation.fund_movements.length > 0) {
                         <div class="detail-effect">
-                          <p class="detail-label">Движение фонда</p>
+                          <p class="detail-label">{{ t('operations.fundMovement') }}</p>
                           <div class="movement-list fund-movement-list">
                             @for (
                               movement of operation.fund_movements;
                               track movement.fund_id + movement.account_id
                             ) {
-                              <span
-                                >Фонд «{{ movement.fund_name }}» · {{ movement.account_name }}
+                              <span>
+                                {{
+                                  t('operations.fundP0P1', {
+                                    p0: movement.fund_name,
+                                    p1: movement.account_name,
+                                  })
+                                }}
                                 <strong
                                   >{{ movement.amount | money }} {{ baseCurrency() }}</strong
                                 ></span
@@ -564,9 +628,9 @@
                     </div>
                     <div class="row-actions">
                       <button type="button" class="secondary" (click)="edit(operation)">
-                        Изменить</button
+                        {{ t('accounts.edit') }}</button
                       ><button type="button" class="danger" (click)="remove(operation)">
-                        Удалить
+                        {{ t('accounts.delete') }}
                       </button>
                     </div>
                   </div>
@@ -575,23 +639,30 @@
             }
           </div>
           @if (total() > pageSize || page() > 1) {
-            <nav class="pagination" aria-label="Страницы журнала">
+            <nav class="pagination" [attr.aria-label]="t('operations.journalPages')">
               <button
                 type="button"
                 class="secondary"
                 (click)="previousPage()"
                 [disabled]="page() === 1"
               >
-                Назад
+                {{ t('funds.back') }}
               </button>
-              <span>Страница {{ page() }} из {{ Math.max(1, Math.ceil(total() / pageSize)) }}</span>
+              <span>
+                {{
+                  t('funds.pageP0OfP1', {
+                    p0: page(),
+                    p1: Math.max(1, Math.ceil(total() / pageSize)),
+                  })
+                }}
+              </span>
               <button
                 type="button"
                 class="secondary"
                 (click)="nextPage()"
                 [disabled]="page() * pageSize >= total()"
               >
-                Далее
+                {{ t('funds.next') }}
               </button>
             </nav>
           }

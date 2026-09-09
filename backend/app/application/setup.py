@@ -3,7 +3,11 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings
 from app.modules.auth.contracts import IssuedSession, setup_owner
 from app.modules.backup.contracts import open_backup, preview_backup, restore_backup
-from app.modules.categories.contracts import OnboardingExpenseGroup, create_onboarding_categories
+from app.modules.categories.contracts import (
+    CategoryTemplateLanguage,
+    OnboardingExpenseGroup,
+    create_onboarding_categories,
+)
 
 
 def initialize_fresh_application(
@@ -15,6 +19,7 @@ def initialize_fresh_application(
     timezone: str,
     create_default_categories: bool,
     onboarding_expense_groups: list[OnboardingExpenseGroup],
+    category_template_language: CategoryTemplateLanguage = CategoryTemplateLanguage.RU,
 ) -> IssuedSession:
     """Create access state and optional owner-selected directories in one transaction."""
     issued = setup_owner(
@@ -25,7 +30,9 @@ def initialize_fresh_application(
         timezone=timezone,
     )
     if create_default_categories:
-        create_onboarding_categories(session, onboarding_expense_groups)
+        create_onboarding_categories(
+            session, onboarding_expense_groups, language=category_template_language
+        )
     return issued
 
 

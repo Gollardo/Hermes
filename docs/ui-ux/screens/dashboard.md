@@ -188,3 +188,10 @@ retaining sensitive data longer than necessary.
 - Which two or three charts best answer the main questions without overload?
 - Should recent activity occupy more space than compact analytics?
 - Is a privacy mode needed when showing the screen to other people?
+
+## Multilingual presentation
+
+The implemented RU/EN presentation follows the shared
+[internationalization contract](../internationalization.md). Language changes
+update screen copy and accessible labels while preserving financial semantics,
+user-entered data, dates, selected context and exact monetary payloads.

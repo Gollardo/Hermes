@@ -305,7 +305,8 @@ def test_future_recurring_occurrence_can_be_edited_and_confirmed_today(
         assert operation["category_id"] == accepted_category
 
         balances = {item["id"]: item["balance"] for item in client.get("/api/v1/accounts").json()}
-        assert balances[original_account] == "0.0000"
+        assert isinstance(balances[original_account], str)
+        assert Decimal(balances[original_account]) == Decimal("0")
         assert balances[accepted_account] == "25.5000"
         persisted_rule = client.get("/api/v1/scheduling/rules").json()[0]
         assert persisted_rule["amount"] == "10.0000"

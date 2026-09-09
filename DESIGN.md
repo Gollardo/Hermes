@@ -403,3 +403,12 @@ Confirmed domain invariants override UI/UX hypotheses.
 If documents under `docs/ui-ux/` appear to conflict, do not guess. Surface the
 conflict before implementing the UI change. Open questions and preliminary
 directions must not be silently promoted to approved design decisions.
+
+## Runtime language contract
+
+The owner-approved RU/EN foundation uses immediate browser-local selection and
+shared catalogs. Follow [internationalization](docs/ui-ux/internationalization.md)
+for reactive copy, errors, accessibility labels, dates and contributor checks.
+Language selection never changes financial payloads, the mandatory comma-based
+money/percentage format, existing names or unsaved form values. Track repeated
+controls by stable identity, not translated text.

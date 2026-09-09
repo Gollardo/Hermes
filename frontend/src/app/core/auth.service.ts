@@ -13,6 +13,7 @@ export interface SetupPayload {
   base_currency: string;
   timezone: string;
   create_default_categories?: boolean;
+  category_template_language?: 'ru' | 'en';
   onboarding_expense_groups?: string[];
 }
 
@@ -132,73 +133,4 @@ export class AuthService {
   private clearSession(): void {
     this.access.unauthenticated();
   }
-}
-
-export function apiErrorMessage(error: unknown, fallback: string): string {
-  if (!(error instanceof HttpErrorResponse)) {
-    return fallback;
-  }
-  const detail: unknown = error.error?.detail;
-  if (
-    typeof detail === 'object' &&
-    detail !== null &&
-    'code' in detail &&
-    typeof detail.code === 'string'
-  ) {
-    const localized: Record<string, string> = {
-      already_initialized: 'Первоначальная настройка уже завершена.',
-      authentication_required: 'Сессия завершена. Войдите снова.',
-      base_currency_locked: 'Основную валюту уже нельзя изменить.',
-      timezone_locked_by_schedule: 'Часовой пояс нельзя изменить после создания регулярных правил.',
-      account_has_history: 'Счёт с историей операций нельзя удалить. Архивируйте его.',
-      account_not_found: 'Счёт не найден.',
-      archived_fund_balance:
-        'Изменение вернуло бы деньги в архивный фонд. Сначала восстановите фонд.',
-      category_has_active_children: 'Сначала архивируйте активные подкатегории.',
-      category_not_found: 'Категория не найдена.',
-      category_type_has_history:
-        'Тип категории с финансовой историей изменить нельзя. Создайте новую категорию.',
-      csrf_failed: 'Защитный токен устарел. Обновите страницу и повторите действие.',
-      current_password_invalid: 'Текущий мастер-пароль указан неверно.',
-      invalid_credentials: 'Неверный мастер-пароль.',
-      invalid_category_parent: 'Родитель должен быть активной категорией того же типа.',
-      invalid_account_reference: 'Выбранный счёт недоступен для новой операции.',
-      invalid_category_reference: 'Выбранная категория недоступна или имеет другой тип.',
-      insufficient_balance: 'На счёте недостаточно денег. Отрицательный остаток запрещён.',
-      fund_not_found: 'Фонд не найден или находится в архиве.',
-      invalid_fund_reference: 'Выбранный фонд недоступен для новой операции.',
-      fund_conflict: 'Фонд уже изменён в другой вкладке. Обновите страницу.',
-      fund_percentage_limit: 'Сумма процентов активных фондов не может превышать 100,00%.',
-      fund_allocation_unavailable:
-        'Распределение не выполнено: задайте положительный процент хотя бы одному активному фонду.',
-      dynamic_fund_targets_required:
-        'Для динамического режима задайте целевую сумму каждому неархивному фонду.',
-      fund_has_balance: 'Фонд можно архивировать только после обнуления остатка.',
-      insufficient_fund_balance: 'В выбранном фонде на этом счёте недостаточно денег.',
-      insufficient_free_balance: 'На счёте недостаточно свободных денег для резервирования.',
-      login_rate_limited: 'Слишком много неудачных попыток. Повторите вход позже.',
-      operation_conflict: 'Операция уже изменена в другой вкладке. Обновите журнал.',
-      operation_not_found: 'Операция не найдена.',
-      operation_linked_to_occurrence:
-        'Подтверждённую операцию из календаря нельзя удалить отдельно.',
-      operation_linked_to_allocation:
-        'Перевод с распределением по фондам нельзя изменить в журнале. Удалите его и создайте заново.',
-      recurring_rule_not_found: 'Регулярное правило не найдено.',
-      expected_occurrence_not_found: 'Ожидаемая операция не найдена.',
-      forecast_account_not_found: 'Счёт для прогноза не найден.',
-      scheduling_conflict: 'Расписание уже изменено в другой вкладке. Обновите календарь.',
-      invalid_occurrence_transition: 'Это действие больше недоступно для ожидаемой операции.',
-      confirmation_invalid: 'Фраза подтверждения не совпадает. Данные не изменены.',
-      backup_too_large: 'Backup превышает допустимый размер.',
-      backup_authentication_failed:
-        'Не удалось расшифровать резервную копию. Пароль неверен или файл повреждён.',
-      invalid_hermes_file: 'Hermes-backup имеет некорректную структуру.',
-      unsupported_hermes_version: 'Эта версия Hermes-backup пока не поддерживается.',
-      invalid_kdf_parameters: 'Параметры защиты Hermes-backup недопустимы.',
-      invalid_backup_payload: 'Расшифрованные данные backup повреждены или несовместимы.',
-      invalid_backup: 'Backup повреждён, несовместим или нарушает финансовые правила.',
-    };
-    return localized[detail.code] ?? fallback;
-  }
-  return fallback;
 }

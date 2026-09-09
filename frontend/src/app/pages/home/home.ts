@@ -1,10 +1,11 @@
+import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, of, switchMap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { apiErrorMessage } from '../../core/auth.service';
+import { apiErrorMessage } from '../../core/api-error';
 import { DateTextPipe } from '../../shared/date-text.pipe';
 import { currencySymbol, MoneyPipe } from '../../shared/money.pipe';
 import { OperationCreateMenu } from '../../shared/operation-create-menu';
@@ -92,6 +93,7 @@ interface Settings {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePage implements OnInit {
+  protected readonly t = t;
   private readonly http = inject(HttpClient);
 
   protected readonly summary = signal<FundSummary | null>(null);
@@ -102,10 +104,10 @@ export class HomePage implements OnInit {
   protected readonly categories = signal<CategorySummary>({ income: [], expense: [] });
   protected readonly analyticsFrom = signal('');
   protected readonly analyticsThrough = signal('');
-  protected readonly analyticsError = signal<string | null>(null);
+  protected readonly analyticsError = localizedSignal();
   protected readonly baseCurrency = signal('RUB');
   protected readonly loading = signal(true);
-  protected readonly error = signal<string | null>(null);
+  protected readonly error = localizedSignal();
 
   ngOnInit(): void {
     this.http
@@ -141,8 +143,8 @@ export class HomePage implements OnInit {
               })
               .pipe(
                 catchError((error: unknown) => {
-                  this.analyticsError.set(
-                    apiErrorMessage(error, 'Не удалось загрузить распределение по категориям.'),
+                  this.analyticsError.set(() =>
+                    apiErrorMessage(error, t('home.couldNotLoadTheCategoryBreakdown')),
                   );
                   return of({ income: [], expense: [] });
                 }),
@@ -163,7 +165,7 @@ export class HomePage implements OnInit {
         },
         error: (error: unknown) => {
           this.loading.set(false);
-          this.error.set(apiErrorMessage(error, 'Не удалось собрать обзор.'));
+          this.error.set(() => apiErrorMessage(error, t('home.couldNotBuildTheOverview')));
         },
       });
   }
@@ -187,10 +189,10 @@ export class HomePage implements OnInit {
 
   protected typeLabel(type: Operation['type'] | Occurrence['type']): string {
     return {
-      income: 'Доход',
-      expense: 'Расход',
-      transfer: 'Перевод',
-      balance_adjustment: 'Корректировка',
+      income: t('operation-create-menu.income'),
+      expense: t('operation-create-menu.expense'),
+      transfer: t('operation-create-menu.transfer'),
+      balance_adjustment: t('operation-create-menu.adjustment'),
     }[type];
   }
 
@@ -206,27 +208,30 @@ export class HomePage implements OnInit {
       .slice(5)
       .reduce((total, item) => total + (moneyUnits(item.amount) ?? 0n), 0n);
     return rest > 0n
-      ? [...top, { category_id: 'other', category_name: 'Прочее', amount: formatUnits(rest) }]
+      ? [
+          ...top,
+          { category_id: 'other', category_name: t('home.other'), amount: formatUnits(rest) },
+        ]
       : top;
   }
 
   protected analyticsCharts(): AnalyticsChart[] {
     return [
       {
-        title: 'Расходы по категориям',
-        context: 'Текущий календарный месяц',
+        title: t('home.expensesByCategory'),
+        context: t('home.currentCalendarMonth'),
         items: this.categories().expense,
         operationType: 'expense',
       },
       {
-        title: 'Доходы по категориям',
-        context: 'Текущий календарный месяц',
+        title: t('home.incomeByCategory'),
+        context: t('home.currentCalendarMonth'),
         items: this.categories().income,
         operationType: 'income',
       },
       {
-        title: 'Отложенные средства',
-        context: 'Текущее состояние',
+        title: t('home.moneySetAside'),
+        context: t('home.currentState'),
         items: this.fundsChart(),
         operationType: null,
       },

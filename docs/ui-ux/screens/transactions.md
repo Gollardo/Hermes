@@ -219,3 +219,10 @@ version, keeps their draft, and reconfirms consequences.
 - Which filters are used daily, and which belong under “More”?
 - Is running balance needed in account-scoped mode?
 - What data volume is normal for desktop and mobile tests?
+
+## Multilingual presentation
+
+The implemented RU/EN presentation follows the shared
+[internationalization contract](../internationalization.md). Language changes
+update screen copy and accessible labels while preserving financial semantics,
+user-entered data, dates, selected context and exact monetary payloads.

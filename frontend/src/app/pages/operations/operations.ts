@@ -1,3 +1,4 @@
+import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -5,7 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { apiErrorMessage } from '../../core/auth.service';
+import { apiErrorMessage } from '../../core/api-error';
 import { DateTextPipe, formatTextDate } from '../../shared/date-text.pipe';
 import { currencySymbol, formatMoney, MoneyPipe } from '../../shared/money.pipe';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
@@ -141,6 +142,7 @@ interface ExpectedOccurrence extends Omit<OneOffPlan, 'source_kind'> {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationsPage implements OnInit {
+  protected readonly t = t;
   private readonly http = inject(HttpClient);
   private readonly builder = inject(NonNullableFormBuilder);
   private readonly route = inject(ActivatedRoute, { optional: true });
@@ -167,8 +169,8 @@ export class OperationsPage implements OnInit {
   protected readonly loadingTodayPlans = signal(false);
   protected readonly saving = signal(false);
   protected readonly confirmingPlanId = signal<string | null>(null);
-  protected readonly error = signal<string | null>(null);
-  protected readonly scheduledNotice = signal<string | null>(null);
+  protected readonly error = localizedSignal();
+  protected readonly scheduledNotice = localizedSignal();
   protected readonly editingId = signal<string | null>(null);
   protected readonly editingPlan = signal<OneOffPlan | null>(null);
   protected readonly confirmingOccurrence = signal<ExpectedOccurrence | null>(null);
@@ -264,17 +266,22 @@ export class OperationsPage implements OnInit {
   }
 
   protected fundPositionLabel(fund: Fund): string {
-    return `${fund.name} · доступно ${formatMoney(
-      formatMoneyUnits(this.fundAvailableOnSource(fund.id, this.form.controls.accountId.value)),
-    )} ${this.baseCurrency()}${fund.archived ? ' · в архиве' : ''}`;
+    return t('operations.p0AvailableP1P2P3', {
+      p0: fund.name,
+      p1: formatMoney(
+        formatMoneyUnits(this.fundAvailableOnSource(fund.id, this.form.controls.accountId.value)),
+      ),
+      p2: this.baseCurrency(),
+      p3: fund.archived ? ' ' + t('funds.archived') : '',
+    });
   }
 
   protected operationTypeLabel(type: OperationType): string {
     return {
-      income: 'Доход',
-      expense: 'Расход',
-      transfer: 'Перевод',
-      balance_adjustment: 'Корректировка',
+      income: t('operation-create-menu.income'),
+      expense: t('operation-create-menu.expense'),
+      transfer: t('operation-create-menu.transfer'),
+      balance_adjustment: t('operation-create-menu.adjustment'),
     }[type];
   }
 
@@ -283,18 +290,18 @@ export class OperationsPage implements OnInit {
       ? this.categories().find((item) => item.id === category.parent_id)
       : null;
     const label = parent ? `${parent.name} → ${category.name}` : category.name;
-    return category.archived ? `${label} · в архиве` : label;
+    return category.archived ? t('operations.p0Archived', { p0: label }) : label;
   }
 
   protected accountLabel(account: Account): string {
-    return `${account.name} · ${formatMoney(account.balance)}${account.archived ? ' · в архиве' : ''}`;
+    return `${account.name} · ${formatMoney(account.balance)}${account.archived ? ' ' + t('funds.archived') : ''}`;
   }
 
   protected accountOptions(accounts = this.accounts()): EntityOption[] {
     return accounts.map((account) => ({
       id: account.id,
       label: account.name,
-      detail: `${formatMoney(account.balance)} ${this.baseCurrency()}${account.archived ? ' · в архиве' : ''}`,
+      detail: `${formatMoney(account.balance)} ${this.baseCurrency()}${account.archived ? ' ' + t('funds.archived') : ''}`,
     }));
   }
 
@@ -314,7 +321,7 @@ export class OperationsPage implements OnInit {
       return {
         id: category.id,
         label: category.name,
-        detail: `${category.type === 'income' ? 'Доход' : 'Расход'}${parent ? ` · ${parent.name}` : ''}${category.archived ? ' · в архиве' : ''}`,
+        detail: `${category.type === 'income' ? t('operation-create-menu.income') : t('operation-create-menu.expense')}${parent ? ` · ${parent.name}` : ''}${category.archived ? ' ' + t('funds.archived') : ''}`,
       };
     });
   }
@@ -327,14 +334,14 @@ export class OperationsPage implements OnInit {
     const destination = operation.movements.find((movement) => moneyUnits(movement.amount)! > 0n);
     return source && destination
       ? `${source.account_name} → ${destination.account_name}`
-      : 'Направление недоступно';
+      : t('operations.directionUnavailable');
   }
 
   protected operationContext(operation: Operation): string {
     if (operation.type === 'transfer') return this.transferDirection(operation);
     const account = operation.movements[0]?.account_name;
     const fund = operation.fund_movements[0]?.fund_name;
-    return [operation.category_name, account, fund ? `Фонд «${fund}»` : null]
+    return [operation.category_name, account, fund ? t('operations.fundP0', { p0: fund }) : null]
       .filter(Boolean)
       .join(' · ');
   }
@@ -353,7 +360,7 @@ export class OperationsPage implements OnInit {
   }
 
   protected plannedStatusLabel(plan: OneOffPlan): string {
-    return plan.status === 'postponed' ? 'Перенесено на' : 'Запланировано на';
+    return plan.status === 'postponed' ? t('operations.postponedTo') : t('operations.scheduledFor');
   }
 
   protected isConfirmingPlan(plan: OneOffPlan): boolean {
@@ -365,11 +372,11 @@ export class OperationsPage implements OnInit {
     if (!today || this.confirmingPlanId()) return;
     const confirmed = window.confirm(
       [
-        'Применить разовый план сегодня?',
-        'Дата факта: текущий день Hermes в момент применения.',
+        t('operations.applyThisOneOffPlanToday'),
+        t('operations.postingDateTheCurrentHermesDayAt'),
         `${this.operationTypeLabel(plan.type)}: ${formatMoney(this.signedAmount(plan))} ${this.baseCurrency()}.`,
-        `Счёт: ${this.plannedOperationContext(plan)}.`,
-        'После применения изменится фактический остаток.',
+        t('operations.accountP0', { p0: this.plannedOperationContext(plan) }),
+        t('operations.theActualBalanceWillChangeAfterApplication'),
       ].join('\n'),
     );
     if (!confirmed) return;
@@ -383,13 +390,13 @@ export class OperationsPage implements OnInit {
       .subscribe({
         next: () => {
           this.confirmingPlanId.set(null);
-          this.scheduledNotice.set('Разовый план применён и добавлен в журнал.');
+          this.scheduledNotice.set(() => t('operations.theOneOffPlanWasAppliedAnd'));
           this.load();
           this.loadDirectories();
         },
         error: (error: unknown) => {
           this.confirmingPlanId.set(null);
-          this.error.set(apiErrorMessage(error, 'Не удалось применить разовый план.'));
+          this.error.set(() => apiErrorMessage(error, t('operations.couldNotApplyTheOneOffPlan')));
           this.load();
         },
       });
@@ -400,9 +407,7 @@ export class OperationsPage implements OnInit {
   }
 
   protected removePlan(plan: OneOffPlan): void {
-    if (
-      !window.confirm('Удалить разовый план? Он будет отменён и перестанет отображаться в журнале.')
-    ) {
+    if (!window.confirm(t('operations.deleteTheOneOffPlanItWill'))) {
       return;
     }
     this.http
@@ -415,7 +420,7 @@ export class OperationsPage implements OnInit {
           this.load();
         },
         error: (error: unknown) =>
-          this.error.set(apiErrorMessage(error, 'Не удалось удалить разовый план.')),
+          this.error.set(() => apiErrorMessage(error, t('operations.couldNotDeleteTheOneOffPlan'))),
       });
   }
 
@@ -489,15 +494,17 @@ export class OperationsPage implements OnInit {
   protected filterChips(): string[] {
     const value = this.filters.getRawValue();
     const chips: string[] = [];
-    if (value.occurredFrom) chips.push(`с ${value.occurredFrom}`);
-    if (value.occurredTo) chips.push(`по ${value.occurredTo}`);
+    if (value.occurredFrom) chips.push(t('operations.fromP0', { p0: value.occurredFrom }));
+    if (value.occurredTo) chips.push(t('operations.throughP0', { p0: value.occurredTo }));
     if (value.accountId) {
-      chips.push(this.accounts().find((item) => item.id === value.accountId)?.name ?? 'Счёт');
+      chips.push(
+        this.accounts().find((item) => item.id === value.accountId)?.name ?? t('forecast.account'),
+      );
     }
     if (value.type) chips.push(this.operationTypeLabel(value.type));
     if (value.categoryId) {
       const category = this.categories().find((item) => item.id === value.categoryId);
-      chips.push(category ? this.categoryLabel(category) : 'Категория');
+      chips.push(category ? this.categoryLabel(category) : t('operations.category'));
     }
     return chips;
   }
@@ -513,7 +520,7 @@ export class OperationsPage implements OnInit {
         : amount;
     if (!this.canSubmit() || postingAmount === null || fundAmount === null) {
       this.form.markAllAsTouched();
-      this.error.set('Заполните обязательные поля выбранного типа операции.');
+      this.error.set(() => t('operations.completeTheRequiredFieldsForTheSelected'));
       return;
     }
     const body: Record<string, unknown> = {
@@ -571,7 +578,7 @@ export class OperationsPage implements OnInit {
         this.saving.set(false);
         if (occurrence && 'actual_operation_id' in result && result.actual_operation_id) {
           const operationId = result.actual_operation_id;
-          this.scheduledNotice.set('Плановая операция принята и добавлена в журнал.');
+          this.scheduledNotice.set(() => t('operations.thePlannedOperationWasConfirmedAndAdded'));
           this.cancelEdit();
           this.load();
           this.loadDirectories();
@@ -583,8 +590,10 @@ export class OperationsPage implements OnInit {
           return;
         }
         if (this.isPlanMode() && 'scheduled_on' in result) {
-          this.scheduledNotice.set(
-            `Разовая операция запланирована на ${formatTextDate(result.scheduled_on)}.`,
+          this.scheduledNotice.set(() =>
+            t('operations.oneOffOperationScheduledForP0', {
+              p0: formatTextDate(result.scheduled_on),
+            }),
           );
         }
         this.cancelEdit();
@@ -593,7 +602,7 @@ export class OperationsPage implements OnInit {
       },
       error: (error: unknown) => {
         this.saving.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось сохранить операцию.'));
+        this.error.set(() => apiErrorMessage(error, t('operations.couldNotSaveTheOperation')));
       },
     });
   }
@@ -649,7 +658,9 @@ export class OperationsPage implements OnInit {
   protected remove(operation: Operation): void {
     if (
       !window.confirm(
-        `Удалить операцию «${this.operationTypeLabel(operation.type)}»? Остатки будут пересчитаны.`,
+        t('operations.deleteOperationP0BalancesWillBeRecalculated', {
+          p0: this.operationTypeLabel(operation.type),
+        }),
       )
     )
       return;
@@ -663,7 +674,7 @@ export class OperationsPage implements OnInit {
           this.loadDirectories();
         },
         error: (error: unknown) =>
-          this.error.set(apiErrorMessage(error, 'Не удалось удалить операцию.')),
+          this.error.set(() => apiErrorMessage(error, t('operations.couldNotDeleteTheOperation'))),
       });
   }
 
@@ -786,7 +797,9 @@ export class OperationsPage implements OnInit {
         this.loadPlannedOperations(this.filters.getRawValue());
       },
       error: (error: unknown) =>
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить валюту и часовой пояс.')),
+        this.error.set(() =>
+          apiErrorMessage(error, t('operations.couldNotLoadCurrencyAndTimezone')),
+        ),
     });
   }
 
@@ -794,7 +807,9 @@ export class OperationsPage implements OnInit {
     this.http.get<Operation>(`${environment.apiBaseUrl}/operations/${operationId}`).subscribe({
       next: (operation) => this.focusedOperation.set(operation),
       error: (error: unknown) =>
-        this.error.set(apiErrorMessage(error, 'Не удалось открыть связанную операцию.')),
+        this.error.set(() =>
+          apiErrorMessage(error, t('operations.couldNotOpenTheLinkedOperation')),
+        ),
     });
   }
 
@@ -808,7 +823,7 @@ export class OperationsPage implements OnInit {
             plan.status === 'confirmed' ||
             plan.status === 'cancelled'
           ) {
-            this.error.set('Этот план нельзя редактировать.');
+            this.error.set(() => t('operations.thisPlanCannotBeEdited'));
             return;
           }
           this.defaultAccountWasApplied = false;
@@ -828,7 +843,7 @@ export class OperationsPage implements OnInit {
           this.formOpen.set(true);
         },
         error: (error: unknown) =>
-          this.error.set(apiErrorMessage(error, 'Не удалось открыть разовый план.')),
+          this.error.set(() => apiErrorMessage(error, t('operations.couldNotOpenTheOneOffPlan'))),
       });
   }
 
@@ -838,7 +853,7 @@ export class OperationsPage implements OnInit {
       .subscribe({
         next: (occurrence) => {
           if (occurrence.status === 'confirmed' || occurrence.status === 'cancelled') {
-            this.error.set('Эту плановую операцию нельзя принять.');
+            this.error.set(() => t('operations.thisPlannedOperationCannotBeConfirmed'));
             return;
           }
           this.defaultAccountWasApplied = false;
@@ -858,7 +873,9 @@ export class OperationsPage implements OnInit {
           this.formOpen.set(true);
         },
         error: (error: unknown) =>
-          this.error.set(apiErrorMessage(error, 'Не удалось открыть плановую операцию.')),
+          this.error.set(() =>
+            apiErrorMessage(error, t('operations.couldNotOpenThePlannedOperation')),
+          ),
       });
   }
 
@@ -869,12 +886,12 @@ export class OperationsPage implements OnInit {
         this.applyDefaultAccount();
       },
       error: (error: unknown) =>
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить счета.')),
+        this.error.set(() => apiErrorMessage(error, t('accounts.couldNotLoadAccounts'))),
     });
     this.http.get<Category[]>(`${environment.apiBaseUrl}/categories`).subscribe({
       next: (categories) => this.categories.set(categories),
       error: (error: unknown) =>
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить категории.')),
+        this.error.set(() => apiErrorMessage(error, t('categories.couldNotLoadCategories'))),
     });
     this.http.get<FundSummary>(`${environment.apiBaseUrl}/funds/summary`).subscribe({
       next: (summary) => {
@@ -882,7 +899,7 @@ export class OperationsPage implements OnInit {
         this.fundPositions.set(summary.positions);
       },
       error: (error: unknown) =>
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить фонды.')),
+        this.error.set(() => apiErrorMessage(error, t('funds.couldNotLoadFunds'))),
     });
   }
 
@@ -908,7 +925,7 @@ export class OperationsPage implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
-        this.error.set(apiErrorMessage(error, 'Не удалось загрузить журнал.'));
+        this.error.set(() => apiErrorMessage(error, t('operations.couldNotLoadTheJournal')));
       },
     });
     if (this.applicationToday()) this.loadPlannedOperations(filter);
@@ -936,7 +953,7 @@ export class OperationsPage implements OnInit {
         this.plannedOperations.set(
           this.filterOneOffPlans(items, filter).filter((plan) => plan.due_on !== today),
         ),
-      'Не удалось загрузить разовые планы.',
+      () => t('operations.couldNotLoadOneOffPlans'),
     );
 
     if (!this.todayIsWithinPeriod(filter, today)) {
@@ -951,7 +968,7 @@ export class OperationsPage implements OnInit {
         this.todayPlannedOperations.set(this.filterOneOffPlans(items, filter));
         this.loadingTodayPlans.set(false);
       },
-      'Не удалось загрузить разовые планы на сегодня.',
+      () => t('operations.couldNotLoadTodaySOneOff'),
       () => this.loadingTodayPlans.set(false),
     );
   }
@@ -982,7 +999,7 @@ export class OperationsPage implements OnInit {
   private loadAllOneOffPlans(
     params: HttpParams,
     onSuccess: (items: OneOffPlan[]) => void,
-    fallbackError: string,
+    fallbackError: () => string,
     onError?: () => void,
   ): void {
     const items: OneOffPlan[] = [];
@@ -1003,7 +1020,7 @@ export class OperationsPage implements OnInit {
           },
           error: (error: unknown) => {
             onError?.();
-            this.error.set(apiErrorMessage(error, fallbackError));
+            this.error.set(() => apiErrorMessage(error, fallbackError));
           },
         });
     };
@@ -1013,7 +1030,7 @@ export class OperationsPage implements OnInit {
   private loadOneOffPlanPage(
     params: HttpParams,
     onSuccess: (items: OneOffPlan[]) => void,
-    fallbackError: string,
+    fallbackError: () => string,
   ): void {
     this.http
       .get<{ items: OneOffPlan[] }>(`${environment.apiBaseUrl}/scheduling/occurrences`, {
@@ -1021,7 +1038,7 @@ export class OperationsPage implements OnInit {
       })
       .subscribe({
         next: (result) => onSuccess(result.items),
-        error: (error: unknown) => this.error.set(apiErrorMessage(error, fallbackError)),
+        error: (error: unknown) => this.error.set(() => apiErrorMessage(error, fallbackError)),
       });
   }
 

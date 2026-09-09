@@ -62,6 +62,7 @@ question by itself.
   [Oracle · What if?](ui-ux/screens/scenarios.md),
   [reports](ui-ux/screens/reports.md),
   [transactions](ui-ux/screens/transactions.md)
+- [Internationalization contract and translation guide](ui-ux/internationalization.md)
 - [Open UI/UX questions](ui-ux/open-questions.md)
 
 These documents record research-backed product hypotheses and interface rules.

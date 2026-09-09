@@ -1,3 +1,4 @@
+import { language, LANGUAGE_STORAGE_KEY } from '../../i18n/i18n';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
@@ -26,6 +27,11 @@ describe('SetupPage', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    language.set('ru');
+    localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+  });
+
   function startFresh(): void {
     ([...fixture.nativeElement.querySelectorAll('button')] as HTMLButtonElement[])
       .find((button) => button.textContent.includes('Начать с чистого листа'))!
@@ -44,6 +50,37 @@ describe('SetupPage', () => {
     repeated.dispatchEvent(new Event('input'));
     fixture.detectChanges();
   }
+
+  it('selects English before setup while keeping template language explicit and independent', () => {
+    const selector = fixture.nativeElement.querySelector(
+      'app-language-select select',
+    ) as HTMLSelectElement;
+    selector.value = 'en';
+    selector.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Welcome to Hermes');
+    ([...fixture.nativeElement.querySelectorAll('button')] as HTMLButtonElement[])
+      .find((button) => button.textContent.includes('Start fresh'))!
+      .click();
+    fixture.detectChanges();
+    fillPasswords();
+    fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
+    fixture.detectChanges();
+    const template = fixture.nativeElement.querySelector('#template-language') as HTMLSelectElement;
+    expect(template.value).toBe('en');
+    template.value = 'ru';
+    template.dispatchEvent(new Event('change'));
+    ([...fixture.nativeElement.querySelectorAll('button')] as HTMLButtonElement[])
+      .find((button) => button.textContent.trim() === 'Skip and create application')!
+      .click();
+    expect(auth.setup).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category_template_language: 'ru',
+        master_password: 'long-master-password',
+      }),
+    );
+    expect(language()).toBe('en');
+  });
 
   it('creates selected expense groups and the default income categories', () => {
     startFresh();

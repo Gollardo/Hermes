@@ -1,29 +1,31 @@
 <section class="forecast-page">
   <header class="forecast-header">
     <div>
-      <p class="eyebrow">Планирование баланса</p>
-      <h1>Прогноз средств</h1>
-      <p>Проверьте запас до ближайших расходов и заранее увидьте риск дефицита.</p>
+      <p class="eyebrow">{{ t('forecast.balancePlanning') }}</p>
+      <h1>{{ t('forecast.balanceForecast') }}</h1>
+      <p>{{ t('forecast.checkYourBufferBeforeUpcomingExpensesAnd') }}</p>
     </div>
-    <a class="button-link secondary calendar-link" routerLink="/calendar">Открыть календарь</a>
+    <a class="button-link secondary calendar-link" routerLink="/calendar">
+      {{ t('forecast.openCalendar') }}
+    </a>
   </header>
 
-  <section class="panel forecast-controls" aria-label="Параметры прогноза">
+  <section class="panel forecast-controls" [attr.aria-label]="t('forecast.forecastSettings')">
     <div class="control-label">
-      Счёт
+      {{ t('forecast.account') }}
       <app-entity-combobox
         [ngModel]="selectedAccountId()"
-        accessibleLabel="Счёт"
+        [accessibleLabel]="t('forecast.account')"
         (ngModelChange)="changeAccount($event)"
         [disabled]="loading()"
         [options]="accountOptions()"
         recentKey="accounts"
-        placeholder="Все счета"
+        [placeholder]="t('accounts.allAccounts')"
         [allowEmpty]="true"
       />
     </div>
     <fieldset>
-      <legend>Период</legend>
+      <legend>{{ t('forecast.period') }}</legend>
       <div class="segmented-control period-switcher">
         @for (item of horizons; track item.value) {
           <button
@@ -39,7 +41,7 @@
       </div>
     </fieldset>
     <fieldset class="balance-mode-control">
-      <legend>Показывать</legend>
+      <legend>{{ t('forecast.show') }}</legend>
       <div class="segmented-control balance-switcher">
         <button
           type="button"
@@ -48,7 +50,7 @@
           [attr.aria-pressed]="balanceMode() === 'free'"
           (click)="changeBalanceMode('free')"
         >
-          Свободные средства
+          {{ t('forecast.freeBalance') }}
         </button>
         <button
           type="button"
@@ -57,7 +59,7 @@
           [attr.aria-pressed]="balanceMode() === 'total'"
           (click)="changeBalanceMode('total')"
         >
-          Все средства
+          {{ t('forecast.totalBalance') }}
         </button>
       </div>
     </fieldset>
@@ -69,27 +71,29 @@
 
   @if (loading() && !forecast()) {
     <section class="panel empty-state forecast-loading" aria-live="polite">
-      Рассчитываем будущие остатки…
+      {{ t('forecast.calculatingFutureBalances') }}
     </section>
   } @else if (viewModel(); as vm) {
     @if (vm.dataset.overdue_excluded_count) {
       <section class="overdue-note" role="status">
         <div>
-          <strong>Просроченные события не включены: {{ vm.dataset.overdue_excluded_count }}</strong>
-          <span>Их нужно подтвердить, перенести или отменить.</span>
+          <strong>
+            {{ t('forecast.overdueEventsExcludedP0', { p0: vm.dataset.overdue_excluded_count }) }}
+          </strong>
+          <span> {{ t('forecast.confirmPostponeOrCancelThem') }} </span>
         </div>
-        <a routerLink="/calendar">Перейти к событиям</a>
+        <a routerLink="/calendar"> {{ t('forecast.goToEvents') }} </a>
       </section>
     }
 
-    <section class="kpi-row" aria-label="Ключевые показатели прогноза">
+    <section class="kpi-row" [attr.aria-label]="t('forecast.keyForecastFigures')">
       <article class="kpi-card safe-spend-card">
-        <span class="kpi-label">Можно потратить сейчас</span>
+        <span class="kpi-label"> {{ t('forecast.availableToSpendNow') }} </span>
         <strong>{{ vm.metrics.safeToSpend | money }} {{ baseCurrency() }}</strong>
         @if (vm.metrics.hasCashGap) {
-          <p>Сначала закройте прогнозируемый дефицит.</p>
+          <p>{{ t('forecast.coverTheForecastShortfallFirst') }}</p>
         } @else {
-          <p>Максимум без ухода прогноза ниже 0 {{ baseCurrency() }}.</p>
+          <p>{{ t('forecast.maximumWithoutTheForecastDroppingBelow0', { p0: baseCurrency() }) }}</p>
         }
       </article>
 
@@ -100,13 +104,13 @@
         (click)="selectRiskPoint(vm.minimumPointIndex, vm.metrics.minimumBalanceDate)"
         aria-controls="forecast-day-detail"
       >
-        <span class="kpi-label">Минимальный остаток</span>
+        <span class="kpi-label"> {{ t('forecast.minimumBalance') }} </span>
         <strong>{{ vm.metrics.minimumBalance | money }} {{ baseCurrency() }}</strong>
         <small>{{ vm.metrics.minimumBalanceDate | textDate }}</small>
       </button>
 
       <article class="kpi-card">
-        <span class="kpi-label">Прогноз на конец периода</span>
+        <span class="kpi-label"> {{ t('forecast.balanceAtPeriodEnd') }} </span>
         <strong [class.negative]="isNegative(vm.metrics.forecastEndBalance)">
           {{ vm.metrics.forecastEndBalance | money }} {{ baseCurrency() }}
         </strong>
@@ -114,7 +118,7 @@
       </article>
 
       <article class="kpi-card flow-card">
-        <span class="kpi-label">Чистый поток</span>
+        <span class="kpi-label"> {{ t('forecast.netFlow') }} </span>
         <strong
           [class.positive]="isPositive(vm.metrics.netPlannedFlow)"
           [class.negative]="isNegative(vm.metrics.netPlannedFlow)"
@@ -138,33 +142,32 @@
               <p class="section-label">{{ granularityLabel(vm.dataset) }}</p>
               <h2 id="chart-title">{{ chartTitle(vm.dataset.balance_mode) }}</h2>
               <p>
-                {{ vm.dataset.account_name || 'Все счета' }} · {{ vm.dataset.from_on | textDate }} —
+                {{ vm.dataset.account_name || t('accounts.allAccounts') }} ·
+                {{ vm.dataset.from_on | textDate }} —
                 {{ vm.dataset.through_on | textDate }}
               </p>
             </div>
-            <div class="chart-context" aria-label="Контекст графика">
+            <div class="chart-context" [attr.aria-label]="t('forecast.chartContext')">
               <span class="status-pill">{{ balanceModeLabel(vm.dataset.balance_mode) }}</span>
               <span class="starting-balance">
-                Сейчас <b>{{ vm.metrics.currentBalance | money }} {{ baseCurrency() }}</b>
+                {{ t('forecast.now') }}
+                <b>{{ vm.metrics.currentBalance | money }} {{ baseCurrency() }}</b>
               </span>
             </div>
           </div>
 
           @if (vm.dataset.balance_mode === 'free') {
             <details class="model-note">
-              <summary>Как учитываются фонды</summary>
+              <summary>{{ t('forecast.howFundsAreIncluded') }}</summary>
               <p>
-                Старт исключает текущие резервы. Запланированный перевод с распределением уменьшает
-                свободный остаток на сумму, которая будет назначена фондам; нераспределённая часть
-                остаётся свободной.
+                {{ t('forecast.theStartingBalanceExcludesExistingReservesA') }}
               </p>
             </details>
           }
 
           @if (!hasFutureEvents()) {
             <p class="no-events-note" role="status">
-              Нет известных ожидаемых событий. Линия показывает неизменность известных данных, а не
-              гарантию будущего остатка.
+              {{ t('forecast.thereAreNoKnownPlannedEventsThe') }}
             </p>
           }
 
@@ -233,7 +236,7 @@
                     [style.top.%]="startingPoint.y"
                     aria-hidden="true"
                   >
-                    <span>Сейчас</span>
+                    <span> {{ t('forecast.now') }} </span>
                   </span>
                 }
 
@@ -273,13 +276,17 @@
                     [class.edge-right]="marker.x > 84"
                     [style.left.%]="marker.x"
                     [style.top.%]="marker.y"
-                    attr.aria-label="Кассовый разрыв {{ marker.on | textDate }}: {{
-                      marker.balance | money
-                    }} {{ baseCurrency() }}"
+                    [attr.aria-label]="
+                      t('forecast.cashGapLabel', {
+                        date: (marker.on | textDate),
+                        amount: (marker.balance | money),
+                        currency: baseCurrency(),
+                      })
+                    "
                     aria-controls="forecast-day-detail"
                     (click)="selectRiskPoint(marker.pointIndex, marker.on)"
                   >
-                    <span>Разрыв</span>
+                    <span> {{ t('forecast.shortfall') }} </span>
                   </button>
                 }
 
@@ -297,10 +304,10 @@
                     <strong>{{ point.closing_balance | money }} {{ baseCurrency() }}</strong>
                     <small>
                       {{ signed(point.change) | money }} {{ baseCurrency() }} ·
-                      {{ point.events.length }} {{ operationsWord(point.events.length) }}
+                      {{ operationsWord(point.events.length) }}
                     </small>
                     @if (point.events.length) {
-                      <b>Посмотреть операции →</b>
+                      <b> {{ t('forecast.viewOperations') }} </b>
                     }
                   </div>
                 }
@@ -317,12 +324,12 @@
           <section class="timeline-block" aria-labelledby="timeline-title">
             <div class="timeline-heading">
               <div>
-                <h3 id="timeline-title">Ближайшие события</h3>
-                <p>Выберите событие, чтобы синхронизировать детали с графиком.</p>
+                <h3 id="timeline-title">{{ t('forecast.upcomingEvents') }}</h3>
+                <p>{{ t('forecast.selectAnEventToSynchronizeTheDetails') }}</p>
               </div>
               @if (vm.timelineEvents.length > timelineEventLimit) {
                 <button type="button" class="secondary timeline-toggle" (click)="toggleTimeline()">
-                  {{ timelineExpanded() ? 'Показать ближайшие' : 'Показать все' }}
+                  {{ timelineExpanded() ? t('forecast.showUpcoming') : t('forecast.showAll') }}
                 </button>
               }
             </div>
@@ -348,7 +355,7 @@
                 }
               </div>
             } @else {
-              <p class="timeline-empty">Событий в выбранном периоде нет.</p>
+              <p class="timeline-empty">{{ t('forecast.noEventsInTheSelectedPeriod') }}</p>
             }
           </section>
 
@@ -373,7 +380,7 @@
                 </strong>
               </div>
               @if (!point.events.length) {
-                <p class="day-empty">В этот день ожидаемых операций нет.</p>
+                <p class="day-empty">{{ t('forecast.noPlannedOperationsOnThisDay') }}</p>
               } @else {
                 <div class="event-list">
                   @for (event of point.events; track event.occurrence_id) {
@@ -383,7 +390,11 @@
                         <h4>{{ eventTitle(event) }}</h4>
                         <p>
                           {{ eventDirection(event) }} ·
-                          {{ event.status === 'postponed' ? 'перенесено' : 'ожидается' }}
+                          {{
+                            event.status === 'postponed'
+                              ? t('forecast.postponed')
+                              : t('forecast.pending')
+                          }}
                         </p>
                       </div>
                       <div class="event-amount">
@@ -395,13 +406,18 @@
                             <small>
                               {{
                                 vm.dataset.balance_mode === 'free' && isNegative(event.effect)
-                                  ? 'Распределение уменьшает свободный остаток'
-                                  : 'Нейтрально для общего остатка'
+                                  ? t('forecast.allocationReducesTheFreeBalance')
+                                  : t('forecast.neutralForTheTotalBalance')
                               }}
                             </small>
                           } @else {
                             <small>
-                              Сумма операции: {{ event.amount | money }} {{ baseCurrency() }}
+                              {{
+                                t('forecast.operationAmountP0P1', {
+                                  p0: (event.amount | money),
+                                  p1: baseCurrency(),
+                                })
+                              }}
                             </small>
                           }
                         }
@@ -411,7 +427,7 @@
                         routerLink="/calendar"
                         [queryParams]="calendarQuery(event)"
                       >
-                        Открыть в календаре
+                        {{ t('forecast.openInCalendar') }}
                       </a>
                     </article>
                   }
@@ -422,11 +438,11 @@
         </section>
       </main>
 
-      <aside class="insights-column" aria-label="Риски и итоги периода">
+      <aside class="insights-column" [attr.aria-label]="t('forecast.periodRisksAndTotals')">
         <section class="panel risks-panel" aria-labelledby="risks-title">
           <div class="aside-heading">
-            <p class="section-label">Контроль</p>
-            <h2 id="risks-title">Финансовые риски</h2>
+            <p class="section-label">{{ t('forecast.monitoring') }}</p>
+            <h2 id="risks-title">{{ t('forecast.financialRisks') }}</h2>
           </div>
 
           @if (vm.metrics.hasCashGap) {
@@ -438,12 +454,12 @@
               "
               aria-controls="forecast-day-detail"
             >
-              <span>Кассовый разрыв</span>
+              <span> {{ t('forecast.cashShortfall') }} </span>
               <small>{{ vm.metrics.firstNegativeBalanceDate | textDate }}</small>
               <strong>{{ vm.metrics.firstNegativeBalance | money }} {{ baseCurrency() }}</strong>
             </button>
           } @else {
-            <div class="risk-clear">Кассовых разрывов не ожидается.</div>
+            <div class="risk-clear">{{ t('forecast.noCashShortfallsExpected') }}</div>
           }
 
           @if (!vm.metrics.hasCashGap) {
@@ -453,7 +469,7 @@
               (click)="selectRiskPoint(vm.minimumPointIndex, vm.metrics.minimumBalanceDate)"
               aria-controls="forecast-day-detail"
             >
-              <span>Минимальный остаток</span>
+              <span> {{ t('forecast.minimumBalance') }} </span>
               <small>{{ vm.metrics.minimumBalanceDate | textDate }}</small>
               <strong>{{ vm.metrics.minimumBalance | money }} {{ baseCurrency() }}</strong>
             </button>
@@ -466,7 +482,7 @@
               (click)="selectTimelineEvent(expense)"
               aria-controls="forecast-day-detail"
             >
-              <span>Крупнейший плановый расход</span>
+              <span> {{ t('forecast.largestPlannedExpense') }} </span>
               <small>{{ expense.due_on | textDate }} · {{ eventTitle(expense) }}</small>
               <strong>{{ signed(expense.effect) | money }} {{ baseCurrency() }}</strong>
             </button>
@@ -474,8 +490,8 @@
 
           @if (vm.dataset.overdue_excluded_count) {
             <a class="risk-item overdue-risk" routerLink="/calendar">
-              <span>Просроченные события</span>
-              <small>Не включены в прогноз</small>
+              <span> {{ t('forecast.overdueEvents') }} </span>
+              <small> {{ t('forecast.excludedFromTheForecast') }} </small>
               <strong>{{ vm.dataset.overdue_excluded_count }}</strong>
             </a>
           }
@@ -486,17 +502,17 @@
             <p class="section-label">
               {{ vm.dataset.from_on | textDate }} — {{ vm.dataset.through_on | textDate }}
             </p>
-            <h2 id="summary-title">Итоги периода</h2>
+            <h2 id="summary-title">{{ t('forecast.periodTotals') }}</h2>
           </div>
           <dl>
             <div>
-              <dt>Доходы</dt>
+              <dt>{{ t('categories.income') }}</dt>
               <dd class="positive">
                 +{{ vm.metrics.totalPlannedIncome | money }} {{ baseCurrency() }}
               </dd>
             </div>
             <div>
-              <dt>Расходы</dt>
+              <dt>{{ t('categories.expenses') }}</dt>
               <dd class="negative">
                 −{{ vm.metrics.totalPlannedExpense | money }} {{ baseCurrency() }}
               </dd>
@@ -506,7 +522,7 @@
               isNegative(vm.metrics.netPlannedTransferFlow)
             ) {
               <div>
-                <dt>Переводы</dt>
+                <dt>{{ t('forecast.transfers') }}</dt>
                 <dd
                   [class.positive]="isPositive(vm.metrics.netPlannedTransferFlow)"
                   [class.negative]="isNegative(vm.metrics.netPlannedTransferFlow)"
@@ -516,7 +532,7 @@
               </div>
             }
             <div>
-              <dt>Чистый поток</dt>
+              <dt>{{ t('forecast.netFlow') }}</dt>
               <dd
                 [class.positive]="isPositive(vm.metrics.netPlannedFlow)"
                 [class.negative]="isNegative(vm.metrics.netPlannedFlow)"
@@ -525,11 +541,11 @@
               </dd>
             </div>
             <div class="summary-divider summary-repeat">
-              <dt>Прогноз на конец</dt>
+              <dt>{{ t('forecast.closingForecast') }}</dt>
               <dd>{{ vm.metrics.forecastEndBalance | money }} {{ baseCurrency() }}</dd>
             </div>
             <div class="summary-repeat">
-              <dt>Минимум</dt>
+              <dt>{{ t('forecast.minimum') }}</dt>
               <dd [class.negative]="isNegative(vm.metrics.minimumBalance)">
                 {{ vm.metrics.minimumBalance | money }} {{ baseCurrency() }}
               </dd>
@@ -542,38 +558,50 @@
     @if (fundError(); as message) {
       <section class="panel fund-forecast-error" aria-labelledby="fund-forecast-error-title">
         <div>
-          <h2 id="fund-forecast-error-title">Перспектива фондов недоступна</h2>
-          <p role="alert">{{ message }} Основной прогноз средств остаётся актуальным.</p>
+          <h2 id="fund-forecast-error-title">{{ t('forecast.fundOutlookUnavailable') }}</h2>
+          <p role="alert">{{ t('forecast.p0TheMainBalanceForecastRemainsUp', { p0: message }) }}</p>
         </div>
-        <button type="button" class="secondary" (click)="retryFundForecast()">Повторить</button>
+        <button type="button" class="secondary" (click)="retryFundForecast()">
+          {{ t('forecast.retry') }}
+        </button>
       </section>
     } @else if (fundForecast(); as funds) {
       <section class="panel fund-forecast-panel" aria-labelledby="fund-forecast-title">
         <div class="fund-forecast-heading">
           <div>
-            <p class="section-label">План распределения</p>
-            <h2 id="fund-forecast-title">Сколько будет в фондах</h2>
+            <p class="section-label">{{ t('forecast.allocationPlan') }}</p>
+            <h2 id="fund-forecast-title">{{ t('forecast.futureFundBalances') }}</h2>
             <p>
-              Текущие остатки плюс запланированные переводы с распределением до
-              {{ funds.through_on | textDate }}.
+              {{
+                t('forecast.currentBalancesPlusPlannedTransfersWithAllocation', {
+                  p0: (funds.through_on | textDate),
+                })
+              }}
             </p>
             <p class="fund-mode-label">
               {{
                 funds.allocation_mode === 'dynamic'
-                  ? 'Динамические проценты пересчитываются перед каждым переводом.'
-                  : 'Используются текущие ручные проценты.'
+                  ? t('forecast.dynamicPercentagesAreRecalculatedBeforeEachTransfer')
+                  : t('forecast.currentManualPercentagesAreUsed')
               }}
             </p>
           </div>
           <div class="fund-allocation-total">
             <span>{{
               funds.allocation_mode === 'dynamic'
-                ? 'В фонды из переводов'
-                : 'Распределится из переводов'
+                ? t('forecast.transfersIntoFunds')
+                : t('forecast.allocatedFromTransfers')
             }}</span>
             <strong>{{ funds.planned_allocation_total | money }} {{ baseCurrency() }}</strong>
             @if (funds.allocation_mode === 'dynamic') {
-              <small>Резерв к концу: {{ funds.ending_reserve | money }} {{ baseCurrency() }}</small>
+              <small>
+                {{
+                  t('forecast.closingReserveP0P1', {
+                    p0: (funds.ending_reserve | money),
+                    p1: baseCurrency(),
+                  })
+                }}
+              </small>
             }
           </div>
         </div>
@@ -581,23 +609,25 @@
           <div class="fund-visuals">
             <div class="fund-projection-layout">
               <div class="fund-share-summary">
-                <span>Структура к {{ funds.through_on | textDate }}</span>
+                <span>
+                  {{ t('forecast.breakdownAtP0', { p0: (funds.through_on | textDate) }) }}
+                </span>
                 <div
                   class="fund-projection-donut"
                   [style.background]="fundDonutStyle()"
                   role="img"
                   [attr.aria-label]="
-                    'Конечное распределение средств между фондами. Фондов: ' + funds.series.length
+                    t('forecast.closingAllocationAcrossFundsFunds') + ' ' + funds.series.length
                   "
                 ></div>
               </div>
             </div>
           </div>
           <div class="fund-legend-header" aria-hidden="true">
-            <span>Фонд и доля</span>
-            <span>Сейчас</span>
+            <span> {{ t('forecast.fundAndShare') }} </span>
+            <span> {{ t('forecast.now') }} </span>
             <span></span>
-            <span>К {{ funds.through_on | textDate }}</span>
+            <span> {{ t('forecast.byP0', { p0: (funds.through_on | textDate) }) }} </span>
           </div>
           <ul class="fund-legend">
             @for (series of funds.series; track series.fund_id; let index = $index) {
@@ -621,19 +651,34 @@
           </ul>
           <p class="fund-allocation-note">
             @if (funds.blocked_allocation_count) {
-              По текущему состоянию не распределяется:
-              <strong>{{ funds.unallocated_total | money }} {{ baseCurrency() }}</strong
-              >. Заблокированные переводы не могут быть подтверждены с распределением.
-            } @else if (funds.allocation_mode === 'dynamic' && !isZero(funds.unallocated_total)) {
-              В фонды поступит {{ funds.planned_allocation_total | money }} {{ baseCurrency() }}, а
+              {{ t('forecast.notAllocatedUnderCurrentConditions') }}
               <strong>{{ funds.unallocated_total | money }} {{ baseCurrency() }}</strong>
-              останется в резерве на счетах до появления незаполненной цели.
+              {{ t('forecast.blockedTransfersCannotBeConfirmedWithAllocation') }}
+            } @else if (funds.allocation_mode === 'dynamic' && !isZero(funds.unallocated_total)) {
+              {{
+                t('forecast.fundsWillReceiveP0P1And', {
+                  p0: (funds.planned_allocation_total | money),
+                  p1: baseCurrency(),
+                })
+              }}
+              <strong>{{ funds.unallocated_total | money }} {{ baseCurrency() }}</strong>
+              {{ t('forecast.willRemainInAccountReservesUntilAn') }}
             } @else if (isZero(funds.unallocated_total)) {
-              Все {{ funds.planned_transfer_total | money }} {{ baseCurrency() }} плановых переводов
-              будут распределены по фондам.
+              {{
+                t('forecast.allP0P1OfPlannedTransfersWill', {
+                  p0: (funds.planned_transfer_total | money),
+                  p1: baseCurrency(),
+                })
+              }}
             } @else {
-              Распределится {{ funds.planned_allocation_total | money }} {{ baseCurrency() }} из
-              {{ funds.planned_transfer_total | money }} {{ baseCurrency() }}. Останется свободно:
+              {{
+                t('forecast.p0P1OutOfP2P3Will', {
+                  p0: (funds.planned_allocation_total | money),
+                  p1: baseCurrency(),
+                  p2: (funds.planned_transfer_total | money),
+                  p3: baseCurrency(),
+                })
+              }}
               <strong>{{ funds.unallocated_total | money }} {{ baseCurrency() }}</strong
               >.
             }
@@ -641,17 +686,19 @@
         } @else {
           <p class="empty-state">
             @if (funds.allocation_mode === 'dynamic') {
-              Создайте неархивный фонд с целью, чтобы увидеть перспективу распределения.
+              {{ t('forecast.createANonArchivedFundWithA') }}
             } @else {
-              Создайте активный фонд и задайте процент, чтобы увидеть перспективу распределения.
+              {{ t('forecast.createAnActiveFundAndSetA') }}
             }
           </p>
         }
         @if (funds.blocked_allocation_count) {
           <p class="form-error" role="alert">
-            Плановых переводов без доступных незаполненных фондов:
-            {{ funds.blocked_allocation_count }}. Такие переводы нельзя подтвердить с
-            распределением, пока не появится активный фонд.
+            {{
+              t('forecast.plannedTransfersWithoutAvailableIncompleteFundsP0', {
+                p0: funds.blocked_allocation_count,
+              })
+            }}
           </p>
         }
       </section>

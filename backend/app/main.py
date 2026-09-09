@@ -2,9 +2,11 @@ from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 
 from app import APP_VERSION
 from app.api.router import create_api_router
+from app.api.validation import validation_error_response
 from app.core.config import Settings, get_settings
 from app.core.database import create_database_engine, create_session_factory
 from app.core.static import mount_frontend
@@ -31,6 +33,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version=APP_VERSION,
         lifespan=create_lifespan(resolved_settings),
     )
+    application.add_exception_handler(RequestValidationError, validation_error_response)
     application.state.settings = resolved_settings
     application.include_router(create_api_router(), prefix=resolved_settings.api_prefix)
     mount_frontend(application, resolved_settings.static_dir)

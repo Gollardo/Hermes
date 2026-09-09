@@ -12,10 +12,8 @@ in [index.md](./index.md). The actual version history is in
 [CHANGELOG.md](../CHANGELOG.md): the roadmap must not assign an already-used
 version number to a new future scope.
 
-Versions through `0.4.6` are the owner's internal development milestones, not
-published GitHub Releases. The first public tag starts the normal release
-process; its version is selected separately after the current release gate is
-closed.
+The `0.x` versions were internal development milestones. Version `1.0.0`
+started the public release process on 2026-08-28.
 
 ## Development principles
 
@@ -53,570 +51,26 @@ Project priorities:
 
 ---
 
-# 0.0.x — project foundation
+# Delivered baseline through 1.0.0
 
-The milestone goal was to create a reproducible environment and engineering
-foundation without complete financial business logic.
+Version `1.0.0` was published on 2026-08-28 after owner acceptance. Internal
+`0.x` milestones are summarized here; detailed history and verification remain
+in [CHANGELOG.md](../CHANGELOG.md) and [project-status.md](project-status.md).
 
-## 0.0.1 — initial structure
+- Foundation, single-owner setup/authentication, settings, accounts and categories.
+- Exact financial ledger, operation journal, virtual funds and atomic posting.
+- Recurring and one-off plans, calendar and deterministic balance forecasting.
+- Reports, default account, shared financial formatting and amount expressions.
+- Dynamic fund allocation, relative target progress, reserve and series shifts.
+- Plaintext JSON and protected `.hermes` V1 backup/restore and Compose delivery.
 
-- [x] Git repository initialization.
-- [x] Python and FastAPI backend skeleton.
-- [x] Angular frontend skeleton.
-- [x] PostgreSQL and Docker Compose.
-- [x] Initial migration configuration.
-- [x] Application health check.
-- [x] Testing and static-analysis tooling.
-- [x] Initial architecture documentation.
-- [x] `AGENTS.md`.
-- [x] AGPL-3.0-or-later license.
-- [x] Local development and deployment documentation.
-
-## Milestone completion criteria
-
-- The project can be deployed by following its documentation.
-- Backend, frontend, and PostgreSQL start in the local environment.
-- Available tests, lint, type checks, and the production build pass.
-- The repository contains no secrets or local artifacts.
-- Architectural boundaries are described under `docs/`.
-
-This milestone remained an internal development milestone and was not published
-as a user release or git tag.
+Public-version upgrade coverage and other unfinished operational work remain
+explicitly deferred below; release publication does not mark them complete.
 
 ---
 
-# 0.1.0-alpha.1 — first run and application access
+# Product plan after 1.0.0
 
-The release goal was a protected single-user application with basic settings.
-
-**Status: completed on 2026-08-02.** The user scenario was verified in a
-production-like Compose environment on a clean PostgreSQL volume. The upgrade
-from `0001_first_run_access` to `0002_harden_access_invariants` was verified on
-an initialized database while preserving credentials, settings, and sessions.
-
-## First run
-
-- [x] Detect an uninitialized application.
-- [x] Initial setup screen.
-- [x] Master password creation.
-- [x] Base currency selection.
-- [x] Timezone selection.
-- [x] Prevent repeated initial setup after initialization.
-
-## Authentication
-
-- [x] Password hashing with Argon2id.
-- [x] Sign in with the master password.
-- [x] Server-side sessions.
-- [x] HttpOnly cookie.
-- [x] End the current session.
-- [x] End all active sessions.
-- [x] Protect every API except setup, login, and health check.
-- [x] Rate-limit frequent failed login attempts.
-
-## Settings
-
-- [x] View application settings.
-- [x] Change timezone.
-- [x] Change the base currency before financial data exists.
-- [x] Change the master password.
-
-## Release criteria
-
-- [x] A new user can deploy the application and complete initial setup.
-- [x] An unauthenticated user cannot access financial data or protected APIs.
-- [x] Sessions are created, validated, and ended correctly.
-- [x] Startup was verified on a clean database.
-- [x] Migration of an initialized database was verified.
-
----
-
-# 0.1.0-alpha.2 — accounts and categories
-
-The release goal was to prepare the core financial reference data.
-
-**Status: the primary slice was implemented on 2026-08-02.** Scenarios were
-verified on PostgreSQL 17 with both a clean migration and an upgrade of existing
-data from `0001_first_run_access` to head. Verification of a real operation with
-an archived category remained partial until categorized operations arrived in
-`alpha.3`.
-
-## Accounts
-
-- [x] Create an account.
-- [x] Account types: `cash`, `debit`, and `savings`.
-- [x] Account name and description.
-- [x] Initial balance through a financial adjustment operation.
-- [x] View the account list.
-- [x] View the current balance.
-- [x] Edit an account.
-- [x] Archive and restore an account.
-- [x] Prevent invalid deletion of an account with operation history.
-
-## Categories
-
-- [x] Create a category.
-- [x] Income categories.
-- [x] Expense categories.
-- [x] Subcategories.
-- [x] Edit categories.
-- [x] Archive categories.
-- [~] The archived-category contract is ready; the real operation scenario
-  awaited `alpha.3`.
-
-## Release criteria
-
-- [x] The user can create an account and category structure.
-- [x] Initial balance is not stored as an arbitrarily mutable field.
-- [x] Account and category history is preserved in real categorized operations.
-- [x] Monetary values do not use `float`.
-
----
-
-# 0.1.0-alpha.3 — financial core
-
-The release goal was to implement the operation journal and calculation of
-actual balances.
-
-**Status: the vertical slice was implemented and verified on 2026-08-02.** The
-posting model is recorded separately in ADR 0001. The owner confirmed that
-negative balances are prohibited for the current release; overdraft and
-multi-currency behavior require separate future models.
-
-The financial posting model had to be reviewed and documented separately before
-implementation.
-
-## Operation model
-
-- [x] Financial operation header.
-- [x] Account movement records.
-- [x] Atomic posting of an operation.
-- [x] Derive an account balance from the movement journal.
-- [x] Validate financial invariants.
-- [x] Prevent partially saved operations.
-
-## Income
-
-- [x] Create income.
-- [x] Select an account.
-- [x] Select a category.
-- [x] Date, amount, and description.
-- [x] Edit income.
-- [x] Delete income.
-
-## Expenses
-
-- [x] Create an expense.
-- [x] Select an account.
-- [x] Select a category.
-- [x] Date, amount, and description.
-- [x] Edit an expense.
-- [x] Delete an expense.
-- [x] Enforce the approved insufficient-balance policy.
-
-## Transfers
-
-- [x] Transfer between two accounts.
-- [x] Represent a transfer as one operation.
-- [x] Atomic debit and credit.
-- [x] Edit a transfer.
-- [x] Delete a transfer.
-
-## Balance adjustment
-
-- [x] Create an adjustment.
-- [x] Enter the expected balance and calculate the exact journal movement.
-- [x] Display the adjustment reason.
-- [x] Save the adjustment in the operation journal.
-
-## Operation journal
-
-- [x] Operation list.
-- [x] Filter by period.
-- [x] Filter by account.
-- [x] Filter by type and category.
-- [x] View operation details.
-- [x] Pagination.
-- [x] Transfer direction, active filters, and the total for the full selection.
-
-## Release criteria
-
-- Every account balance can be fully reconstructed from the journal.
-- Creating, editing, and deleting an operation is transactional.
-- A transfer cannot be saved partially.
-- Core invariants are covered by unit and integration tests.
-- Migrations are verified on clean and existing databases.
-
-The regression suite additionally verifies concurrent debits and account
-deletion, rollback after saving the header and first movement, immutability of a
-historical category type, and timezone-boundary upgrade and downgrade of
-`alpha.3` data.
-
----
-
-# 0.1.0-alpha.4 — virtual funds
-
-The release goal was to implement the application's primary differentiating
-feature: virtual allocation of money to purposes.
-
-**Status: the primary vertical slice was implemented and verified on
-2026-08-11.** The virtual posting, rounding, coverage, and archiving models are
-recorded separately in ADR 0002.
-
-## Fund management
-
-- [x] Create a fund.
-- [x] Fund name and description.
-- [x] Allocation percentage.
-- [x] Edit a fund.
-- [x] Archive a fund.
-- [x] Ensure active-fund percentages total no more than 100%.
-- [x] Optional target amount and progress.
-
-## Fund balances
-
-- [x] Total fund balance.
-- [x] Fund breakdown by physical account.
-- [x] Free balance of each account.
-- [x] Reserved balance of each account.
-- [x] Fund movement history.
-
-## Allocation
-
-- [x] Allocate an arbitrary amount by percentages.
-- [x] Allocation preview.
-- [x] Manually adjust the allocation.
-- [x] Atomically allocate an amount directly to the fund being created.
-- [x] Leave the unallocated amount free.
-- [x] Fixed rounding policy.
-
-## Fund operations
-
-- [x] Spend from a selected fund.
-- [x] Spend without a fund.
-- [x] Transfer money and a virtual fund portion between accounts.
-- [x] Redistribute a fund between accounts without changing its total.
-- [x] Edit operations associated with a fund.
-- [x] Delete operations associated with a fund.
-- [x] Restore invariants after changing an operation.
-- [x] Transfer a virtual amount between funds on one account.
-
-## Release criteria
-
-- Funds reserved on an account do not exceed its physical balance under the
-  approved policy.
-- Spending from a fund reduces both the account and the fund.
-- Transferring a fund between accounts does not change the fund total.
-- Percentage allocation is reproducible and covered by tests.
-- Rounding rules are documented.
-
-The regression suite verifies exact independent rounding, concurrent allocation
-and fund consumption, rollback of both journals after an injected failure,
-prevention of coverage violations through physical-operation changes, the
-archive invariant, and migrations on clean and existing `alpha.3` databases.
-
----
-
-# 0.1.0-beta.1 — recurring operations and calendar
-
-The release goal was to add planned financial events.
-
-## Recurrence rules
-
-- [x] Create recurring income.
-- [x] Create a recurring expense.
-- [x] Create a recurring transfer.
-- [x] Recurrence frequency.
-- [x] Weekdays and a 1–3 week interval for weekly recurrence; a 1–3 month
-  interval for monthly recurrence.
-- [x] Start date.
-- [x] Optional end date.
-- [x] Account, category, amount, and description.
-- [x] Edit and disable a rule.
-
-## Expected occurrences
-
-- [x] Materialize future occurrences.
-- [x] Prevent duplicate materialization.
-- [x] Statuses `pending`, `confirmed`, `postponed`, and `cancelled`.
-- [x] Confirm an expected operation.
-- [x] Review and adjust an individual occurrence's operation fields during
-  confirmation without changing its rule or siblings; an early confirmation
-  posts on application today.
-- [x] Atomic planned transfer with percentage-based fund allocation.
-- [x] Postpone an individual occurrence.
-- [x] Cancel an individual occurrence.
-- [x] Link a confirmed occurrence to the actual operation.
-- [x] Create and edit one-off income, expense and transfer plans from a future
-  operation date; apply them explicitly today without creating a future journal
-  fact. The current worktree passes local backend, PostgreSQL integration,
-  frontend, static and Alembic model/schema checks.
-
-## Calendar
-
-- [x] Monthly view.
-- [x] Upcoming-operation list.
-- [x] Filter by accounts and types.
-- [x] Highlight overdue expected operations.
-- [x] Quick confirmation, postponement, and cancellation.
-
-## Resolved decisions
-
-- [x] Editing a rule synchronizes or automatically cancels only untouched
-  current and future occurrences; confirmed and manually edited occurrences
-  remain unchanged.
-- [x] Occurrences are materialized from the current date through one calendar
-  year ahead, inclusive.
-- [x] Nonexistent dates are prohibited: monthly recurrence is limited to days
-  1–28, and yearly recurrence does not accept February 29.
-- [x] All values are calendar dates. The occurrence timezone is considered
-  stable after initial setup; schedules are not migrated automatically.
-
-## Release criteria
-
-- An expected operation does not change the actual balance.
-- Only confirmation creates an actual operation.
-- Repeated materialization does not create duplicates.
-- Postponing an occurrence does not change its rule without an explicit user
-  action.
-
-The regression suite verifies exact generation, repeated and concurrent
-materialization, protection of manually edited occurrences, preservation of
-overdue items, idempotent confirmation, concurrent confirmation and rule edits,
-the authentication and CSRF boundary, rollback of the actual operation and link
-after an injected failure, upgrade of an existing `alpha.4` database, and
-downgrade of the `beta.1` schema. Frontend checks cover full month pagination,
-an honest upcoming-event limit, archived references when editing a rule, and a
-direct link to the actual operation. `alembic check` confirms that head has no
-model/schema drift.
-
----
-
-# 0.1.0-beta.2 — balance forecasting
-
-The release goal was to show future balances including expected operations.
-
-**Status: the vertical slice was implemented and verified on 2026-08-12.** The
-read-only model adds no stored entities, so no new migration is required;
-migration checks confirm compatibility with the existing schema.
-
-## Calculation engine
-
-- [x] Forecast for one account.
-- [x] Aggregate forecast for all accounts.
-- [x] Horizons: two weeks, one month, one quarter, six months, and one year.
-- [x] Include expected income.
-- [x] Include expected expenses.
-- [x] Include planned transfers.
-- [x] Calculate the minimum future balance.
-- [x] Identify the date of a possible negative balance.
-- [x] Explain the events affecting every forecast point.
-
-## Interface
-
-- [x] Forecast balance chart.
-- [x] Period selector.
-- [x] Account selector.
-- [x] Aggregate forecast.
-- [x] Insufficient-funds warnings.
-- [x] View operations that changed the forecast.
-
-## Release criteria
-
-- The calculation engine is tested separately from the visualization.
-- Identical source data produces an identical forecast.
-- Transfers do not distort the total balance across all accounts.
-- The user can understand why the forecast changed.
-
-The pure unit suite fixes calendar horizons, `Decimal` determinism, daily close,
-minimum and negative balance, scope filtering, and transfer neutrality. The
-PostgreSQL integration scenario confirms that a confirmed event moves only into
-the actual starting state, a postponed event changes the planned date, and the
-API is unavailable without a session. UI tests cover selectors, risk, and
-explanations.
-
----
-
-# 0.1.0-rc.1 — backup and MVP stabilization
-
-The release goal was to prepare the application for real daily use.
-
-## JSON export
-
-- [x] Full data export.
-- [x] Versioned format.
-- [x] Fields `format`, `schema_version`, `app_version`, and `exported_at`.
-- [x] Export settings.
-- [x] Export accounts, categories, operations, and funds.
-- [x] Export recurrence rules and expected occurrences.
-- [x] Validate the generated backup's integrity.
-
-## Restore
-
-- [x] Upload a JSON file.
-- [x] Validate format and version.
-- [x] Preview a content summary.
-- [x] Explicitly confirm data replacement.
-- [x] Transactional restore.
-- [x] Validate domain invariants after restore.
-- [x] Clear error messages.
-- [x] Restore test on a clean database.
-
-## Stabilization
-
-- [x] Verify upgrades from all previous prerelease versions.
-- [x] Verify deployment on a clean server.
-- [x] Update documentation.
-- [x] Backup documentation.
-- [x] Verify the production Docker image.
-- [x] Fix critical UX issues.
-- [x] Fix critical financial-core defects.
-- [x] Verify that monetary calculations do not use `float`.
-- [x] Review authentication and session security.
-
----
-
-# 0.1.2 — stabilized MVP slice
-
-**Status: the code slice was completed on 2026-08-15.** The version number is
-recorded in the changelog but does not by itself confirm publication of the
-first public tag. Real-use and publication criteria move to the current release
-gate.
-
-## Release capabilities
-
-- Single-user authentication.
-- Accounts.
-- Categories and subcategories.
-- Income and expenses.
-- Transfers.
-- Balance adjustments.
-- Operation journal.
-- Virtual funds.
-- Percentage-based allocation.
-- Expenses and transfers involving funds.
-- Recurring expected operations.
-- Calendar.
-- Balance forecast.
-- JSON export and restore.
-- Docker Compose deployment.
-- End an inactive session after 30 minutes.
-- Free funds as the primary forecast mode, with an explicit switch to total
-  physical balance.
-- Consistent textual dates, currency symbols, and thousands grouping in
-  monetary fields.
-
-## Public release criteria
-
-- No known defects can silently corrupt financial data.
-- All key financial invariants are covered by tests.
-- Full restore from backup is verified.
-- Migrations from the previous version are verified.
-- Documentation matches actual behavior.
-- Installation and upgrade instructions are clear.
-- The production image builds reproducibly.
-- The application has completed a period of real personal use.
-
----
-
-# 0.3.0 — reports and everyday usability
-
-**Status: completed on 2026-08-17.** The intermediate development version
-`0.2.0` has no separate section in the current changelog; its implemented scope
-is consolidated under `0.3.0`. Unimplemented items from the former plan were
-moved to an unversioned backlog.
-
-- [x] Income and expenses for a month or arbitrary period.
-- [x] Expenses and income by category with operation lists.
-- [x] Fund outlook based on planned percentage allocations.
-- [x] Quick-create dropdown with operation-type selection.
-- [x] Optional active default account for new income and expenses.
-- [x] Redesign the application in the approved light, neutral visual direction.
-- [x] Free-balance forecasting includes future percentage allocations from
-  transfers, while total forecasting preserves the physical neutrality of
-  internal transfers.
-
----
-
-# 0.4.0 — dynamic fund allocation
-
-**Status: implementation and automated checks were completed on 2026-08-17;
-owner acceptance on real data and the public-tag decision remain the release
-gate.**
-
-- [x] Switch between manual and dynamic modes in settings.
-- [x] Calculate the initial dynamic percentages from each absolute remaining
-  amount to target while guaranteeing a base share.
-- [x] Exclude completed and archived funds, and include restored funds again.
-- [x] Recalculate after actual and sequential planned allocations.
-- [x] Preserve currently calculated percentages when returning to manual mode.
-- [x] Migration, backup compatibility, API/UI, and automated checks.
-- [x] Format every UI amount and percentage consistently as `100 000,00` and
-  `12,50%`, accept comma and period decimal separators in numeric inputs, and
-  cover the contract with frontend tests. Server-side precision is unchanged.
-
----
-
-# 0.4.5 — amount expressions and recurring-series shifts
-
-**Status: implemented on 2026-08-19; owner acceptance on real data remains.**
-
-- [x] Evaluate addition and subtraction exactly in monetary operation and
-  scheduling inputs without binary floating point.
-- [x] Add an opt-in rule policy that propagates a postpone delta to untouched
-  later occurrences while preserving confirmed and manual decisions.
-- [x] Persist the policy and accumulated offset through migration and backups.
-- [x] Model automatically cancelled dated exceptions with an explicit
-  series-shift preservation marker instead of an offset comparison.
-- [x] Narrow series-shift row locks to the selected occurrence and mutable later
-  candidates without weakening atomicity or preserved-exception semantics.
-- [x] Decompose Scheduling's scoped calendar and action styles so its owned CSS
-  stays within the component-style budget without changing established UX.
-- [x] Cover validation, API/UI behavior, domain invariants and error paths.
-- [x] Advance the internal application version to `0.4.5`.
-
----
-
-# 0.4.6 — relative fund progress and scheduling control alignment
-
-**Status: implemented on 2026-08-20; owner acceptance on real data remains.**
-
-- [x] Weight dynamic fund percentages by relative unfilled target progress so
-  equal completion levels receive equal shares regardless of target size.
-- [x] Preserve the existing equal guaranteed-base behavior when 20 or more
-  funds are active and document that relative progress cannot differentiate
-  shares once that base consumes the complete percentage.
-- [x] Reuse the same exact calculator for previews, committed transfer
-  allocations, manual-mode snapshots and sequential forecast projections.
-- [x] Preserve the existing base share, exact largest-remainder closure,
-  filled/archive eligibility, reactivation and target-overshoot behavior.
-- [x] Correct long recurring-rule checkbox alignment without changing the
-  series-shift workflow or adding a new interface pattern.
-- [x] Cover the new policy and layout contract with unit, integration and
-  frontend tests, and update current product documentation.
-- [x] Advance the internal application version to `0.4.6`.
-- [x] Confirm that no database migration is required because the dynamic
-  percentages are derived and the persisted schema is unchanged.
-
----
-
-# 0.5.0 — dynamic fund reserve
-
-**Status: implemented on 2026-08-21; owner acceptance on real data remains.**
-
-- [x] Cap dynamic allocations at each goal and iteratively redistribute the
-  remainder within one atomic operation.
-- [x] Store final excess in a separate per-account reserve only in dynamic mode.
-- [x] Automatically refill incomplete funds from reserves across all accounts
-  and reverse operation-caused refills with operation edits or deletion.
-- [x] Allow only manual reserve release to free money on the same account.
-- [x] Expose reserve totals and account detail in Funds, history, backup and
-  forecast contracts.
-- [x] Add migration `0013_fund_reserve` and advance the application to `0.5.0`.
-
----
-
-# Proposed global plan after 0.5.0
 
 This plan is a product hypothesis for discussion, not an approved detailed
 design or calendar commitment. A version number marks a convenient boundary of
@@ -625,7 +79,7 @@ An unfinished item is never moved silently into the next release.
 
 ## Sequencing principles
 
-1. First publish and strengthen a reliable self-hosted core.
+1. Preserve the released self-hosted core while adding multilingual support.
 2. Add the i18n foundation early, while the amount of unmigrated copy is small.
 3. Build the deterministic What if? engine before shortening its input path
    with local AI.
@@ -638,31 +92,24 @@ An unfinished item is never moved silently into the next release.
 8. A public online platform is a separate architectural program and does not
    automatically expand the trusted single-owner model.
 
-## Deferred operational hardening after 1.0.0
-
-- [x] Perform owner acceptance of `0.5.0` on a restored copy of real data.
-- [x] Add protected `.hermes` V1 export/restore while retaining explicit legacy
-  plaintext JSON export/import.
-- [ ] Define supported PostgreSQL, Python, Node, Docker, and browser versions.
-- [ ] Verify upgrades and backup/restore between public versions.
-- [ ] Add automated local backups, validation, and limited rotation.
-- [ ] Publish a multi-architecture image and document upgrades, rollback,
-  reverse proxy, VPN, and HTTPS.
-- [ ] Resolve known critical defects and complete the release/security
-  checklist.
-- [x] Release `1.0.0` after the separate explicit owner decision on 2026-08-28.
-
 ## 1.1.0 — multilingual foundation
 
-- [ ] Move user-facing copy out of components and define an i18n contract.
-- [ ] Support Russian and English interfaces with an explicit fallback
-  language.
-- [ ] Localize dates, numbers, currencies, validation, and API errors without
-  changing exact domain payloads.
-- [ ] Verify interface overflow, keyboard navigation, and screen-reader labels
-  in both languages.
-- [ ] Document how to add a community translation without changing business
-  code.
+**Implemented and locally verified; unreleased.** Selected by the owner on
+2026-09-09 ahead of deferred operational hardening. See the
+[implementation record](multilingual-foundation-plan.md),
+[i18n contract](ui-ux/internationalization.md) and current
+[verification evidence](project-status.md#multilingual-verification--2026-09-09).
+
+Completed scope: Russian/English runtime UI with Russian fallback and browser-local
+preference; translated validation, API errors, dates and accessible labels;
+independent fresh-setup category-template language; unchanged exact financial
+formatting, domain payloads and stored names; contributor guidance and automated
+catalog coverage. Unit, PostgreSQL integration and frontend tests pass. Mobile
+layout and keyboard/accessibility-tree checks were performed in the local browser.
+
+Remaining release gate: owner acceptance and the standard release checklist.
+Exhaustive Safari/VoiceOver testing remains unverified. No database migration,
+server language preference, extra languages or operational hardening is included.
 
 ## 2.0.0 — Oracle: deterministic What if? mode
 
@@ -817,6 +264,20 @@ may ship as `4.x` minor versions without changing import ownership.
 - [ ] Broker import and crypto assets are considered after the base model is
   stable and are not automatically part of the first investment release.
 
+## Deferred operational hardening after 1.0.0
+
+Deferred by the owner on 2026-09-09 in favor of multilingual foundation. These
+items remain open; relevant safety and compatibility checks still apply to each
+release. Existing protected-deployment restrictions remain in force.
+
+- [ ] Define supported PostgreSQL, Python, Node, Docker, and browser versions.
+- [ ] Verify upgrades and backup/restore between public versions.
+- [ ] Add automated local backups, validation, and limited rotation.
+- [ ] Publish a multi-architecture image and document upgrades, rollback,
+  reverse proxy, VPN, and HTTPS.
+- [ ] Resolve known critical defects and complete the release/security
+  checklist.
+
 ## Parallel everyday-work backlog
 
 These improvements may be included in the nearest thematically appropriate
@@ -863,9 +324,8 @@ prematurely on multi-tenant or cloud infrastructure.
 - The entire `0.x` series is for internal trial use. Versions `0.1.0`–`0.4.6`
   and subsequent numbers before a separate owner decision are not stable public
   releases.
-- The first stable public release will be `1.0.0`. The owner announces its
-  readiness and release date separately; the roadmap cannot do so
-  automatically.
+- The first stable public release is `1.0.0`, published after the separate
+  owner decision on 2026-08-28. Future publication also requires a release decision.
 - Major product generations use `2.0.0`, `3.0.0`, and so on. Functional
   improvements within a generation ship as minor `N.x.0` versions, while
   compatible fixes ship as patches `N.x.y`.
@@ -878,31 +338,6 @@ prematurely on multi-tenant or cloud infrastructure.
 - `N.x.0-rc.1` prereleases may verify a real upgrade; a prerelease does not
   replace a stable backup/restore test.
 - Published migrations are never rewritten after the first public release.
-
----
-
-# 1.0.0 — stable release
-
-Version `1.0.0` must not be released merely because many features have been
-implemented.
-
-Proposed criteria:
-
-- The application is used reliably with real data.
-- The financial model is considered stable.
-- Operation and fund formats do not require destructive redesign.
-- Backup and restore are verified across different versions.
-- A compatibility policy is documented.
-- Migrations between public versions are reliable.
-- A vulnerability-handling process exists.
-- The update release process is clear.
-- No known critical defects remain.
-- Core user scenarios require no manual database intervention.
-- A person who did not participate in development can install and upgrade the
-  project by following the documentation.
-
-Until these conditions are met, the project may remain in the `0.x` series even
-if it is already fully usable.
 
 ---
 
