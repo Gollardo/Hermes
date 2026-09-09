@@ -51,150 +51,37 @@ Positive, negative, operational and migration consequences.
 Anything intentionally deferred.
 ```
 
-## Candidate register
+## Remaining architecture questions
 
-The entries below are candidates, not retroactively accepted ADRs. Unless a
-candidate is explicitly linked to an implementation decision below, its status
-is `proposed` even where the owner has supplied a strong direction; formal
-consequences and unresolved details still require review.
-Candidates ADR-003, ADR-004 and ADR-006 predate the numbered implementation
-decisions above. They are retained as discovery history, but ADR 0001, 0002 and
-0003 are the authoritative records of the implemented baselines.
+The old discovery candidates duplicated implemented contracts and used numbering
+that conflicted with the ADR files above. They are replaced by the focused
+register below. This cleanup does not retroactively approve a new ADR.
 
-### ADR-001 Modular monolith
+| Area | Current source of truth | Still unresolved |
+| --- | --- | --- |
+| Modular monolith | [Module boundaries](../architecture/module-boundaries.md) | Automated private-boundary enforcement, stable cross-module read contracts and criteria for revisiting deployment boundaries |
+| PostgreSQL | [Deployment](../architecture/deployment.md) and [release baseline](../operations/release.md) | Broader version/extension support policy |
+| Authentication | [Authentication domain](../domains/authentication.md) | Password recovery and long-term session/idle/throttle policy |
+| Frontend delivery | [Deployment architecture](../architecture/deployment.md) | Measured static-serving limits, cache/compression policy and further proxy/CSP review |
+| Ledger and funds | ADR 0001/0002 above | Measured balance caching, reconciliation and future lifecycle extensions |
+| Recurrence | ADR 0003 above | Richer expressions, background materialization and timezone migration |
+| Backup | [Import/export](../domains/import-export.md) and ADR 0004 | Compatibility beyond payload schema 1, signing and streaming |
 
-- **Status:** proposed
-- **Context:** a self-hosted single-owner application has many finance domains
-  but one deployment lifecycle; distributed operations would add unjustified
-  failure modes and administration.
-- **Proposed choice:** one modular monolith with explicit public module
-  boundaries and one transactional PostgreSQL database.
-- **Known alternatives:** unstructured monolith; microservices; separate worker
-  services.
-- **Questions:** enforcement mechanism for private boundaries; which
-  cross-module read contracts remain stable; criteria for ever revisiting the
-  deployment boundary.
+## Future ADR candidates
 
-### ADR-002 PostgreSQL as the only supported database
+### Deterministic what-if scenario boundary
 
-- **Status:** proposed
-- **Context:** financial invariants require reliable transactions and a single
-  support target. Supporting divergent SQL dialects would multiply schema and
-  locking behavior.
-- **Proposed choice:** PostgreSQL is the sole production and test database; do
-  not add SQLite compatibility.
-- **Known alternatives:** SQLite for local use; MySQL/MariaDB; a database
-  abstraction supporting several engines.
-- **Questions:** first supported PostgreSQL major versions; extension policy;
-  transaction isolation and locking conventions.
+Product direction is confirmed; detailed design is not accepted. Structured
+hypothetical changes should use the same coherent snapshot and exact projection
+rules as the baseline, remain read-only and require an explicit plan-draft flow.
+Alternatives include temporary-plan mutation or cloned financial tables; neither
+is approved. Resolve the initial command set, snapshot/version strategy,
+persistence and Forecasting/Scenarios ownership split before implementation.
 
-### ADR-003 Ledger-derived account balances
+### Optional local assistant boundary
 
-- **Status:** implemented baseline recorded by ADR 0001; immutable change
-  history is explicitly not required for the current product
-- **Context:** freely editable balance fields can drift from operation history.
-  The owner confirmed operation history as source of truth and initial balance
-  as an adjustment operation.
-- **Proposed choice:** derive physical account balance from posted money
-  movements; never expose direct balance mutation.
-- **Known alternatives:** mutable balance column; cached balance projection with
-  reconciliation; full accounting double-entry ledger.
-- **Questions:** whether and how to cache; future reconciliation requirements
-  if the product scope changes.
-
-### ADR-004 Virtual fund allocation model
-
-- **Status:** accepted current-release policy recorded by ADR 0002
-- **Context:** funds earmark real account money, can span accounts and must move
-  atomically with relevant physical operations.
-- **Proposed choice:** represent per-account virtual fund movements and derive
-  fund positions; enforce percentage and physical-coverage invariants.
-- **Known alternatives:** funds as accounts; a mutable allocation snapshot;
-  envelope-only totals without account placement.
-- **Questions:** future lifecycle of explicit allocation events beyond the
-  accepted rounding, remainder, ownership and coverage rules.
-
-### ADR-005 Single-user server-side authentication
-
-- **Status:** proposed
-- **Context:** the deployment has one local owner and no need for identity
-  federation, registration, roles or tenants.
-- **Proposed choice:** first-run Argon2id credential plus revocable server-side
-  sessions identified by HttpOnly cookies.
-- **Known alternatives:** JWT bearer tokens; HTTP Basic authentication; reverse
-  proxy authentication; multi-user identity model.
-- **Implemented alpha baseline:** seven-day database sessions, hashed opaque
-  tokens, SameSite cookies, double-submit CSRF, 30-minute idle expiry and
-  persistent instance-wide throttling. These are documented release
-  assumptions, not a retroactively accepted ADR.
-- **Questions:** recovery flow, reverse-proxy cookie behavior and whether the
-  current lifetime/idle/throttle defaults should become long-term policy.
-
-### ADR-006 Expected occurrence materialization
-
-- **Status:** accepted current-release policy recorded by ADR 0003
-- **Context:** recurring intent must be visible and adjustable without changing
-  actual balances until confirmation.
-- **Proposed choice:** materialize dated expected occurrences with lifecycle
-  states; confirmation atomically creates and links one posted operation.
-- **Known alternatives:** calculate recurrences only on read; post future
-  operations immediately; use an external scheduler/queue.
-- **Questions:** future richer recurrence expressions, background
-  materialization and timezone migration.
-
-### ADR-007 Angular production build delivery
-
-- **Status:** proposed
-- **Context:** users should access one port while development benefits from the
-  Angular dev server.
-- **Proposed choice:** multi-stage build copies Angular browser assets into the
-  FastAPI application image, which serves them after `/api` routes.
-- **Known alternatives:** Nginx/Caddy sidecar; separately exposed frontend;
-  server-side rendering.
-
-### ADR-008 Deterministic what-if scenario boundary
-
-- **Status:** proposed candidate; product direction confirmed, detailed design
-  not accepted
-- **Context:** Hermes should compare the consequences of a hypothetical
-  financial decision without changing actual facts or confirmed plans.
-- **Proposed choice:** apply structured hypothetical changes to the same coherent
-  snapshot and exact projection rules as the baseline; keep scenarios read-only
-  and require a separate explicit plan-draft flow.
-- **Known alternatives:** mutate and roll back a temporary plan; clone financial
-  tables; let an AI model calculate the answer.
-- **Questions:** initial command set, snapshot/version strategy, persistence and
-  the exact Forecasting/Scenarios ownership split.
-
-### ADR-009 Optional local assistant boundary
-
-- **Status:** proposed candidate; owner-confirmed safety and fallback direction
-- **Context:** natural language can simplify scenario construction, but model
-  output is probabilistic and personal financial data should remain local.
-- **Proposed choice:** an optional local adapter produces a reviewable structured
-  draft and grounded explanation; deterministic services calculate outcomes,
-  and the complete workflow remains available without AI.
-- **Known alternatives:** mandatory bundled model; external AI API; direct
-  model-to-ledger tools; structured UI only.
-- **Questions:** runtime and model packaging, resource budget, update policy,
-  evaluation corpus and whether semantic retrieval is justified.
-- **Questions:** cache headers and compression; reverse-proxy guidance; CSP;
-  whether FastAPI static serving remains adequate under measured load.
-
-### ADR-010 Versioned JSON backup format
-
-- **Status:** proposed
-- **Context:** owners need cloud-independent, portable full export and atomic
-  restore across evolving schemas.
-- **Proposed choice:** module-coordinated JSON document with `format`,
-  `schema_version`, `app_version`, `exported_at`, exact decimal strings and a
-  transactional restore.
-- **Implemented baseline:** `hermes-json-backup` schema 1, canonical SHA-256
-  integrity, a 50 MiB pre-parse limit, destination-owner re-authentication and
-  transactional restore through module-owned persistence contracts.
-- **Known alternatives:** PostgreSQL-only dumps; per-domain files; unversioned
-  JSON; archive containing JSON plus attachments.
-- **Implemented extension:** ADR 0004 adds the encrypted `hermes` V1 envelope
-  while retaining explicit plaintext JSON export/import.
-- **Questions:** compatibility beyond payload schema 1, authenticity/signing
-  and large-dataset streaming.
+The owner confirmed the safety and non-AI fallback direction. An optional local
+adapter may produce a reviewable draft and grounded explanation; deterministic
+services own calculations. Runtime/model packaging, resource budget, updates,
+evaluation and any semantic retrieval still need design. Mandatory models,
+external AI services and direct model-to-ledger tools are not approved defaults.

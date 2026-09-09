@@ -51,68 +51,24 @@ Project priorities:
 
 ---
 
-# Delivered baseline through 1.0.0
+# Delivered baseline through 1.1.0
 
-Version `1.0.0` was published on 2026-08-28 after owner acceptance. Internal
-`0.x` milestones are summarized here; detailed history and verification remain
-in [CHANGELOG.md](../CHANGELOG.md) and [project-status.md](project-status.md).
+- `1.0.0` (2026-08-28): self-hosted single-owner access, exact ledger, accounts,
+  categories, virtual funds, recurring/one-off plans, forecast, reports and backup.
+- `1.1.0` (2026-09-09): RU/EN runtime interface and setup templates, reviewed
+  occurrence confirmation, localization fixes and responsive calendar refinement.
 
-- Foundation, single-owner setup/authentication, settings, accounts and categories.
-- Exact financial ledger, operation journal, virtual funds and atomic posting.
-- Recurring and one-off plans, calendar and deterministic balance forecasting.
-- Reports, default account, shared financial formatting and amount expressions.
-- Dynamic fund allocation, relative target progress, reserve and series shifts.
-- Plaintext JSON and protected `.hermes` V1 backup/restore and Compose delivery.
+See [CHANGELOG](../CHANGELOG.md) for release history and [project status](project-status.md)
+for checks and limits. Delivered features are not future work. Operational
+hardening is still deferred below; publication does not close its remaining items.
 
-Public-version upgrade coverage and other unfinished operational work remain
-explicitly deferred below; release publication does not mark them complete.
+# Product plan after 1.1.0
 
----
-
-# Product plan after 1.0.0
-
-
-This plan is a product hypothesis for discussion, not an approved detailed
-design or calendar commitment. A version number marks a convenient boundary of
-user value; each version's scope is confirmed separately before implementation.
-An unfinished item is never moved silently into the next release.
-
-## Sequencing principles
-
-1. Preserve the released self-hosted core while adding multilingual support.
-2. Add the i18n foundation early, while the amount of unmigrated copy is small.
-3. Build the deterministic What if? engine before shortening its input path
-   with local AI.
-4. Import high-quality source data before history-informed analytics.
-5. Implement debts and budgeting as independent domains, without mixing them
-   with funds or ordinary operations.
-6. Build explainable deterministic analytics first, then use a local model only
-   as an optional assistant over the same facts.
-7. Multi-currency support must precede full investment accounting.
-8. A public online platform is a separate architectural program and does not
-   automatically expand the trusted single-owner model.
-
-## 1.1.0 — multilingual foundation
-
-**Completed for release `1.1.0` on 2026-09-09.** Selected by the owner on
-2026-09-09 ahead of deferred operational hardening. See the
-[implementation record](multilingual-foundation-plan.md),
-[i18n contract](ui-ux/internationalization.md) and current
-[verification evidence](project-status.md#multilingual-verification--2026-09-09).
-
-Completed scope: Russian/English runtime UI with Russian fallback and browser-local
-preference; translated validation, API errors, dates and accessible labels;
-independent fresh-setup category-template language; unchanged exact financial
-formatting, domain payloads and stored names; contributor guidance and automated
-catalog coverage. Unit, PostgreSQL integration and frontend tests pass. Mobile
-layout and keyboard/accessibility-tree checks were performed in the local browser.
-
-All four [production-backup acceptance findings](operations/multilingual-acceptance-2026-09-09.md)
-are fixed, covered by rendered regressions and manually retested on the rebuilt
-local production image. The owner authorized release publication on 2026-09-09; the release checklist
-is recorded in project status.
-Exhaustive Safari/VoiceOver testing remains unverified. No database migration,
-server language preference, extra languages or operational hardening is included.
+Future milestones are product hypotheses, not approved detailed designs or a
+calendar commitment. Confirm each scope separately and move unfinished work
+explicitly. Deterministic scenarios precede their optional AI input; imported
+facts precede history-informed analytics; multi-currency precedes investments.
+The hosted platform remains a separate architectural program.
 
 ## 2.0.0 — Oracle: deterministic What if? mode
 

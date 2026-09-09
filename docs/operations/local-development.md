@@ -76,13 +76,10 @@ during Angular upgrades; the latest verified result is recorded in
 
 ## Migrations
 
-Run Alembic from `backend` through the Make targets. Revision
-`0001_first_run_access` is the first public schema,
-`0002_harden_access_invariants` adds database checks, and
-`0003_accounts_categories` adds the first financial directories and ledger
-foundation. The current single head is `0012_recurring_series_shift`; the full
-chain is summarized in `backend/migrations/README.md`. Do not rewrite a shipped
-revision; correct it with a later revision.
+Run Alembic from `backend` through the Make targets. The current single head is
+`0014_one_off_plans`; [the migration registry](../../backend/migrations/README.md)
+records the chain and destructive downgrade consequences. Never rewrite a
+published revision; correct it with a new migration.
 
 `make test-backend` keeps PostgreSQL scenarios opt-in so an isolated backend unit
 run does not create or drop databases. The aggregate `make test` and explicit

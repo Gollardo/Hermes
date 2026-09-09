@@ -1,8 +1,7 @@
 # README screenshots
 
 These screenshots were captured on 2026-09-09 in Chrome from an isolated Hermes
-production-image instance running the unreleased multilingual foundation for
-`1.1.0`. The application version badge still reads `1.0.0`; no release version
+production-image instance running the pre-release build of `1.1.0`. The application version badge still reads `1.0.0`; no release version
 was changed for these images.
 
 The interface language and all demonstration names are English. The dataset was

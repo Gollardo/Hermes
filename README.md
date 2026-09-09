@@ -119,7 +119,7 @@ preference independent of the accounting currency.
 - previewed, validated, transactional restore.
 
 See the [current project status](docs/project-status.md) for the factual
-verification snapshot, known limitations, and the next release gate.
+verification snapshot, known limitations, and next steps.
 
 ## Run locally
 

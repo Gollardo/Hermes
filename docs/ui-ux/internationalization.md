@@ -9,9 +9,8 @@ additional package is introduced. The native `Intl.PluralRules` implementation
 owns plural selection; Hermes supports plain named parameters rather than a
 custom ICU message language.
 
-The [implementation plan](../multilingual-foundation-plan.md) retains the
-source audit and delivery sequence. The current verification evidence is in
-[project status](../project-status.md).
+This contract supersedes the completed implementation plan. Release verification
+is recorded in [project status](../project-status.md).
 
 ## Language selection and state
 

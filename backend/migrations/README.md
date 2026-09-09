@@ -25,7 +25,10 @@ Later revisions extend the same linear history:
   and the causal operation link used for atomic refill rollback and composed
   transfer-and-allocation reversal.
 
-`0013_fund_reserve` is the current single head. Revision identifiers,
+- `0014_one_off_plans` adds one-off occurrence origin and lifecycle support
+  alongside recurring occurrences.
+
+`0014_one_off_plans` is the current single head. Revision identifiers,
 rather than migration filenames, are the stable Alembic chain.
 
 Downgrading below `0013_fund_reserve` removes reserve movements and causal
@@ -37,3 +40,8 @@ offsets and cancelled-occurrence preservation markers. Untouched occurrence
 dates are normalized back to their source dates; take a backup before rollback
 because the accumulated series shift and explicit preservation decisions cannot
 be reconstructed afterward.
+
+Downgrade from `0014_one_off_plans` is refused while any one-off occurrences
+exist. Once none remain, it removes the one-off origin schema.
+Use a verified pre-upgrade backup for production rollback; see the
+[release runbook](../../docs/operations/release.md).
