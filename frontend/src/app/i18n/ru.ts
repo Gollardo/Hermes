@@ -694,7 +694,7 @@ export const ru = {
     'После перевода сумма распределяется по процентам активных фондов.',
   'scheduling.followingEventsShiftTogetherWithThePostponed':
     'Следующие события сдвигаются вместе с переносимым',
-  'scheduling.currentShiftP0P1Days': '· текущий сдвиг {p0}{p1} дн.',
+  'scheduling.currentShiftP0P1Days': '· текущий сдвиг {p0}',
   'scheduling.active': 'Активно',
   'scheduling.disabled': 'Отключено',
   'scheduling.disable': 'Отключить',
@@ -734,8 +734,7 @@ export const ru = {
     'Сдвигать следующие события при переносе текущего',
   'scheduling.confirmedCancelledAndPreviouslyManuallyPostponedEvents':
     'Подтверждённые, отменённые и ранее перенесённые вручную события не изменятся.',
-  'scheduling.currentAccumulatedSeriesShiftP0P1Days':
-    'Текущий накопленный сдвиг серии: {p0}{p1} дн.',
+  'scheduling.currentAccumulatedSeriesShiftP0P1Days': 'Текущий накопленный сдвиг серии: {p0}',
   'scheduling.allocateTheAmountAmongActiveFundsBy':
     'Распределить сумму по активным фондам согласно их процентам',
   'scheduling.activeFundPercentagesAtTheTimeOf':
@@ -850,14 +849,14 @@ export const ru = {
   'settings.protectedBackupPassword': 'Пароль защищённого backup',
   'settings.validateProtectedBackup': 'Проверить защищённый backup',
   'settings.integrityConfirmed': 'Целостность подтверждена',
-  'settings.p0OperationsP1PhysicalMovements': '{p0} операций · {p1} физических движений',
-  'settings.p0AccountsP1CategoriesP2Funds': '{p0} счетов · {p1} категорий · {p2} фондов',
-  'settings.p0FundEventsP1VirtualMovements': '{p0} событий фондов · {p1} виртуальных движений',
-  'settings.p0ReserveMovements': '{p0} движений резерва',
+  'settings.p0OperationsP1PhysicalMovements': 'Операции: {p0} · Физические движения: {p1}',
+  'settings.p0AccountsP1CategoriesP2Funds': 'Счета: {p0} · Категории: {p1} · Фонды: {p2}',
+  'settings.p0FundEventsP1VirtualMovements': 'События фондов: {p0} · Виртуальные движения: {p1}',
+  'settings.p0ReserveMovements': 'Движения резерва: {p0}',
   'settings.p0RecurringRulesP1PlannedOperations':
-    '{p0} регулярных правил · {p1} ожидаемых операций',
+    'Регулярные правила: {p0} · Ожидаемые операции: {p1}',
   'settings.thisReplacesP0AccountsP1OperationsP2':
-    'Будут заменены {p0} счетов, {p1} операций, {p2} фондов и {p3} ожидаемых операций. Остальные сессии завершатся. Ошибка откатит всю замену.',
+    'Будут заменены данные: счета — {p0}, операции — {p1}, фонды — {p2}, ожидаемые операции — {p3}. Остальные сессии завершатся. Ошибка откатит всю замену.',
   'settings.typeReplaceAllData': 'Введите «ЗАМЕНИТЬ ВСЕ ДАННЫЕ»',
   'settings.restoreAndReplaceData': 'Восстановить и заменить данные',
   'settings.sessions': 'Сессии',

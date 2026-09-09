@@ -1,3 +1,4 @@
+import { language } from '../../i18n/i18n';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -63,6 +64,7 @@ describe('OperationsPage', () => {
   });
 
   afterEach(() => {
+    language.set('ru');
     vi.useRealTimers();
     vi.restoreAllMocks();
     http
@@ -201,6 +203,50 @@ describe('OperationsPage', () => {
     control.dispatchEvent(new Event('change'));
     fixture.detectChanges();
   }
+
+  it.each(['ru', 'en'] as const)(
+    'keeps a rejected expense error inside the composer in %s and preserves exact input',
+    (selected) => {
+      flushInitial();
+      language.set(selected);
+      setValue('#operation-type', 'expense');
+      setValue('#operation-category', 'category-1');
+      setValue('#operation-amount', '999999.1234');
+      setValue('#operation-account', 'account-1');
+      const button = fixture.nativeElement.querySelector(
+        '.entry-panel button[type="submit"]',
+      ) as HTMLButtonElement;
+      button.click();
+      const request = http.expectOne('/api/v1/operations');
+      expect(request.request.body.amount).toBe('999999.1234');
+      request.flush(
+        { detail: { code: 'insufficient_balance' } },
+        { status: 409, statusText: 'Conflict' },
+      );
+      fixture.detectChanges();
+      const dialog = fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+      const alert = dialog.querySelector('[role="alert"]');
+      expect(alert).not.toBeNull();
+      expect(fixture.nativeElement.querySelectorAll('[role="alert"]').length).toBe(1);
+      expect((dialog.querySelector('#operation-amount') as HTMLInputElement).value).toContain(
+        '999',
+      );
+      expect(button.disabled).toBe(false);
+      const initial = alert?.textContent;
+      language.set(selected === 'ru' ? 'en' : 'ru');
+      fixture.detectChanges();
+      expect(alert?.textContent).not.toBe(initial);
+      // A language change must not retry a failed posting.
+      http.expectNone('/api/v1/operations');
+      button.click();
+      const retry = http.expectOne('/api/v1/operations');
+      expect(retry.request.body.amount).toBe('999999.1234');
+      retry.flush(
+        { detail: { code: 'insufficient_balance' } },
+        { status: 409, statusText: 'Conflict' },
+      );
+    },
+  );
 
   it('starts without an unapproved type default and enables only a complete expense', () => {
     flushInitial();

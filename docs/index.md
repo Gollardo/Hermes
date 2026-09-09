@@ -76,6 +76,7 @@ design system.
 - [Deployment runbook](operations/deployment.md)
 - [Backup and restore](operations/backup-and-restore.md)
 - [Release lifecycle](operations/release.md)
+- [Multilingual production-backup acceptance](operations/multilingual-acceptance-2026-09-09.md)
 
 Each document distinguishes owner-confirmed rules, initialization decisions,
 assumptions, open questions and future work where those categories apply.

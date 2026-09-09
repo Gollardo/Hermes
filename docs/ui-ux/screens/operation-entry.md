@@ -176,7 +176,11 @@ after a save attempt.
 ### Insufficient balance
 
 The backend blocks a mutation that would leave an affected account below zero,
-and the UI shows a localized explanation. This is a conservative alpha policy,
+and the UI shows a localized explanation inside the active dialog as an alert.
+Submission errors stay in the action footer outside the scrolling form body,
+including on narrow screens. Entered values retain their exact precision for
+correction and explicit retry; the page-level alert is hidden while the composer
+is open. This is a conservative alpha policy,
 not the final overdraft model.
 
 ### Insufficient fund money

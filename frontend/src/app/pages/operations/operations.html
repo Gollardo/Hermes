@@ -8,7 +8,7 @@
     <app-operation-create-menu (selected)="openCreate($event)" />
   </header>
 
-  @if (error(); as message) {
+  @if (!formOpen() && error(); as message) {
     <p class="form-error" role="alert">{{ message }}</p>
   }
   @if (scheduledNotice(); as message) {
@@ -303,6 +303,9 @@
           </div>
 
           <div class="modal-actions">
+            @if (error(); as message) {
+              <p class="form-error" role="alert">{{ message }}</p>
+            }
             @if (form.touched && !canSubmit()) {
               <p class="field-error">{{ t('operations.completeTheRequiredFieldsAndCheckThe') }}</p>
             }

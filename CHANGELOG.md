@@ -29,6 +29,16 @@ assigned.
 - Existing notices retranslate on language changes; financial formatting,
   exact payloads, currency/timezone rules and backup schema remain unchanged.
 
+### Fixed
+
+- Restore button, prompt and submission guard now share the currently selected
+  language's confirmation phrase while preserving the published API command.
+- Rejected operation submissions show an alert inside the active composer and
+  retain the entered data for correction and retry.
+- Calendar series shifts use signed day plurals in Russian and English; Russian
+  backup summaries use count labels without incorrect noun inflections.
+- Forecast date ticks adapt to chart width and keep edge labels inside the plot.
+
 ### Migration
 
 - None. Interface language is browser-local and template language affects only

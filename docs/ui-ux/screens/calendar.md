@@ -110,3 +110,10 @@ The implemented RU/EN presentation follows the shared
 [internationalization contract](../internationalization.md). Language changes
 update screen copy and accessible labels while preserving financial semantics,
 user-entered data, dates, selected context and exact monetary payloads.
+
+## Localized series-shift presentation
+
+Rule summaries and the editor render the accumulated shift through the shared
+signed-day plural helper, including `+1 day` / `+1 день`, `+2 days` / `+2 дня`,
+and negative shifts. This only changes presentation; scheduled dates and shift
+semantics remain unchanged.

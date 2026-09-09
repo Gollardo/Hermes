@@ -5,6 +5,9 @@ import {
   Component,
   OnInit,
   computed,
+  effect,
+  ElementRef,
+  viewChild,
   inject,
   signal,
 } from '@angular/core';
@@ -161,6 +164,21 @@ interface ForecastRiskMarker extends PlotCoordinate {
 export class ForecastPage implements OnInit {
   protected readonly t = t;
   private readonly http = inject(HttpClient);
+  private readonly chartCanvas = viewChild<ElementRef<HTMLElement>>('chartCanvas');
+  private readonly chartWidth = signal(0);
+
+  constructor() {
+    effect((onCleanup) => {
+      const canvas = this.chartCanvas()?.nativeElement;
+      if (!canvas || typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver(([entry]) => {
+        this.chartWidth.set(entry.contentRect.width);
+      });
+      observer.observe(canvas);
+      onCleanup(() => observer.disconnect());
+    });
+  }
+
   private requestId = 0;
   private fundRequestId = 0;
 
@@ -408,7 +426,16 @@ export class ForecastPage implements OnInit {
   protected readonly dateTicks = computed<DateTick[]>(() => {
     const points = this.plot();
     if (!points.length) return [];
-    const count = Math.min(this.forecast()?.horizon === 'two_weeks' ? 5 : 7, points.length);
+    // Reserve enough space for RU/EN month labels, including edge-aligned dates.
+    const capacity = Math.max(
+      2,
+      Math.floor((this.chartWidth() * (PLOT_RIGHT - PLOT_LEFT)) / 100 / 80),
+    );
+    const count = Math.min(
+      this.forecast()?.horizon === 'two_weeks' ? 5 : 7,
+      capacity,
+      points.length,
+    );
     return uniqueIndexes(count, points.length).map((index) => ({
       x: points[index].x,
       label: compactDate(points[index].on, this.forecast()?.granularity === 'month'),

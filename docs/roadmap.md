@@ -107,7 +107,10 @@ formatting, domain payloads and stored names; contributor guidance and automated
 catalog coverage. Unit, PostgreSQL integration and frontend tests pass. Mobile
 layout and keyboard/accessibility-tree checks were performed in the local browser.
 
-Remaining release gate: owner acceptance and the standard release checklist.
+All four [production-backup acceptance findings](operations/multilingual-acceptance-2026-09-09.md)
+are fixed, covered by rendered regressions and manually retested on the rebuilt
+local production image. Remaining release gate: owner acceptance and the standard
+release checklist.
 Exhaustive Safari/VoiceOver testing remains unverified. No database migration,
 server language preference, extra languages or operational hardening is included.
 

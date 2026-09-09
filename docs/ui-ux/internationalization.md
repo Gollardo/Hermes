@@ -86,6 +86,9 @@ one deliberately non-diagnostic backup message.
 The localized restore confirmation is checked in the interface and mapped to the
 unchanged published server confirmation string. Switching language does not
 rewrite entered confirmation text; it must match the currently displayed phrase.
+The prompt, button disabled condition and submission guard share that same
+localized value. Rendered tests click the button in both languages and cover
+changing language after typing the phrase.
 
 ## Adding and reviewing translations
 

@@ -374,8 +374,7 @@
                       @if (rule.series_shift_days) {
                         {{
                           t('scheduling.currentShiftP0P1Days', {
-                            p0: rule.series_shift_days > 0 ? '+' : '',
-                            p1: rule.series_shift_days,
+                            p0: signedDays(rule.series_shift_days),
                           })
                         }}
                       }
@@ -628,8 +627,7 @@
             <p class="hint">
               {{
                 t('scheduling.currentAccumulatedSeriesShiftP0P1Days', {
-                  p0: shiftDays > 0 ? '+' : '',
-                  p1: shiftDays,
+                  p0: signedDays(shiftDays),
                 })
               }}
             </p>

@@ -696,7 +696,7 @@ export const en = {
     'After the transfer, the amount is allocated using active fund percentages.',
   'scheduling.followingEventsShiftTogetherWithThePostponed':
     'Following events shift together with the postponed event',
-  'scheduling.currentShiftP0P1Days': '· current shift {p0}{p1} days',
+  'scheduling.currentShiftP0P1Days': '· current shift {p0}',
   'scheduling.active': 'Active',
   'scheduling.disabled': 'Disabled',
   'scheduling.disable': 'Disable',
@@ -735,8 +735,7 @@ export const en = {
     'Shift following events when postponing this one',
   'scheduling.confirmedCancelledAndPreviouslyManuallyPostponedEvents':
     'Confirmed, cancelled and previously manually postponed events stay unchanged.',
-  'scheduling.currentAccumulatedSeriesShiftP0P1Days':
-    'Current accumulated series shift: {p0}{p1} days',
+  'scheduling.currentAccumulatedSeriesShiftP0P1Days': 'Current accumulated series shift: {p0}',
   'scheduling.allocateTheAmountAmongActiveFundsBy':
     'Allocate the amount among active funds by their percentages',
   'scheduling.activeFundPercentagesAtTheTimeOf':

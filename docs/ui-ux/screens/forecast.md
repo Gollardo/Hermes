@@ -202,8 +202,11 @@ unavailable source and offers retry; actual balance may appear separately.
   lower padding. A safe forecast focuses on its real range; a near-zero or
   negative balance includes zero. The area below zero has a light red tint, and
   the negative segment and points become red, so risk is not color-only.
-- The X axis thins labels by horizon without losing source precision. Point
-  selection happens directly on the chart and reveals an explanation below.
+- The X axis thins labels by horizon and measured plot width without losing
+  source precision or selectable points. A conservative 80-pixel label budget
+  limits density; first and last labels align inward. Without ResizeObserver,
+  the scale falls back to at most two endpoint labels. Point selection happens
+  directly on the chart and reveals an explanation below.
 - Two weeks, month, quarter, and half-year show a point for each day; year groups
   by calendar month. Points and labels thin within a responsive chart viewport;
   the chart has no internal scrolling.

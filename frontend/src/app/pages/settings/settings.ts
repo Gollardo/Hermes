@@ -84,7 +84,9 @@ export class SettingsPage implements OnInit {
   protected readonly backupError = localizedSignal();
   protected readonly backupSuccess = localizedSignal();
   protected readonly backupRequiresPassword = signal(false);
-  protected readonly restoreConfirmation = RESTORE_CONFIRMATION;
+  protected get restoreConfirmation(): string {
+    return t('settings.restorePhrase');
+  }
   protected readonly formatTimestamp = formatTextTimestamp;
   protected readonly currencyLabel = currencySymbol;
   private selectedBackupSequence = 0;
@@ -320,9 +322,9 @@ export class SettingsPage implements OnInit {
   protected restoreBackup(): void {
     const backup = this.backupDocument();
     const value = this.restoreForm.getRawValue();
-    if (!backup || this.restoreForm.invalid || value.confirmation !== t('settings.restorePhrase')) {
+    if (!backup || this.restoreForm.invalid || value.confirmation !== this.restoreConfirmation) {
       this.restoreForm.markAllAsTouched();
-      if (value.confirmation !== t('settings.restorePhrase')) {
+      if (value.confirmation !== this.restoreConfirmation) {
         this.backupError.set(() => t('auth.theConfirmationPhraseDoesNotMatchNo'));
       }
       return;

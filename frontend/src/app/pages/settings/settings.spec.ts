@@ -187,7 +187,7 @@ describe('SettingsPage', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Целостность подтверждена');
     expect(fixture.nativeElement.textContent).toContain('12 августа 2026');
-    expect(fixture.nativeElement.textContent).toContain('2 операций');
+    expect(fixture.nativeElement.textContent).toContain('Операции: 2');
     expect(fixture.nativeElement.textContent).toContain('ЗАМЕНИТЬ ВСЕ ДАННЫЕ');
   });
 
@@ -225,45 +225,78 @@ describe('SettingsPage', () => {
   });
 
   it.each(['ru', 'en'] as const)(
-    'submits the previewed backup after exact %s confirmation',
-    (selected) => {
+    'submits through the rendered restore button in %s and rechecks after switching language',
+    async (selected) => {
       fixture.detectChanges();
-      http.expectOne('/api/v1/settings').flush({
-        base_currency: 'RUB',
-        timezone: 'Europe/Moscow',
-        default_account_id: null,
-        base_currency_locked: true,
-        updated_at: '2026-08-12T00:00:00Z',
-      });
+      http
+        .expectOne('/api/v1/settings')
+        .flush({ base_currency: 'RUB', timezone: 'UTC', base_currency_locked: true });
       http.expectOne('/api/v1/accounts').flush([]);
+      fixture.detectChanges();
       const backup = { format: 'hermes-json-backup', schema_version: 1 };
-      const page = fixture.componentInstance as unknown as {
-        backupDocument: { set: (value: unknown) => void };
-        restoreForm: {
-          setValue: (value: {
-            confirmation: string;
-            masterPassword: string;
-            backupPassword: string;
-          }) => void;
-          getRawValue: () => {
-            confirmation: string;
-            masterPassword: string;
-            backupPassword: string;
-          };
-        };
-        restoreBackup: () => void;
-      };
-      language.set(selected);
-      page.backupDocument.set(backup);
-      page.restoreForm.setValue({
-        confirmation: selected === 'ru' ? 'ЗАМЕНИТЬ ВСЕ ДАННЫЕ' : 'REPLACE ALL DATA',
-        masterPassword: 'correct-master-password',
-        backupPassword: '',
+      const file = new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' });
+      const input = fixture.nativeElement.querySelector('#backup-file') as HTMLInputElement;
+      Object.defineProperty(input, 'files', { value: [file] });
+      input.dispatchEvent(new Event('change'));
+      await file.text();
+      http.expectOne('/api/v1/backup/preview').flush({
+        app_version: '1.0.0',
+        exported_at: '2026-09-09T00:00:00Z',
+        base_currency: 'RUB',
+        timezone: 'UTC',
+        integrity_verified: true,
+        counts: {
+          accounts: 2,
+          categories: 1,
+          operations: 2,
+          account_movements: 2,
+          funds: 1,
+          fund_events: 1,
+          fund_movements: 1,
+          fund_reserve_movements: 0,
+          recurring_rules: 1,
+          expected_occurrences: 3,
+        },
       });
-      page.restoreBackup();
-
+      fixture.detectChanges();
+      const setLanguage = (value: string) => {
+        const select = fixture.nativeElement.querySelector(
+          'app-language-select select',
+        ) as HTMLSelectElement;
+        select.value = value;
+        select.dispatchEvent(new Event('change'));
+        fixture.detectChanges();
+      };
+      const fill = (selector: string, value: string) => {
+        const field = fixture.nativeElement.querySelector(selector) as HTMLInputElement;
+        field.value = value;
+        field.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+      };
+      const button = fixture.nativeElement.querySelector(
+        '.restore-form button[type="submit"]',
+      ) as HTMLButtonElement;
+      const phrase = selected === 'ru' ? 'ЗАМЕНИТЬ ВСЕ ДАННЫЕ' : 'REPLACE ALL DATA';
+      setLanguage(selected);
+      fill('#restore-confirmation', phrase);
+      expect(button.disabled).toBe(true);
+      fill('#restore-password', 'correct-master-password');
+      expect(button.disabled).toBe(false);
+      setLanguage(selected === 'ru' ? 'en' : 'ru');
+      expect(
+        (fixture.nativeElement.querySelector('#restore-confirmation') as HTMLInputElement).value,
+      ).toBe(phrase);
+      expect(button.disabled).toBe(true);
+      button.click();
+      http.expectNone('/api/v1/backup/restore');
+      fill('#restore-confirmation', selected === 'ru' ? 'REPLACE ALL DATA' : 'ЗАМЕНИТЬ ВСЕ ДАННЫЕ');
+      expect(button.disabled).toBe(false);
+      setLanguage(selected);
+      fill('#restore-confirmation', phrase);
+      button.click();
+      fixture.detectChanges();
+      expect(button.disabled).toBe(true);
       const request = http.expectOne('/api/v1/backup/restore');
-      expect(request.request.method).toBe('POST');
       expect(request.request.body).toEqual({
         backup,
         confirmation: 'ЗАМЕНИТЬ ВСЕ ДАННЫЕ',
@@ -274,7 +307,11 @@ describe('SettingsPage', () => {
         { detail: { code: 'invalid_backup' } },
         { status: 422, statusText: 'Unprocessable Content' },
       );
-      expect(page.restoreForm.getRawValue().masterPassword).toBe('');
+      fixture.detectChanges();
+      expect(
+        (fixture.nativeElement.querySelector('#restore-password') as HTMLInputElement).value,
+      ).toBe('');
+      expect(button.disabled).toBe(true);
     },
   );
 

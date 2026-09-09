@@ -364,6 +364,13 @@
   white-space: nowrap;
 }
 
+.chart-date-ticks .first-tick {
+  transform: none;
+}
+.chart-date-ticks .last-tick:not(.first-tick) {
+  transform: translateX(-100%);
+}
+
 @media (max-width: 38rem) {
   .chart-heading {
     align-items: stretch;

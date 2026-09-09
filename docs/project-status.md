@@ -21,6 +21,23 @@ hardening. The multilingual foundation is now implemented and locally verified,
 but remains unreleased. The [implementation record](multilingual-foundation-plan.md)
 and [i18n contract](ui-ux/internationalization.md) describe the accepted scope.
 
+### Production-backup browser acceptance — 2026-09-09
+
+The production Docker build now succeeds. A separate loopback-only Compose
+instance was tested with an owner-provided production backup. See the
+[acceptance report](operations/multilingual-acceptance-2026-09-09.md).
+Browser restore and round-trip exports preserved the complete source data;
+financial create/edit/delete, transfer, planning, reports and fund allocation
+checks passed within the documented coverage.
+
+The four acceptance findings are fixed and manually retested in Chrome on the
+rebuilt production image: localized restore submission, visible composer errors,
+signed day plurals, and responsive forecast date labels. The follow-up JSON
+export equals the complete source `data` object. Rendered-component regressions
+now exercise the actual restore button instead of bypassing its guard. Owner
+release acceptance remains outstanding. The local restored instance remains
+running for inspection; production was not changed.
+
 ### Multilingual verification — 2026-09-09
 
 - Russian and English runtime catalogs cover all implemented screens, validation,
@@ -30,18 +47,18 @@ and [i18n contract](ui-ux/internationalization.md) describe the accepted scope.
   Existing names and restored content remain unchanged. No migration is needed:
   database schema, settings and backup formats remain unchanged at head `0014_one_off_plans`.
 - `make test`: 109 backend tests passed (69 PostgreSQL-gated skips in the first
-  run), then all 70 PostgreSQL integration tests passed; 163 frontend tests passed.
+  run), then all 70 PostgreSQL integration tests passed; 171 frontend tests passed.
   `make lint typecheck`, catalog/source checks and production frontend build passed.
-  `alembic check` detected no schema changes. Final Docker image verification is
-  blocked: two builds failed at `npm ci` with network `ECONNRESET`; a previous
-  intermediate image build succeeded, but does not certify the final sources.
-  The disposable test database and local verification server were stopped.
+  `alembic check` detected no schema changes. The standard production Docker
+  image was successfully rebuilt and used for the real-backup defect retest.
+  The disposable integration-test PostgreSQL container was stopped; the separate
+  acceptance instance remains available on loopback port 18089.
 - Live browser checks used disposable PostgreSQL data: setup, login, overview,
   accounts, funds, forecast, calendar, reports and settings; mobile width 390 px,
   language selection by keyboard and accessible labels were inspected.
   This is not exhaustive Safari/VoiceOver certification.
 - Both catalogs are eagerly bundled. The initial frontend bundle exceeds the
-  500 kB warning budget by 15.45 kB (515.45 kB total); existing component CSS
+  500 kB warning budget by 16.44 kB (516.44 kB total); existing component CSS
   warnings remain.
   Native file/date dialogs can retain the browser or operating-system language.
   Cross-tab preference synchronization is outside this scope.
@@ -777,7 +794,7 @@ access. Direct public-internet exposure is unsupported.
 
 ## Recommended next action
 
-Perform owner acceptance of RU/EN workflows on an isolated restored copy, then
-prepare the `1.1.0` release using the existing release checklist. Review the small
-initial-bundle warning before adding further languages. Operational hardening
-remains deferred; no public tag or version bump was made by this implementation.
+Complete owner acceptance of the corrected local instance and the standard
+release checklist before preparing `1.1.0`. Review the initial-bundle warning
+before adding further languages. Operational hardening remains deferred; no
+public tag or version bump was made by this implementation.

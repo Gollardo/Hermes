@@ -1,3 +1,4 @@
+import { language } from '../../i18n/i18n';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -116,7 +117,52 @@ describe('ForecastPage', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    language.set('ru');
+    vi.unstubAllGlobals();
+    http.verify();
+  });
+
+  it.each(['ru', 'en'] as const)(
+    'adapts date labels to chart width without changing forecast points in %s',
+    async (selected) => {
+      let resize: ResizeObserverCallback | undefined;
+      const disconnect = vi.fn();
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(callback: ResizeObserverCallback) {
+            resize = callback;
+          }
+          observe = vi.fn();
+          disconnect = disconnect;
+        },
+      );
+      flushInitial();
+      http.expectOne('/api/v1/forecast?horizon=month&balance_mode=free').flush(FORECAST);
+      language.set(selected);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const pointCount = fixture.nativeElement.querySelectorAll('.chart-point').length;
+      const setWidth = (width: number) => {
+        resize?.([{ contentRect: { width } } as ResizeObserverEntry], {} as ResizeObserver);
+        fixture.detectChanges();
+      };
+      setWidth(240);
+      const narrow = fixture.nativeElement.querySelectorAll('.chart-date-ticks span');
+      expect(narrow.length).toBe(2);
+      expect(narrow[0].classList.contains('first-tick')).toBe(true);
+      expect(narrow[1].classList.contains('last-tick')).toBe(true);
+      const endpoints = [narrow[0].textContent, narrow[1].textContent];
+      setWidth(900);
+      const wide = fixture.nativeElement.querySelectorAll('.chart-date-ticks span');
+      expect(wide.length).toBeGreaterThan(narrow.length);
+      expect([wide[0].textContent, wide[wide.length - 1].textContent]).toEqual(endpoints);
+      expect(fixture.nativeElement.querySelectorAll('.chart-point').length).toBe(pointCount);
+      fixture.destroy();
+      expect(disconnect).toHaveBeenCalled();
+    },
+  );
 
   it('prioritizes safe-to-spend, cash-gap and synchronized day details', () => {
     flushInitial();

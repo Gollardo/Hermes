@@ -180,7 +180,7 @@
               }
             </div>
             <div class="chart-viewport">
-              <div class="chart-canvas">
+              <div class="chart-canvas" #chartCanvas>
                 <svg
                   class="forecast-chart"
                   viewBox="0 0 100 100"
@@ -313,8 +313,13 @@
                 }
 
                 <div class="chart-date-ticks" aria-hidden="true">
-                  @for (tick of dateTicks(); track tick.x) {
-                    <span [style.left.%]="tick.x">{{ tick.label }}</span>
+                  @for (tick of dateTicks(); track tick.x; let first = $first; let last = $last) {
+                    <span
+                      [style.left.%]="tick.x"
+                      [class.first-tick]="first"
+                      [class.last-tick]="last"
+                      >{{ tick.label }}</span
+                    >
                   }
                 </div>
               </div>

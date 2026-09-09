@@ -1,3 +1,4 @@
+import { language } from '../../i18n/i18n';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -91,7 +92,35 @@ describe('SchedulingPage recurrence editor', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    language.set('ru');
+    http.verify();
+  });
+
+  it.each([
+    [1, '+1 day', '+1 день'],
+    [2, '+2 days', '+2 дня'],
+    [5, '+5 days', '+5 дней'],
+    [-1, '-1 day', '-1 день'],
+  ] as const)('localizes signed series shift %s in the list and editor', (days, en, ru) => {
+    flushInitial([], [{ ...RULE, series_shift_days: days }]);
+    language.set('en');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('current shift ' + en);
+    const edit = [...fixture.nativeElement.querySelectorAll('button')].find(
+      (b: HTMLButtonElement) => b.textContent.trim() === 'Edit',
+    ) as HTMLButtonElement;
+    edit.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="dialog"]').textContent).toContain(
+      'Current accumulated series shift: ' + en,
+    );
+    language.set('ru');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="dialog"]').textContent).toContain(
+      'Текущий накопленный сдвиг серии: ' + ru,
+    );
+  });
 
   it('submits selected weekdays, interval and a normalized decimal amount', () => {
     const page = fixture.componentInstance as unknown as SchedulingHarness;

@@ -150,6 +150,7 @@ export class SchedulingPage implements OnInit {
   protected readonly calendarOccurrences = signal<ExpectedOccurrence[]>([]);
   protected readonly upcoming = signal<ExpectedOccurrence[]>([]);
   protected readonly upcomingTotal = signal(0);
+  protected readonly signedDays = signedDays;
   protected readonly today = signal('');
   protected readonly selectedMonth = signal('');
   protected readonly baseCurrency = signal('RUB');
