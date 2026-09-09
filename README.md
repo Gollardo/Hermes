@@ -13,8 +13,8 @@ savings, planned operations, and explainable cash forecasting.**
 
 ![Hermes overview showing free money, physical balance, reserved funds, near-term forecast, and category analytics](docs/assets/readme/overview.jpg)
 
-All screenshots use a synthetic demonstration dataset; no personal financial
-data is included.
+Screenshots show the English interface from the upcoming `1.1.0` release with
+synthetic USD demonstration data; no personal financial data is included.
 
 Hermes helps one owner understand not only where money went, but what is free to
 use, what has already been assigned to goals, and how known plans may change the
@@ -75,8 +75,9 @@ than shrinking the desktop layout mechanically.
 
 </details>
 
-The current runtime interface is in Russian. A multilingual foundation and an
-English interface are planned after the stable self-hosted core.
+The development version supports Russian and English, with a browser-local
+language preference. Multilingual support is implemented for the upcoming
+`1.1.0` release; the latest public release remains `1.0.0`.
 
 ## Current capabilities
 

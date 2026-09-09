@@ -31,6 +31,9 @@ assigned.
 
 ### Fixed
 
+- Compact calendar columns fit desktop panels; scroll guidance follows available
+  panel width and long daily amounts wrap without clipping digits.
+
 - Restore button, prompt and submission guard now share the currently selected
   language's confirmation phrase while preserving the published API command.
 - Rejected operation submissions show an alert inside the active composer and

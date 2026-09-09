@@ -38,6 +38,19 @@ now exercise the actual restore button instead of bypassing its guard. Owner
 release acceptance remains outstanding. The local restored instance remains
 running for inspection; production was not changed.
 
+### Calendar layout and README refresh — 2026-09-09
+
+The compact calendar grid no longer retains the old 98-rem card-based minimum.
+At a 1440-pixel viewport, all seven columns fit the panel in RU and EN. At 390
+pixels, only the calendar grid scrolls (document width remains 390); the scroll
+hint follows panel width. Long amounts may wrap without clipped digits.
+All five README screenshots now use a separately initialized synthetic USD
+instance with English names. Interface language does not change base currency.
+Frontend tests (171), lint/typecheck and the production Docker build passed;
+the calendar was manually checked in Chrome at desktop/mobile widths in RU/EN.
+No backend behavior, migration or financial invariant changed. Existing build
+budget warnings remain; this does not broaden browser certification.
+
 ### Multilingual verification — 2026-09-09
 
 - Russian and English runtime catalogs cover all implemented screens, validation,

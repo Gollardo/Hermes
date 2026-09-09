@@ -25,6 +25,12 @@ monthly grid at every width. The calendar uses an internally scrollable grid on
 narrow screens instead of expanding the document. It never includes future
 events merely because they are within the next 30 days.
 
+The compact month grid has seven equal columns with an 8-rem minimum per day
+instead of the former occurrence-card width. Weekday headings and cells share
+the same column sizing. The scroll hint follows the calendar panel width through
+a container query; it is hidden when the complete week fits. Long monetary
+summaries wrap and cells can grow vertically without clipping significant digits.
+
 ## States and actions
 
 - `pending` and `postponed` expose quick actions.
