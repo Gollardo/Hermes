@@ -158,3 +158,14 @@ The complete decision and persistence consequences are recorded in
 - A user-selectable missing-day policy for dates 29–31 and leap day.
 - Background materialization without an external job queue.
 - Migration semantics if instance timezone changes after schedules exist.
+
+## Explicit import confirmation
+
+Statement import can close one pending/postponed occurrence on the user-selected
+fact date, including a historical date. Bank dates are not applied. The original
+schedule dates and recurrence identity remain unchanged; accepted operation
+fields update only that occurrence. An existing compatible fact can be linked
+without creating physical/virtual movements again. An operation already linked
+to another occurrence is rejected. Stale versions and cancelled/confirmed
+occurrences cannot be claimed by another import decision. Ordinary Calendar
+confirmation keeps its existing date policy. See [ADR 0005](../decisions/0005-statement-import.md).

@@ -31,6 +31,8 @@ from app.modules.backup.schemas import (
     FundRecord,
     FundReserveMovementRecord,
     HermesBackup,
+    ImportProfileRecord,
+    ImportReceiptRecord,
     OperationRecord,
     RecurringRuleRecord,
     RestoreResponse,
@@ -45,6 +47,8 @@ from app.modules.funds.backup import (
     FundMovement,
     FundReserveMovement,
 )
+from app.modules.imports.backup import ImportProfile, ImportReceipt
+from app.modules.imports.schemas import Mapping
 from app.modules.operations.backup import AccountMovement, FinancialOperation
 from app.modules.operations.contracts import OperationType
 from app.modules.scheduling.backup import (
@@ -62,6 +66,8 @@ SCHEMA_VERSION = 1
 RESTORE_CONFIRMATION = "ЗАМЕНИТЬ ВСЕ ДАННЫЕ"
 
 _TABLES = (
+    "import_profiles",
+    "import_receipts",
     "application_settings",
     "accounts",
     "categories",
@@ -125,6 +131,8 @@ def create_backup(session: Session) -> BackupDocument:
     if settings is None:
         raise BackupInvariantError("Application settings are missing")
     data = BackupData(
+        import_profiles=[_record(ImportProfileRecord, row) for row in _all(session, ImportProfile)],
+        import_receipts=[_record(ImportReceiptRecord, row) for row in _all(session, ImportReceipt)],
         settings=_record(SettingsRecord, settings),
         accounts=[_record(AccountRecord, row) for row in _all(session, Account)],
         categories=[_record(CategoryRecord, row) for row in _all(session, Category)],
@@ -217,6 +225,16 @@ def preview_backup(document: BackupDocument) -> BackupPreviewResponse:
 
 
 def validate_document(data: BackupData) -> None:
+    for profile in data.import_profiles:
+        Mapping.model_validate(profile.mapping)
+    for records, metadata_key in (
+        (data.import_profiles, "name"),
+        (data.import_receipts, "source_key"),
+    ):
+        if len({getattr(r, metadata_key) for r in records}) != len(records) or len(
+            {r.id for r in records}
+        ) != len(records):
+            raise BackupInvariantError("Duplicate import metadata")
     normalize_currency(data.settings.base_currency)
     normalize_timezone(data.settings.timezone)
     account_ids = {item.id for item in data.accounts}
@@ -643,6 +661,8 @@ def restore_backup(session: Session, document: BackupDocument) -> RestoreRespons
     validate_document(document.data)
     _lock_tables(session, "ACCESS EXCLUSIVE")
     for model in (
+        ImportReceipt,
+        ImportProfile,
         ExpectedOccurrence,
         RecurringRule,
         FundReserveMovement,
@@ -663,6 +683,8 @@ def restore_backup(session: Session, document: BackupDocument) -> RestoreRespons
     settings.default_account_id = None
     for field, value in settings_values.items():
         setattr(settings, field, value)
+    _insert(session, ImportProfile, document.data.import_profiles)
+    _insert(session, ImportReceipt, document.data.import_receipts)
     _insert(session, Account, document.data.accounts)
     settings.default_account_id = default_account_id
     _insert_categories(session, document.data.categories)

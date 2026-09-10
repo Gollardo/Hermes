@@ -226,3 +226,9 @@ The implemented RU/EN presentation follows the shared
 [internationalization contract](../internationalization.md). Language changes
 update screen copy and accessible labels while preserving financial semantics,
 user-entered data, dates, selected context and exact monetary payloads.
+
+## Statement import entry
+
+The journal links to the separate [statement review](imports.md). Imported facts
+appear in the same journal and use the same `focus` deep link. Import mapping and
+batch decisions do not change the ordinary operation composer.

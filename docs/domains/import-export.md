@@ -114,3 +114,22 @@ round-trip verbatim regardless of interface language. Interface language stays
 in browser storage. Localized restore confirmation is mapped to the existing
 server phrase after exact UI validation; protected-backup authentication errors
 retain one non-diagnostic meaning in both languages.
+
+## Statement import implemented on 2026-09-10
+
+[ADR 0005](../decisions/0005-statement-import.md) records the approved user-date
+and all-status policy, transaction boundaries, limits and exclusions.
+`imports` now owns format profiles and durable per-source-row receipts. CSV and
+XLSX normalize exact numeric text without binary floats; preview creates no
+financial records, receipts or calendar instances. Profiles are explicitly saved.
+
+Confirmation creates a fact or links an existing fact and optionally closes one
+plan through public module contracts. A batch is all-or-nothing and retries are
+idempotent. Probable duplicates remain user decisions; imported rows from the
+same exact source cannot be posted twice. A deleted original fact is not
+silently recreated by reimport.
+
+Profiles and receipts are optional schema-1 payload fields with empty defaults
+for older backups. Restore validates profile mappings and unique receipt keys.
+These new backups require a reader that understands the extension; this is not
+forward compatibility with older releases. Raw bank files are not backed up.

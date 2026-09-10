@@ -137,21 +137,29 @@ Loans do not belong in the first debt release merely because both use the word
 “liability”: loans have a different lifecycle, a recurring payment, and a
 creditor.
 
-## 4.0.0 — universal bank-statement import
+## Universal bank-statement import — implemented slice, release number unassigned
+
+The owner requested this bounded slice on 2026-09-10 ahead of the original
+sequence. This does not claim a published 4.0.0 release. See
+[ADR 0005](decisions/0005-statement-import.md) for the accepted all-status and
+user-selected fact-date scope. Bank date detection is no longer required.
 
 “Universal” means a shared configurable pipeline, not a promise to understand
 every bank file automatically without configuration.
 
-- [ ] CSV with encoding, delimiter, numeric locale, and date-format detection.
-- [ ] XLSX with worksheet selection; evaluate OFX and QIF as additional formats.
-- [ ] Column mapping, saved format profiles, and a write-free preview.
-- [ ] Account selection, normalization of operation sign and type, and category
+- [x] CSV with configurable encoding, delimiter and numeric locale.
+- [x] XLSX with worksheet selection.
+- [ ] Evaluate OFX and QIF separately.
+- [x] Column mapping, saved format profiles, and a write-free preview.
+- [x] Account selection, normalization of operation sign and type, and category
   suggestions.
-- [ ] Explainable duplicate candidates and manual conflict resolution.
-- [ ] Explicit confirmation, atomic writes through owning modules' public
+- [x] Explainable duplicate candidates and manual conflict resolution.
+- [x] Explicit confirmation, atomic writes through owning modules' public
   contracts, and a result report.
-- [ ] Bank-specific profiles build on the shared pipeline and receive no direct
+- [x] Bank-specific profiles build on the shared pipeline and receive no direct
   ledger access.
+
+- [x] User-selected fact dates, all-status review and links to planned payments.
 
 Additional formats, ready-made bank profiles, and reconciliation improvements
 may ship as `4.x` minor versions without changing import ownership.

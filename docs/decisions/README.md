@@ -85,3 +85,8 @@ adapter may produce a reviewable draft and grounded explanation; deterministic
 services own calculations. Runtime/model packaging, resource budget, updates,
 evaluation and any semantic retrieval still need design. Mandatory models,
 external AI services and direct model-to-ledger tools are not approved defaults.
+
+### Statement import
+
+[ADR 0005](0005-statement-import.md) records the implemented reviewed CSV/XLSX
+pipeline and the owner's explicit all-status/user-selected-date decisions.

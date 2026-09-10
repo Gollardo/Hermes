@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-09-09. This is the current release snapshot, not a task log.
+Last reviewed: 2026-09-10. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -29,6 +29,7 @@ design still requires approval.
 | Plans | Recurring rules and one-off plans, postpone/cancel/confirm lifecycle, series shifts and compact calendar | [Scheduling](domains/scheduling.md) |
 | Forecast | Read-only exact free/total projections, fund effects, risks and event explanations | [Forecasting](domains/forecasting.md) |
 | Reports | Posted income/expense totals, category breakdown and source operations | [Reports](domains/reports.md) |
+| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions and explicit fact dates | [Import/export](domains/import-export.md) |
 | Portability | Schema-1 JSON and protected Hermes V1 backup, validated atomic restore | [Import/export](domains/import-export.md) |
 | Languages | RU/EN interface, browser-local preference, independent fresh category-template language | [Internationalization](ui-ux/internationalization.md) |
 
@@ -114,8 +115,7 @@ transient build failures from superseded development snapshots are omitted.
 ## Scope boundaries
 
 The [roadmap](roadmap.md) tracks unimplemented capabilities and deferred work.
-Current exclusions include Oracle scenarios/AI, debts, budgeting, external
-statement imports, multi-currency, multi-user access and background workers.
+Current exclusions include Oracle scenarios/AI, debts, budgeting, multi-currency, multi-user access and background workers.
 Implemented domain documentation records narrower limits such as recurrence
 ranges, account overdraft policy and one-fund-per-operation support.
 
@@ -124,3 +124,29 @@ ranges, account overdraft policy and one-fund-per-operation support.
 For deployment, validate a protected backup before upgrading to `v1.1.0`, then
 verify health and primary financial screens using the [release runbook](operations/release.md).
 For product development, agree the bounded `2.0.0` scenario design before coding.
+
+## Unreleased statement-import slice
+
+The owner authorized implementation on 2026-09-10, ahead of the former roadmap
+sequence. All source statuses are reviewed; the owner selects fact dates.
+Migration `0015_statement_imports` adds profiles and durable receipts. No
+production deployment or release publication has occurred. Raw files are not
+persisted. See [ADR 0005](decisions/0005-statement-import.md) and the
+[screen contract](ui-ux/screens/imports.md). Verification: 123 tests passed in the default backend run (78 PostgreSQL-gated
+tests skipped there), all 79 PostgreSQL integration tests passed on a disposable
+PostgreSQL 17 instance, and all 176 frontend tests passed. The focused import
+suite passed again after the final authorization/downgrade assertions: 14 parser
+tests and 9 integration tests. Lint, formatting, catalog checks, mypy, TypeScript,
+documentation checks and production image build passed. The image returned
+health `ok`, served `/imports` with HTTP 200 and passed `alembic check` at
+`0015_statement_imports`. Browser acceptance exercised the provided XLSX,
+all-status review, a suggested plan, explicit fact date, posting, journal link
+and a 390 px layout without horizontal overflow. See the
+[acceptance record](operations/statement-import-acceptance-2026-09-10.md).
+
+Next action: owner review of a small statement against a restored backup before
+any production migration. Current limitations include synchronous bounded
+processing, browser-memory drafts, manual overlap reconciliation and no pending
+bank reservation model. The production build warns about the initial bundle (527.64 kB against a
+500 kB warning budget) and inherited stylesheet budgets. Imports reuses the
+account/directory styles. No runtime infrastructure or dependency was added.

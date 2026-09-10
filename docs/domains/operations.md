@@ -110,3 +110,12 @@ rule on 2026-08-18. Overdraft remains a separately designed future capability.
 - Reconciliation requirements if future integrations change the product scope.
 - Rounding policy once currency precision is chosen.
 - Account-specific overdraft policy beyond the current non-negative rule.
+
+## Statement provenance
+
+Reviewed statement facts use the same posting, fund coverage, exact amount and
+non-negative balance rules. Dates are explicitly selected by the user and may
+not be future facts. Linking a statement row to an existing fact verifies its
+version and reviewed financial fields without reposting. Import receipts remain
+after allowed edits/deletions; they never override the journal or recreate a
+deleted fact. Confirmed-plan deletion protection remains unchanged.

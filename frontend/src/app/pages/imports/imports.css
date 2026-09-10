@@ -1,0 +1,35 @@
+@import '../accounts/accounts.css';
+fieldset {
+  border: 1px solid #d5ddd6;
+  padding: 1rem;
+  margin: 1rem 0;
+  min-width: 0;
+  border-radius: 0.5rem;
+}
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+label {
+  display: grid;
+  gap: 0.3rem;
+}
+input,
+select {
+  max-width: 100%;
+  min-width: 0;
+}
+dl {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) 2fr;
+  gap: 0.4rem;
+  overflow-wrap: anywhere;
+}
+dd {
+  margin: 0;
+}
+.row strong {
+  font-variant-numeric: tabular-nums;
+}

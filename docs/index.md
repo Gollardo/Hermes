@@ -61,7 +61,8 @@ question by itself.
   [forecast](ui-ux/screens/forecast.md),
   [Oracle · What if?](ui-ux/screens/scenarios.md),
   [reports](ui-ux/screens/reports.md),
-  [transactions](ui-ux/screens/transactions.md)
+  [transactions](ui-ux/screens/transactions.md),
+  [statement import](ui-ux/screens/imports.md)
 - [Internationalization contract and translation guide](ui-ux/internationalization.md)
 - [Open UI/UX questions](ui-ux/open-questions.md)
 
@@ -72,6 +73,7 @@ design system.
 ## Decisions and operations
 
 - [ADR registry and candidates](decisions/README.md)
+- [Statement import acceptance](operations/statement-import-acceptance-2026-09-10.md)
 - [Local development](operations/local-development.md)
 - [Deployment runbook](operations/deployment.md)
 - [Backup and restore](operations/backup-and-restore.md)

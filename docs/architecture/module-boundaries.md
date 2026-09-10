@@ -20,11 +20,13 @@
 | `imports` | parse, map, preview, duplicate candidates | owning modules' validation/write commands |
 | `backup` | versioned plaintext/protected export, crypto envelope and restore orchestration | module-owned export/import contracts |
 
-`scenarios`, `assistant`, `liabilities`, `debts` and `imports` are planned
-ownership reservations. Only the last three currently have placeholder
+`scenarios`, `assistant`, `liabilities` and `debts` are planned
+ownership reservations. Only liabilities and debts currently have placeholder
 packages; none exposes runtime routes, tables or use cases in `0.5.0`. Their
 arrows below describe intended dependency direction, not current Python
-imports. All other rows are implemented boundaries.
+imports. All other rows are implemented boundaries. Imports now owns profiles, reviewed
+source receipts and CSV/XLSX parsing; its application coordinator confirms through
+Operations and Scheduling public contracts.
 
 `app.core` owns technical configuration and database lifecycle, not business
 rules. `app.api` composes HTTP routes and cross-cutting concerns. Cross-module
@@ -76,6 +78,8 @@ flowchart TB
     Reports --> Categories
     Imports --> Operations
     Imports --> Accounts
+    Application --> Imports
+    Application --> Scheduling
     Backup --> Modules["All module export/restore contracts"]
 ```
 

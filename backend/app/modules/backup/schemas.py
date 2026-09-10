@@ -223,7 +223,22 @@ class ExpectedOccurrenceRecord(BackupModel):
         return self
 
 
+class ImportProfileRecord(BackupModel):
+    id: UUID
+    name: str = Field(min_length=1, max_length=120)
+    mapping: dict[str, Any]
+
+
+class ImportReceiptRecord(BackupModel):
+    id: UUID
+    source_key: str = Field(pattern=r"^[0-9a-f]{64}$")
+    decision_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    operation_id: UUID
+
+
 class BackupData(BackupModel):
+    import_profiles: list[ImportProfileRecord] = Field(default_factory=list)
+    import_receipts: list[ImportReceiptRecord] = Field(default_factory=list)
     settings: SettingsRecord
     accounts: list[AccountRecord]
     categories: list[CategoryRecord]

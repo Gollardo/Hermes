@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.operations.ledger import account_balance, account_balances
 from app.modules.operations.models import AccountMovement, FinancialOperation, OperationType
-from app.modules.operations.schemas import OperationCreateRequest
+from app.modules.operations.schemas import OperationCreateRequest, OperationResponse
 from app.modules.operations.service import (
     FutureOperationDateError,
     InsufficientBalanceError,
@@ -74,6 +74,7 @@ def report_operations(
         .where(
             FinancialOperation.type == operation_type,
             FinancialOperation.occurred_on.between(from_on, through_on),
+            FinancialOperation.type != OperationType.BALANCE_ADJUSTMENT,
         )
         .order_by(
             FinancialOperation.occurred_on.desc(),
@@ -186,6 +187,10 @@ def operation_history_references(
 
 
 __all__ = [
+    "import_candidates",
+    "import_existing",
+    "post_import_operation",
+    "validate_import_date",
     "InsufficientBalanceError",
     "FutureOperationDateError",
     "OperationHistoryReference",
@@ -203,3 +208,58 @@ __all__ = [
     "report_operations",
     "post_scheduled_operation",
 ]
+
+
+def import_candidates(
+    session: Session, account_id: UUID, from_on: date, through_on: date
+) -> list[dict[str, object]]:
+    rows = session.execute(
+        select(FinancialOperation, AccountMovement.amount)
+        .join(AccountMovement, AccountMovement.operation_id == FinancialOperation.id)
+        .where(
+            AccountMovement.account_id == account_id,
+            FinancialOperation.occurred_on.between(from_on, through_on),
+            FinancialOperation.type != OperationType.BALANCE_ADJUSTMENT,
+        )
+        .order_by(FinancialOperation.occurred_on, FinancialOperation.id)
+        .limit(1001)
+    ).all()
+    if len(rows) > 1000:
+        raise ValueError("Too many matching facts; narrow the date window")
+    return [
+        dict(
+            id=str(o.id),
+            version=o.version,
+            type=o.type.value,
+            amount=str(abs(a)),
+            direction="income" if a > 0 else "expense",
+            date=o.occurred_on.isoformat(),
+            description=o.description or "",
+            category_id=str(o.category_id) if o.category_id else None,
+        )
+        for o, a in rows
+    ]
+
+
+def import_existing(session: Session, operation_id: UUID, version: int) -> "OperationResponse":
+    from app.modules.operations.service import get_operation_response
+
+    operation = session.scalar(
+        select(FinancialOperation).where(FinancialOperation.id == operation_id).with_for_update()
+    )
+    if operation is None or operation.version != version:
+        raise ValueError("Existing operation changed or was deleted")
+    return get_operation_response(session, operation_id)
+
+
+def post_import_operation(session: Session, payload: OperationCreateRequest) -> UUID:
+    from app.modules.operations.service import reject_future_operation_date
+
+    reject_future_operation_date(session, payload.occurred_on)
+    return create_operation(session, payload).id
+
+
+def validate_import_date(session: Session, occurred_on: date) -> None:
+    from app.modules.operations.service import reject_future_operation_date
+
+    reject_future_operation_date(session, occurred_on)

@@ -269,3 +269,14 @@ exact structured values and the same snapshot, ordering and scope as the
 baseline. `PlanDraft` opens the owning composer; it does not write an expected
 or actual operation. Any vector or semantic index is derived and rebuildable,
 not part of financial truth.
+
+## Statement import
+
+Upload -> bounded CSV/XLSX reader -> column mapping -> exact normalized rows ->
+public fact/plan candidate reads -> explicit row decisions -> one application
+transaction -> public Operations/Funds posting or existing-fact verification ->
+public Scheduling confirmation -> Imports receipt -> commit -> journal links.
+
+Preview has no domain writes or schedule materialization. Explicit profile save
+is separate. Source files are processed locally by the application and discarded;
+no external service or worker is introduced. Backup includes profiles/receipts.

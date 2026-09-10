@@ -8,6 +8,10 @@
     <app-operation-create-menu (selected)="openCreate($event)" />
   </header>
 
+  <p>
+    <a routerLink="/imports">{{ t('imports.title') }}</a>
+  </p>
+
   @if (!formOpen() && error(); as message) {
     <p class="form-error" role="alert">{{ message }}</p>
   }

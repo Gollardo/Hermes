@@ -44,6 +44,11 @@ export function apiErrorMessage(error: unknown, fallback: string | (() => string
     typeof detail.code === 'string'
   ) {
     const localized: Record<string, string> = {
+      import_invalid: t('imports.error'),
+      import_currency: t('imports.currencyError'),
+      import_conflict: t('imports.conflictError'),
+      import_mismatch: t('imports.mismatchError'),
+      import_limit: t('imports.limit'),
       future_operation_requires_plan: t('errors.futureOperation'),
       invalid_default_account: t('errors.defaultAccount'),
       invalid_period: t('errors.period'),
@@ -92,7 +97,11 @@ export function apiErrorMessage(error: unknown, fallback: string | (() => string
       invalid_backup_payload: t('auth.theDecryptedBackupDataIsDamagedOr'),
       invalid_backup: t('auth.theBackupIsDamagedIncompatibleOrViolates'),
     };
-    if (localized[detail.code]) return localized[detail.code];
+    if (localized[detail.code]) {
+      return 'row' in detail && typeof detail.row === 'number'
+        ? t('imports.rowError', { row: detail.row, message: localized[detail.code] })
+        : localized[detail.code];
+    }
   }
   if (error.status === 401) return t('auth.yourSessionHasEndedSignInAgain');
   if (error.status === 403) return t('errors.forbidden');

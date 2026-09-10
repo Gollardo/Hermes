@@ -5,6 +5,7 @@ from app.modules.settings.service import (
     application_timezone,
     clear_default_account_if_matches,
     fund_allocation_mode,
+    get_application_settings,
     initialize_settings,
     lock_application_settings,
     lock_application_timezone,
@@ -16,6 +17,7 @@ from app.modules.settings.validation import normalize_currency, normalize_timezo
 
 __all__ = [
     "ApplicationSettings",
+    "get_application_settings",
     "FundAllocationMode",
     "initialize_settings",
     "application_timezone",
