@@ -44,8 +44,9 @@ all accepted rules as an open checklist.
 
 - Should Calendar and Forecast share a permanent Plan workspace?
 - Are uncertain amount ranges useful beyond the current editable exact amount?
-- Which initial scenario commands, risk explanations and actionable warnings
-  belong in the approved detailed `2.0.0` design?
+- Which extensions to the implemented single-decision Oracle flow and
+  known-plan risk methodology are justified by owner acceptance? Saved scenarios
+  and reviewed plan-draft transfer remain `2.1.0` design work.
 - Are external notifications or intraday projections needed beyond the current
   in-app, end-of-day forecast?
 - Multi-currency presentation requires a separately approved conversion model;

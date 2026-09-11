@@ -44,6 +44,11 @@ export function apiErrorMessage(error: unknown, fallback: string | (() => string
     typeof detail.code === 'string'
   ) {
     const localized: Record<string, string> = {
+      scenario_stale: t('oracle.stale'),
+      scenario_source: t('oracle.stale'),
+      scenario_account: t('oracle.accountError'),
+      scenario_date: t('oracle.dateError'),
+      scenario_scope: t('oracle.scopeError'),
       import_invalid: t('imports.error'),
       import_currency: t('imports.currencyError'),
       import_conflict: t('imports.conflictError'),

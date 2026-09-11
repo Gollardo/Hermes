@@ -5,6 +5,12 @@
       <h1>{{ t('forecast.balanceForecast') }}</h1>
       <p>{{ t('forecast.checkYourBufferBeforeUpcomingExpensesAnd') }}</p>
     </div>
+    <a
+      class="button-link secondary"
+      routerLink="/oracle"
+      [queryParams]="{ account_id: selectedAccountId() || null, horizon: selectedHorizon() }"
+      >{{ t('oracle.whatIf') }}</a
+    >
     <a class="button-link secondary calendar-link" routerLink="/calendar">
       {{ t('forecast.openCalendar') }}
     </a>

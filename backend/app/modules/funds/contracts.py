@@ -47,6 +47,7 @@ from app.modules.funds.service import (
     fund_names,
     get_fund_response,
     history_source_ids,
+    list_funds,
     lock_operation_dependent_allocation,
     locked_active_funds,
     locked_percentage_allocation_preview_with_free_balance,
@@ -68,6 +69,11 @@ from app.modules.funds.service import (
     validate_account_coverage,
     validate_dynamic_targets,
 )
+
+
+def projection_funds(session: Session) -> list[FundResponse]:
+    """Read active funds inside a caller-owned repeatable-read transaction."""
+    return list_funds(session, include_archived=False, shared_lock=False)
 
 
 def create_fund_definition(
@@ -93,6 +99,7 @@ def fund_response(session: Session, fund_id: UUID) -> FundResponse:
 
 
 __all__ = [
+    "projection_funds",
     "FundBalanceError",
     "DynamicFundTargetsRequiredError",
     "FundArchivedMutationError",

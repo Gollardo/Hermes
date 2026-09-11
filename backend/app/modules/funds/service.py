@@ -528,18 +528,18 @@ def _fund_response(
     )
 
 
-def list_funds(session: Session, *, include_archived: bool = True) -> list[FundResponse]:
-    _lock_definitions(session, shared=True)
+def list_funds(
+    session: Session, *, include_archived: bool = True, shared_lock: bool = True
+) -> list[FundResponse]:
+    if shared_lock:
+        _lock_definitions(session, shared=True)
     query = select(Fund)
     if not include_archived:
         query = query.where(Fund.archived_at.is_(None))
-    funds = list(
-        session.scalars(
-            query.order_by(Fund.archived_at.nulls_first(), Fund.name, Fund.id).with_for_update(
-                read=True
-            )
-        ).all()
-    )
+    query = query.order_by(Fund.archived_at.nulls_first(), Fund.name, Fund.id)
+    if shared_lock:
+        query = query.with_for_update(read=True)
+    funds = list(session.scalars(query).all())
     balances = _fund_balances(session, {fund.id for fund in funds})
     mode = fund_allocation_mode(session)
     active = [fund for fund in funds if fund.archived_at is None]

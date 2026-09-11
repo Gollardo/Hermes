@@ -28,7 +28,13 @@ Later revisions extend the same linear history:
 - `0014_one_off_plans` adds one-off occurrence origin and lifecycle support
   alongside recurring occurrences.
 
-`0014_one_off_plans` is the current single head. Revision identifiers,
+- `0015_statement_imports` adds statement profiles and durable import receipts.
+- `0016_oracle_read_index` adds a partial `(due_on, id)` index on actionable
+  occurrences. It persists no scenario data and changes no financial rows.
+  Downgrade removes only this index. Upgrade builds the index transactionally
+  and may briefly block schedule writes.
+
+`0016_oracle_read_index` is the current single head. Revision identifiers,
 rather than migration filenames, are the stable Alembic chain.
 
 Downgrading below `0013_fund_reserve` removes reserve movements and causal

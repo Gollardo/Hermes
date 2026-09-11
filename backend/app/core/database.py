@@ -46,3 +46,23 @@ DatabaseSession = Annotated[
     Session,
     Depends(get_database_session, scope="function"),
 ]
+
+
+def get_projection_session(request: Request) -> Iterator[Session]:
+    """MVCC snapshot, including phantoms, and database-enforced no-write boundary.
+
+    Authentication has its own session: idle/session bookkeeping is not financial state.
+    Isolation is configured before the first statement, never on an active transaction.
+    """
+    engine = cast(Engine, request.app.state.database_engine)
+    with (
+        engine.connect().execution_options(
+            isolation_level="REPEATABLE READ", postgresql_readonly=True
+        ) as connection,
+        Session(bind=connection) as session,
+        session.begin(),
+    ):
+        yield session
+
+
+ProjectionSession = Annotated[Session, Depends(get_projection_session, scope="function")]

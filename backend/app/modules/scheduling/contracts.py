@@ -84,6 +84,7 @@ class PlannedOccurrence:
     allocate_to_funds: bool
     status: OccurrenceStatus
     source_kind: OccurrenceSourceKind = OccurrenceSourceKind.RECURRING
+    version: int = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,6 +100,7 @@ def forecast_schedule_snapshot(
     today: date,
     due_to: date,
     account_id: UUID | None,
+    shared_lock: bool = True,
 ) -> ForecastScheduleSnapshot:
     """Lock and return one consistent actionable schedule snapshot.
 
@@ -118,7 +120,7 @@ def forecast_schedule_snapshot(
                 ExpectedOccurrence.destination_account_id == account_id,
             )
         )
-    occurrences = session.scalars(
+    statement = (
         select(ExpectedOccurrence)
         .where(*conditions)
         .order_by(
@@ -126,12 +128,15 @@ def forecast_schedule_snapshot(
             ExpectedOccurrence.scheduled_on,
             ExpectedOccurrence.id,
         )
-        .with_for_update(read=True)
-    ).all()
+    )
+    if shared_lock:
+        statement = statement.with_for_update(read=True)
+    occurrences = session.scalars(statement).all()
     planned = sorted(
         [
             PlannedOccurrence(
                 id=item.id,
+                version=item.version,
                 source_kind=item.source_kind,
                 rule_id=item.rule_id,
                 due_on=item.due_on,

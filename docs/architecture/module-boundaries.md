@@ -20,13 +20,10 @@
 | `imports` | parse, map, preview, duplicate candidates | owning modules' validation/write commands |
 | `backup` | versioned plaintext/protected export, crypto envelope and restore orchestration | module-owned export/import contracts |
 
-`scenarios`, `assistant`, `liabilities` and `debts` are planned
-ownership reservations. Only liabilities and debts currently have placeholder
-packages; none exposes runtime routes, tables or use cases in `0.5.0`. Their
-arrows below describe intended dependency direction, not current Python
-imports. All other rows are implemented boundaries. Imports now owns profiles, reviewed
-source receipts and CSV/XLSX parsing; its application coordinator confirms through
-Operations and Scheduling public contracts.
+`scenarios` is implemented as a read-side module. It uses Forecasting's public
+snapshot/projection contract and owning modules' public source reads. `assistant`,
+`liabilities` and `debts` remain planned; Imports is implemented separately.
+Oracle owns no financial tables and never uses a posting command.
 
 `app.core` owns technical configuration and database lifecycle, not business
 rules. `app.api` composes HTTP routes and cross-cutting concerns. Cross-module
@@ -130,8 +127,7 @@ composed by `app.api`, so the settings module does not depend on auth internals.
 - Whether liabilities and debts remain separate modules once detailed lifecycle
   use cases are designed.
 - Which stable public read contracts reporting and forecasting need.
-- Whether scenario calculation becomes a separate module or remains an
-  application/read-side use case around a pure Forecasting projection.
+- Which measured data volumes require an optimized Oracle source read model.
 - How the optional local assistant is packaged without making model runtime,
   vector storage or external infrastructure mandatory for core operation.
 
@@ -143,3 +139,13 @@ Categories owns RU/EN first-run templates, invoked by the existing atomic setup
 application use case through its public contract. Neither Settings persistence
 nor financial-domain ownership changes. See the
 [internationalization contract](../ui-ux/internationalization.md).
+
+
+## Oracle source and projection boundary
+
+Core provides a separate repeatable-read, read-only PostgreSQL transaction.
+Scenarios reads public Settings, Scheduling, Accounts, Operations and Funds
+contracts once and passes detached values to Forecasting. Forecasting owns
+exact free/total and sequential fund projection; Scenarios owns overlays,
+comparison and explainable boundaries. See [ADR 0006](../decisions/0006-deterministic-oracle.md).
+Existing Forecast routes keep their established shared-lock behavior.

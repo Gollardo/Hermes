@@ -2,6 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -59,6 +60,7 @@ class ForecastInputEvent:
     amount: Decimal
     allocated_to_funds: Decimal = Decimal(0)
     source_kind: OccurrenceSourceKind = OccurrenceSourceKind.RECURRING
+    origin: Literal["plan", "scenario"] = "plan"
 
 
 @dataclass(frozen=True, slots=True)
@@ -348,7 +350,7 @@ def build_forecast(
             mode,
         )
         allocated_by_occurrence = {
-            event.occurrence_id: sum(event.amounts.values(), Decimal(0))
+            event.occurrence_id: sum(event.amounts.values(), Decimal(0)) + event.reserve_amount
             for event in projection.events
         }
     return calculate_forecast(
@@ -521,6 +523,7 @@ def _event_response(
     event: ForecastInputEvent, effect: Decimal, names: dict[UUID, str]
 ) -> ForecastEventResponse:
     return ForecastEventResponse(
+        origin=event.origin,
         occurrence_id=event.occurrence_id,
         rule_id=event.rule_id,
         source_kind=event.source_kind,

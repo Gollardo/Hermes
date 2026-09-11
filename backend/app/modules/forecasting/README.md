@@ -7,3 +7,8 @@ movements. It does not post or mutate financial operations.
 `service.build_forecast` composes public contracts from Accounts, Operations and
 Scheduling. The module owns no tables: projections are calculated on request and
 returned as exact decimal strings.
+
+`contracts.project_snapshot` is the public detached projection boundary used by
+Oracle. It returns free money, physical totals and sequential fund allocations
+from one source dataset, including dynamic overflow assigned to reserve. The
+legacy HTTP builders retain their existing shared-lock source policy.

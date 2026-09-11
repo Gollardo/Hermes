@@ -72,20 +72,24 @@ The hosted platform remains a separate architectural program.
 
 ## 2.0.0 — Oracle: deterministic What if? mode
 
-- [ ] Create a temporary purchase, income, amount-change, or date-shift scenario
+Implemented and verified on 2026-09-11; unreleased. See [ADR 0006](decisions/0006-deterministic-oracle.md)
+and [acceptance](operations/oracle-acceptance-2026-09-11.md) for bounded commands,
+source completeness and remaining owner/release review.
+
+- [x] Create a temporary purchase, income, amount-change, or date-shift scenario
   without changing the ledger or confirmed plan.
-- [ ] Provide an ordinary structured form that does not depend on AI.
-- [ ] Calculate baseline and alternative forecasts from one snapshot, scope,
+- [x] Provide an ordinary structured form that does not depend on AI.
+- [x] Calculate baseline and alternative forecasts from one snapshot, scope,
   and horizon.
-- [ ] Answer “what changes” before showing a chart: delta in free money,
+- [x] Answer “what changes” before showing a chart: delta in free money,
   minimum, date, stress window, and affected funds or events.
-- [ ] Support a user-defined stop-loss and a separate, explainable risk boundary
+- [x] Support a user-defined stop-loss and a separate, explainable risk boundary
   suggested by the system.
-- [ ] Expose assumptions and sources, and distinguish facts, plans, scenarios,
+- [x] Expose assumptions and sources, and distinguish facts, plans, scenarios,
   and estimates.
-- [ ] Discard a scenario by default; saving it or creating a plan draft are
-  separate explicit actions.
-- [ ] Cover scenario calculation with exact-decimal, snapshot-consistency, and
+- [x] Discard a scenario on reset, leave or reload; no implicit saving or plan
+  creation. Explicit saving and plan-draft transfer remain scoped to `2.1.0`.
+- [x] Cover scenario calculation with exact-decimal, snapshot-consistency, and
   no-side-effect tests.
 
 ## 2.1.0 — save and compare scenarios

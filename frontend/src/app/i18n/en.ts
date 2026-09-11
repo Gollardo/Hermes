@@ -1,6 +1,92 @@
 import type { ru } from './ru';
 
 export const en = {
+  'oracle.chartRange': 'Displayed range: {low} — {high}.',
+  'oracle.reserve': 'Unassigned reserve',
+  'oracle.title': 'Oracle',
+  'oracle.whatIf': 'What if?',
+  'oracle.intro':
+    'Test a decision: see changes to free money, plans and cash shortfalls. The scenario disappears when you leave.',
+  'oracle.materialized':
+    'Only existing planned occurrences are included. Oracle does not extend the calendar. Open Calendar to synchronize plans, then refresh sources.',
+  'oracle.loading': 'Loading sources…',
+  'oracle.refresh': 'Refresh sources',
+  'oracle.actualDate': 'Actual balance date:',
+  'oracle.hypothesis': 'Hypothesis',
+  'oracle.action': 'Decision',
+  'oracle.expense': 'New purchase / expense',
+  'oracle.income': 'New income',
+  'oracle.amountChange': 'Change a planned amount',
+  'oracle.move': 'Move a planned event',
+  'oracle.scope': 'Comparison scope',
+  'oracle.plan': 'Planned event',
+  'oracle.noPlans': 'No available events in this scope over the next year.',
+  'oracle.amount': 'Amount',
+  'oracle.date': 'New date',
+  'oracle.stopLoss': 'My lower boundary',
+  'oracle.stopHint':
+    'The optional boundary applies only to this scenario and does not block operations.',
+  'oracle.freeOnly':
+    'A new expense uses free money. No fund is automatically selected to pay for it.',
+  'oracle.calculate': 'Calculate consequences',
+  'oracle.calculating': 'Calculating…',
+  'oracle.discard': 'Discard scenario',
+  'oracle.answer': 'Free money at period end changes by {delta}.',
+  'oracle.endingFree': 'Free money at period end',
+  'oracle.minimum': 'Minimum free money',
+  'oracle.endingTotal': 'Total money at period end',
+  'oracle.delta': 'Change:',
+  'oracle.risks': 'Risk boundaries',
+  'oracle.riskHint':
+    'A stress window contains days when free money is strictly below the boundary. Minima include the current balance and daily closings, even on the annual chart.',
+  'oracle.suggestion': 'Boundary derived from known plans',
+  'oracle.method':
+    'Method: initial free balance minus its baseline minimum, clamped to zero. This is the initial buffer covering the largest cumulative deficit in known cash flows. Sources are the baseline events in the stated period.',
+  'oracle.methodLimit':
+    'For visibility, this buffer is shown as a constant warning boundary. It is not a living-cost reserve or historical prediction; unplanned future spending is unknown. Your boundary stays separate.',
+  'oracle.noSuggestion': 'Not enough influencing planned events to derive a boundary.',
+  'oracle.baseline': 'Baseline',
+  'oracle.alternative': 'With hypothesis',
+  'oracle.zero': 'Cash shortfall below zero',
+  'oracle.noCrossing': 'No boundary crossings.',
+  'oracle.startsNow': 'Starts at the actual balance.',
+  'oracle.recovered': 'Recovered:',
+  'oracle.notRecovered': 'No recovery within the horizon.',
+  'oracle.chart': 'Free money comparison',
+  'oracle.chartHint':
+    'Dashed: baseline. Solid: hypothesis. Red boundary: zero. Dotted: your boundary. The annual chart shows month closings; exact daily values are available below.',
+  'oracle.inspectDate': 'Inspect a day',
+  'oracle.dayBalances': 'Day opening → closing',
+  'oracle.noEvents': 'No known events on this day.',
+  'oracle.effect': 'Effect on free money',
+  'oracle.source': 'Open source in Calendar',
+  'oracle.why': 'What changed the result',
+  'oracle.allocation': 'Fund allocation',
+  'oracle.funds': 'Funds at period end',
+  'oracle.assumptions': 'Sources and assumptions',
+  'oracle.facts': 'Fact — current free money',
+  'oracle.overdueCount': 'Overdue events excluded: {count}.',
+  'oracle.overdue': 'Overdue, confirmed and cancelled events are excluded from future cash flows.',
+  'oracle.daily': 'Calculation uses daily closings; intraday payment order is not modeled.',
+  'oracle.globalFunds':
+    'Funds cover all accounts. Dynamic shares are recalculated sequentially across all planned replenishments.',
+  'oracle.notGuarantee':
+    'A projection may show a deficit. A successful calculation does not guarantee an operation can be posted; ordinary balance checks still apply.',
+  'oracle.outside':
+    'The new date is beyond the selected horizon: its later effect is not shown here.',
+  'oracle.unknownAssumption': 'An additional model limitation applies; update the application.',
+  'oracle.transfer': 'Transfer',
+  'oracle.loadError': 'Could not load sources. Retry the request.',
+  'oracle.calculateError': 'Could not calculate the scenario. Your inputs are preserved.',
+  'oracle.validation':
+    'Check the account or event, positive amount and date within the next year. The boundary must be nonnegative.',
+  'oracle.stale':
+    'Sources changed. Refresh sources, review the selected event and calculate again. Your hypothesis is preserved.',
+  'oracle.accountError': 'The selected account is unavailable for this scenario.',
+  'oracle.dateError': 'The date must be between Hermes today and the end of the annual horizon.',
+  'oracle.scopeError':
+    'The event does not affect the selected account. Change the comparison scope.',
+
   'imports.formatSettings': 'Format settings and column mapping',
   'imports.manualFormat': 'Manual settings',
   'imports.commaHint': 'Separate multiple values with commas.',

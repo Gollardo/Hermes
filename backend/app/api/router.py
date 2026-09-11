@@ -21,6 +21,8 @@ from app.modules.imports.router import write_router as imports_write_router
 from app.modules.operations.router import read_router as operations_read_router
 from app.modules.operations.router import write_router as operations_write_router
 from app.modules.reports.router import read_router as reports_read_router
+from app.modules.scenarios.router import read_router as scenarios_read_router
+from app.modules.scenarios.router import write_router as scenarios_write_router
 from app.modules.scheduling.router import read_router as scheduling_read_router
 from app.modules.scheduling.router import write_router as scheduling_write_router
 
@@ -42,6 +44,8 @@ def create_api_router() -> APIRouter:
     protected.include_router(scheduling_read_router)
     protected.include_router(forecasting_read_router)
     protected.include_router(reports_read_router)
+    protected.include_router(scenarios_read_router)
+    protected.include_router(scenarios_write_router, dependencies=[Depends(require_csrf_session)])
     protected.include_router(backup_read_router)
     protected.include_router(imports_read_router)
     protected.include_router(imports_write_router, dependencies=[Depends(require_csrf_session)])

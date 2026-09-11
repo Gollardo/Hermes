@@ -169,3 +169,13 @@ without creating physical/virtual movements again. An operation already linked
 to another occurrence is rejected. Stale versions and cancelled/confirmed
 occurrences cannot be claimed by another import decision. Ordinary Calendar
 confirmation keeps its existing date policy. See [ADR 0005](../decisions/0005-statement-import.md).
+
+
+## Oracle read consumer
+
+The public planned-occurrence snapshot now includes its optimistic version.
+Oracle requests the lock-free variant only inside a caller-owned repeatable-read
+transaction. The ordinary Forecast caller retains shared locks by default.
+Oracle neither generates nor modifies occurrences; explicit Calendar
+materialization remains the way to refresh missing future plans. Revision
+`0016_oracle_read_index` adds a partial due-date/identity index for actionable reads.

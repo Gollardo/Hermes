@@ -139,6 +139,12 @@ class RecurringRule(Base):
 class ExpectedOccurrence(Base):
     __tablename__ = "expected_occurrences"
     __table_args__ = (
+        Index(
+            "ix_occurrences_oracle_due",
+            "due_on",
+            "id",
+            postgresql_where=text("status IN ('pending', 'postponed')"),
+        ),
         CheckConstraint("amount > 0", name="ck_expected_occurrences_amount_positive"),
         CheckConstraint("version > 0", name="ck_expected_occurrences_version_positive"),
         CheckConstraint(

@@ -141,3 +141,11 @@ is never silently released or moved.
 - edit/delete lifecycle for explicit allocation and redistribution facts;
 - immutable audit history and bulk actions;
 - currency-specific precision and exchange rates.
+
+
+## Oracle source snapshot
+
+Funds exposes `projection_funds` for active definitions and balances inside
+Oracle's repeatable-read, read-only transaction. Ordinary list/posting callers
+retain the existing locking defaults. Oracle reuses the public manual/dynamic
+allocation calculators; it adds no virtual movements or automatic expense funding.

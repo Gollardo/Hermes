@@ -1,0 +1,168 @@
+.oracle-page {
+  display: grid;
+  gap: 1.2rem;
+  min-width: 0;
+}
+.oracle-header,
+.source-actions,
+.actions,
+.chart-labels {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.oracle-header h1 {
+  margin: 0;
+}
+.oracle-header p {
+  max-width: 48rem;
+}
+.source-note,
+.hint {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+.scenario-form fieldset {
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  margin: 0 0 1rem;
+}
+.scenario-form legend {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
+}
+.form-grid label {
+  display: grid;
+  gap: 0.4rem;
+}
+.form-grid input,
+.form-grid select {
+  width: 100%;
+  min-width: 0;
+}
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1.5rem;
+}
+.metric-grid > div {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+}
+.metric-grid strong {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+.metric-grid span,
+small {
+  color: var(--ink-soft);
+}
+small {
+  display: block;
+}
+.answer {
+  border-left: 3px solid var(--accent);
+}
+.risk-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+}
+.risk-columns h4 {
+  margin-bottom: 0.5rem;
+}
+.risk-columns ul {
+  padding-left: 1.2rem;
+}
+.risk-list {
+  list-style: none;
+  padding: 0 !important;
+}
+.risk-list li {
+  border-left: 2px solid var(--warning);
+  padding-left: 0.7rem;
+  margin-block: 0.8rem;
+}
+.risk-list p {
+  margin-block: 0.3rem;
+}
+.comparison-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 10rem;
+}
+.comparison-chart path,
+.comparison-chart line {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+.baseline-line {
+  stroke: var(--ink-soft);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+}
+.alternative-line {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.zero-line {
+  stroke: var(--danger);
+  stroke-width: 1;
+}
+.stop-line {
+  stroke: var(--warning);
+  stroke-dasharray: 2 4;
+  stroke-width: 2;
+}
+.comparison-chart > label {
+  display: grid;
+  max-width: 17rem;
+  margin-block: 1rem;
+}
+.chart-labels {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.change-list {
+  padding-left: 1.2rem;
+}
+.fund-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.fund-list > div {
+  border-top: 1px solid var(--line);
+  padding-top: 0.7rem;
+}
+.oracle-page .panel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 900px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .form-grid,
+  .metric-grid,
+  .risk-columns,
+  .fund-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .risk-columns {
+    gap: 1rem;
+  }
+}

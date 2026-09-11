@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — Oracle deterministic scenarios
+
+- Add temporary purchase, income, amount-change and date-move comparisons from
+  one database-enforced read-only MVCC snapshot, with exact cash/fund projections.
+- Add separate user/system risk boundaries, daily stress intervals, provenance,
+  source-conflict recovery and a complete RU/EN What if? interface.
+- Correct free-money forecasting for dynamic overflow placed in reserve.
+- Add migration `0016_oracle_read_index`; no scenario persistence or backup
+  format change. Existing Forecast, Scheduling and import workflows remain intact.
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),

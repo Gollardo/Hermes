@@ -69,14 +69,11 @@ register below. This cleanup does not retroactively approve a new ADR.
 
 ## Future ADR candidates
 
-### Deterministic what-if scenario boundary
+### Saved scenario lifecycle
 
-Product direction is confirmed; detailed design is not accepted. Structured
-hypothetical changes should use the same coherent snapshot and exact projection
-rules as the baseline, remain read-only and require an explicit plan-draft flow.
-Alternatives include temporary-plan mutation or cloned financial tables; neither
-is approved. Resolve the initial command set, snapshot/version strategy,
-persistence and Forecasting/Scenarios ownership split before implementation.
+The first deterministic boundary is implemented in ADR 0006. Persistence,
+retention, saved-source invalidation and reviewed plan-draft transfer remain
+future design work for 2.1.0.
 
 ### Optional local assistant boundary
 
@@ -90,3 +87,7 @@ external AI services and direct model-to-ledger tools are not approved defaults.
 
 [ADR 0005](0005-statement-import.md) records the implemented reviewed CSV/XLSX
 pipeline and the owner's explicit all-status/user-selected-date decisions.
+
+
+- [ADR 0006: Deterministic Oracle](0006-deterministic-oracle.md) records the
+  implemented read-only snapshot, overlay, risk and migration boundary.

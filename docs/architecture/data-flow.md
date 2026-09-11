@@ -280,3 +280,15 @@ public Scheduling confirmation -> Imports receipt -> commit -> journal links.
 Preview has no domain writes or schedule materialization. Explicit profile save
 is separate. Source files are processed locally by the application and discarded;
 no external service or worker is introduced. Backup includes profiles/receipts.
+
+
+## Oracle comparison
+
+Authenticated source read → read-only repeatable-read transaction → public
+settings/plans/accounts/ledger/fund reads → detached source identity and choices.
+The comparison request checks that identity and occurrence version against a
+fresh coherent snapshot, then projects baseline and a temporary overlay from
+those same values. It returns both outcomes, exact deltas, daily stress windows,
+source events and global fund effects. A mismatch returns a conflict; no branch
+is silently calculated from a different source state. No materialization,
+financial write, saved conversation or scenario table participates.

@@ -15,7 +15,7 @@ Owner-confirmed future inputs, not implemented yet, are:
 - credit/installment payments;
 - debt repayments.
 
-Owner-confirmed future use is scenario comparison: one coherent baseline can be
+Oracle implements the owner-confirmed scenario comparison direction: one coherent baseline can be
 recalculated with structured hypothetical changes to answer “What if?”. The
 hypothesis is read-only and cannot become an actual or expected operation
 without a separate explicit command. See [Financial scenarios](scenarios.md).
@@ -56,7 +56,7 @@ balances with public planned-occurrence and obligation contracts, orders their
 effects on a timeline and applies exact decimal arithmetic. It cannot confirm or
 post expected operations. See the [forecast diagram](../architecture/data-flow.md).
 
-A future Scenarios boundary may reuse a pure projection calculation with extra
+The Scenarios boundary reuses a pure projection calculation with extra
 structured events, but an AI adapter cannot supply authoritative balances or
 bypass Forecasting's exact arithmetic. Baseline and alternative must share the
 same snapshot, scope, horizon, currency and ordering rules.
@@ -86,7 +86,8 @@ same snapshot, scope, horizon, currency and ordering rules.
   balance. In free mode, an explicitly distributed transfer subtracts the
   allocated amount from the destination and combined free balance, while the
   source still shows the full physical outflow. The transfer remains in the
-  explanation for that date.
+  explanation for that date. Dynamic overflow assigned to the reserve also
+  reduces free money; the Oracle slice corrects this previously omitted effect.
 - Two weeks ends at `today + 14 days`; month, quarter, half-year and year preserve the
   day of month where possible and clamp to the target month's last day.
 - All current account identities, including archived accounts, participate in
@@ -95,8 +96,8 @@ same snapshot, scope, horizon, currency and ordering rules.
 - Money is calculated with `Decimal`; API money fields are exact decimal strings.
 - The fund projection exposes the allocation mode, each event's percentages and
   amounts, each fund's starting/ending percentage, and blocked transfers when no
-  incomplete active fund exists. It permits target overshoot without
-  redistributing within the same event.
+  incomplete active fund exists. Dynamic allocation respects target capacity
+  and places overflow in reserve, without leaving that amount free.
 - The current account model has one locked base currency and no per-account
   currency, so all-account aggregation is compatible by construction.
 - The calculation is read-only and persists no projection or snapshot. Beta.2
@@ -125,5 +126,15 @@ same snapshot, scope, horizon, currency and ordering rules.
 - Whether future multi-currency accounts require separate series or explicit FX
   scenarios; implicit conversion remains prohibited.
 - Whether liabilities and debts join the projection after those domains exist.
-- Which pure projection contract permits hypothetical events without allowing a
-  read-side scenario to mutate Scheduling or Operations.
+- Performance of the public projection contract on measured large annual schedules.
+
+
+## Oracle public projection contract (unreleased 2.0.0 slice)
+
+`forecasting.contracts` exposes `ProjectionSnapshot`, `ProjectionResult` and
+`project_snapshot`. The pure projection reuses exact cash and fund calculators
+and computes both free and total perspectives from detached source data.
+Scenarios supplies hypothetical event replacements without importing private
+Forecasting services. Its MVCC source policy is documented in
+[ADR 0006](../decisions/0006-deterministic-oracle.md); the existing Forecast HTTP
+routes and their shared-lock behavior remain compatible.

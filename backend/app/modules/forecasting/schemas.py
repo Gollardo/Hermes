@@ -1,5 +1,6 @@
 from datetime import date
 from enum import StrEnum
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -33,6 +34,7 @@ class ForecastBalanceMode(StrEnum):
 
 
 class ForecastEventResponse(BaseModel):
+    origin: Literal["plan", "scenario"] = "plan"
     occurrence_id: UUID
     rule_id: UUID | None
     source_kind: OccurrenceSourceKind

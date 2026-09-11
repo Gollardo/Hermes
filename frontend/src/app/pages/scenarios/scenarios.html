@@ -1,0 +1,433 @@
+<section class="oracle-page">
+  <header class="oracle-header">
+    <div>
+      <p class="eyebrow">{{ t('oracle.title') }}</p>
+      <h1>{{ t('oracle.whatIf') }}</h1>
+      <p>{{ t('oracle.intro') }}</p>
+    </div>
+    <a class="button-link secondary" routerLink="/forecast">{{ t('app.forecast') }}</a>
+  </header>
+  <p class="source-note">
+    {{ t('oracle.materialized') }} <a routerLink="/calendar">{{ t('forecast.openCalendar') }}</a>
+  </p>
+  @if (error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+  @if (loading()) {
+    <p role="status">{{ t('oracle.loading') }}</p>
+  }
+  <div class="source-actions">
+    <button
+      type="button"
+      class="secondary"
+      (click)="refresh()"
+      [disabled]="loading() || calculating()"
+    >
+      {{ t('oracle.refresh') }}
+    </button>
+    @if (context(); as ctx) {
+      <span>{{ t('oracle.actualDate') }} {{ ctx.today | textDate }}</span>
+    }
+  </div>
+  @if (context(); as ctx) {
+    <form class="panel scenario-form" (ngSubmit)="calculate()">
+      <fieldset [disabled]="loading() || calculating()">
+        <legend>{{ t('oracle.hypothesis') }}</legend>
+        <div class="form-grid">
+          <label
+            >{{ t('oracle.action') }}
+            <select name="action" [ngModel]="action()" (ngModelChange)="changeAction($event)">
+              <option value="expense">{{ t('oracle.expense') }}</option>
+              <option value="income">{{ t('oracle.income') }}</option>
+              <option value="amount">{{ t('oracle.amountChange') }}</option>
+              <option value="move">{{ t('oracle.move') }}</option>
+            </select>
+          </label>
+          <div>
+            <label for="oracle-scope">{{ t('oracle.scope') }}</label>
+            <app-entity-combobox
+              inputId="oracle-scope"
+              name="scope"
+              [options]="accountOptions()"
+              [allowEmpty]="true"
+              [placeholder]="t('accounts.allAccounts')"
+              [emptyLabel]="t('accounts.allAccounts')"
+              [ngModel]="scope()"
+              (ngModelChange)="scope.set($event); invalidate()"
+            />
+          </div>
+          <label
+            >{{ t('forecast.period') }}
+            <select
+              name="horizon"
+              [ngModel]="horizon()"
+              (ngModelChange)="horizon.set($event); invalidate()"
+            >
+              @for (item of horizons(); track item.value) {
+                <option [value]="item.value">{{ item.label }}</option>
+              }
+            </select>
+          </label>
+          @if (isNew()) {
+            <div>
+              <label for="oracle-account">{{ t('forecast.account') }}</label>
+              <app-entity-combobox
+                inputId="oracle-account"
+                name="account"
+                [options]="activeOptions()"
+                [ngModel]="account()"
+                (ngModelChange)="account.set($event); invalidate()"
+                [accessibleLabel]="t('forecast.account')"
+              />
+            </div>
+          } @else {
+            <div class="plan-choice">
+              <label for="oracle-plan">{{ t('oracle.plan') }}</label>
+              <app-entity-combobox
+                inputId="oracle-plan"
+                name="plan"
+                [options]="planOptions()"
+                [ngModel]="occurrence()"
+                (ngModelChange)="choosePlan($event)"
+                [accessibleLabel]="t('oracle.plan')"
+              />
+              @if (selectedPlan(); as plan) {
+                <small
+                  >{{ plan.due_on | textDate }} · {{ plan.amount | money }} {{ currency() }}</small
+                >
+              }
+              @if (!plans().length) {
+                <small>{{ t('oracle.noPlans') }}</small>
+              }
+            </div>
+          }
+          @if (action() !== 'move') {
+            <label
+              >{{ t('oracle.amount') }} · {{ currency() }}
+              <input
+                name="amount"
+                appDecimalInput
+                inputmode="decimal"
+                required
+                [ngModel]="amount()"
+                (ngModelChange)="amount.set($event); invalidate()"
+              />
+            </label>
+          }
+          @if (action() !== 'amount') {
+            <label
+              >{{ t('oracle.date') }}
+              <input
+                name="date"
+                type="date"
+                required
+                [min]="ctx.today"
+                [max]="ctx.maximum_on"
+                [ngModel]="dueOn()"
+                (ngModelChange)="dueOn.set($event); invalidate()"
+              />
+            </label>
+          }
+          <label
+            >{{ t('oracle.stopLoss') }} · {{ currency() }}
+            <input
+              name="stopLoss"
+              appDecimalInput
+              inputmode="decimal"
+              [ngModel]="stopLoss()"
+              (ngModelChange)="stopLoss.set($event); invalidate()"
+            />
+          </label>
+        </div>
+        <p class="hint">{{ t('oracle.freeOnly') }} {{ t('oracle.stopHint') }}</p>
+      </fieldset>
+      <div class="actions">
+        <button type="submit" [disabled]="loading() || calculating() || stale()">
+          {{ calculating() ? t('oracle.calculating') : t('oracle.calculate') }}
+        </button>
+        <button type="button" class="secondary" (click)="discard()" [disabled]="loading()">
+          {{ t('oracle.discard') }}
+        </button>
+      </div>
+    </form>
+  }
+  @if (result(); as r) {
+    <section class="panel answer" aria-live="polite">
+      <h2>{{ t('oracle.answer', { delta: (r.ending_free_delta | money) + ' ' + currency() }) }}</h2>
+      <p>
+        {{ r.baseline.free.account_name || t('accounts.allAccounts') }} ·
+        {{ r.baseline.free.from_on | textDate }} — {{ r.baseline.free.through_on | textDate }}
+      </p>
+      <div class="metric-grid">
+        <div>
+          <span>{{ t('oracle.endingFree') }}</span
+          ><strong
+            >{{ r.baseline.free.ending_balance | money }} {{ currency() }} →
+            {{ r.alternative.free.ending_balance | money }} {{ currency() }}</strong
+          >
+        </div>
+        <div>
+          <span>{{ t('oracle.minimum') }}</span
+          ><strong
+            >{{ r.baseline.free.minimum_balance | money }} {{ currency() }} →
+            {{ r.alternative.free.minimum_balance | money }} {{ currency() }}</strong
+          ><small
+            >{{ r.baseline.free.minimum_on | textDate }} →
+            {{ r.alternative.free.minimum_on | textDate }}</small
+          ><small
+            >{{ t('oracle.delta') }} {{ r.minimum_free_delta | money }} {{ currency() }}</small
+          >
+        </div>
+        <div>
+          <span>{{ t('oracle.endingTotal') }}</span
+          ><strong
+            >{{ r.baseline.total.ending_balance | money }} {{ currency() }} →
+            {{ r.alternative.total.ending_balance | money }} {{ currency() }}</strong
+          ><small
+            >{{ t('oracle.delta') }} {{ r.ending_total_delta | money }} {{ currency() }}</small
+          >
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>{{ t('oracle.risks') }}</h2>
+      <p>{{ t('oracle.riskHint') }}</p>
+      @if (r.suggested_boundary; as suggestion) {
+        <details [open]="showSuggestion()" (toggle)="showSuggestion.set($any($event.target).open)">
+          <summary>
+            {{ t('oracle.suggestion') }}: {{ suggestion.amount | money }} {{ currency() }}
+          </summary>
+          <p>{{ t('oracle.method') }}</p>
+          <p>{{ suggestion.from_on | textDate }} — {{ suggestion.through_on | textDate }}</p>
+          <p>{{ t('oracle.methodLimit') }}</p>
+        </details>
+      } @else {
+        <p>{{ t('oracle.noSuggestion') }}</p>
+      }
+      <div class="risk-columns">
+        @for (
+          side of [
+            { key: 'before', title: t('oracle.baseline'), branch: r.baseline },
+            { key: 'after', title: t('oracle.alternative'), branch: r.alternative },
+          ];
+          track side.key
+        ) {
+          <div>
+            <h3>{{ side.title }}</h3>
+            @for (
+              risk of [
+                { key: 'zero', title: t('oracle.zero'), value: side.branch.zero_risk },
+                { key: 'stop', title: t('oracle.stopLoss'), value: side.branch.stop_loss_risk },
+                {
+                  key: 'suggested',
+                  title: t('oracle.suggestion'),
+                  value: showSuggestion() ? side.branch.suggested_risk : null,
+                },
+              ];
+              track risk.key
+            ) {
+              @if (risk.value; as assessment) {
+                <h4>{{ risk.title }} · {{ assessment.threshold | money }} {{ currency() }}</h4>
+                @if (!assessment.windows.length) {
+                  <p>{{ t('oracle.noCrossing') }}</p>
+                }
+                <ul class="risk-list">
+                  @for (window of assessment.windows; track $index) {
+                    <li>
+                      <button
+                        type="button"
+                        class="secondary"
+                        (click)="inspectDate(window.minimum_on)"
+                      >
+                        {{ window.from_on | textDate }} — {{ window.through_on | textDate }}
+                      </button>
+                      <p>
+                        {{ t('oracle.minimum') }}: {{ window.minimum_balance | money }}
+                        {{ currency() }} ·
+                        {{ window.minimum_on | textDate }}
+                      </p>
+                      @if (window.starts_at_snapshot) {
+                        <small>{{ t('oracle.startsNow') }}</small>
+                      }
+                      <small
+                        >{{
+                          window.recovered_on ? t('oracle.recovered') : t('oracle.notRecovered')
+                        }}
+                        {{ window.recovered_on | textDate }}</small
+                      >
+                    </li>
+                  }
+                </ul>
+              }
+            }
+          </div>
+        }
+      </div>
+    </section>
+    @if (chart(); as c) {
+      <section class="panel comparison-chart" tabindex="-1">
+        <h2>{{ t('oracle.chart') }}</h2>
+        <p id="oracle-chart-help">{{ t('oracle.chartHint') }}</p>
+        <p class="chart-labels">
+          {{
+            t('oracle.chartRange', {
+              low: (c.low | money) + ' ' + currency(),
+              high: (c.high | money) + ' ' + currency(),
+            })
+          }}
+        </p>
+        <svg
+          viewBox="0 0 700 190"
+          role="img"
+          [attr.aria-label]="t('oracle.chart')"
+          aria-describedby="oracle-chart-help"
+        >
+          <line x1="20" x2="680" [attr.y1]="c.zero" [attr.y2]="c.zero" class="zero-line" />
+          @if (c.stop !== null) {
+            <line x1="20" x2="680" [attr.y1]="c.stop" [attr.y2]="c.stop" class="stop-line" />
+          }
+          <path [attr.d]="c.baseline" class="baseline-line" />
+          <path [attr.d]="c.alternative" class="alternative-line" />
+        </svg>
+        <div class="chart-labels">
+          <span>{{ r.baseline.free.from_on | textDate }}</span
+          ><span>{{ r.baseline.free.through_on | textDate }}</span>
+        </div>
+        <label
+          >{{ t('oracle.inspectDate')
+          }}<input
+            type="date"
+            name="selectedDate"
+            [min]="r.baseline.free.from_on"
+            [max]="r.baseline.free.through_on"
+            [ngModel]="selectedDate()"
+            (ngModelChange)="selectedDate.set($event)"
+        /></label>
+        @if (details(); as day) {
+          <div class="risk-columns">
+            @for (
+              side of [
+                { key: 'before', title: t('oracle.baseline'), point: day.before },
+                { key: 'after', title: t('oracle.alternative'), point: day.after },
+              ];
+              track side.key
+            ) {
+              @if (side.point; as point) {
+                <div>
+                  <h3>{{ side.title }} · {{ selectedDate() | textDate }}</h3>
+                  <p>
+                    {{ t('oracle.dayBalances') }}: {{ point.opening_balance | money }}
+                    {{ currency() }} → {{ point.closing_balance | money }} {{ currency() }}
+                  </p>
+                  @if (!point.events.length) {
+                    <p>{{ t('oracle.noEvents') }}</p>
+                  }
+                  <ul>
+                    @for (event of point.events; track event.occurrence_id) {
+                      <li>
+                        <strong>{{
+                          isHypothesis(event) ? t('oracle.hypothesis') : t('oracle.plan')
+                        }}</strong>
+                        · {{ event.description || typeLabel(event.type) }} ·
+                        {{ event.account_name }}
+                        <p>
+                          {{ t('oracle.effect') }}: {{ event.effect | money }} {{ currency() }} ·
+                          {{ t('oracle.amount') }}: {{ event.amount | money }} {{ currency() }}
+                        </p>
+                        @if (!isHypothesis(event)) {
+                          <a
+                            routerLink="/calendar"
+                            [queryParams]="{
+                              month: event.due_on.slice(0, 7),
+                              focus: event.occurrence_id,
+                            }"
+                            >{{ t('oracle.source') }}</a
+                          >
+                        }
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            }
+          </div>
+        }
+      </section>
+    }
+    <section class="panel">
+      <h2>{{ t('oracle.why') }}</h2>
+      <ul class="change-list">
+        @for (event of r.events; track event.occurrence_id) {
+          <li>
+            <strong>{{ event.description || t('oracle.hypothesis') }}</strong>
+            <p>
+              {{ event.before_on | textDate }} → {{ event.after_on | textDate }} ·
+              {{ event.before_amount | money }} {{ currency() }} → {{ event.after_amount | money }}
+              {{ currency() }}
+            </p>
+            <p>
+              {{ t('oracle.allocation') }}: {{ event.baseline_allocation | money }}
+              {{ currency() }} → {{ event.alternative_allocation | money }} {{ currency() }}
+            </p>
+            <p>
+              {{ t('oracle.reserve') }}: {{ event.baseline_reserve | money }} {{ currency() }} →
+              {{ event.alternative_reserve | money }} {{ currency() }}
+            </p>
+            @if (event.allocations.length) {
+              <ul>
+                @for (part of event.allocations; track part.fund_id) {
+                  <li>
+                    {{ part.name }}: {{ part.baseline | money }} {{ currency() }} →
+                    {{ part.alternative | money }} {{ currency() }}
+                  </li>
+                }
+              </ul>
+            }
+            @if (event.before_on) {
+              <a
+                routerLink="/calendar"
+                [queryParams]="{ month: event.before_on.slice(0, 7), focus: event.occurrence_id }"
+                >{{ t('oracle.source') }}</a
+              >
+            }
+          </li>
+        }
+      </ul>
+      <h3>{{ t('oracle.reserve') }}</h3>
+      <p>
+        {{ t('oracle.baseline') }}: {{ r.reserve.baseline | money }} {{ currency() }} →
+        {{ t('oracle.alternative') }}: {{ r.reserve.alternative | money }} {{ currency() }} ·
+        {{ t('oracle.delta') }} {{ r.reserve.delta | money }} {{ currency() }}
+      </p>
+      @if (r.funds.length) {
+        <h3>{{ t('oracle.funds') }}</h3>
+        <p>{{ t('oracle.globalFunds') }}</p>
+        <div class="fund-list">
+          @for (fund of r.funds; track fund.fund_id) {
+            <div>
+              <strong>{{ fund.name }}</strong>
+              <p>
+                {{ t('oracle.baseline') }}: {{ fund.baseline | money }} {{ currency() }} →
+                {{ t('oracle.alternative') }}: {{ fund.alternative | money }} {{ currency() }}
+              </p>
+              <small>{{ t('oracle.delta') }} {{ fund.delta | money }} {{ currency() }}</small>
+            </div>
+          }
+        </div>
+      }
+    </section>
+    <section class="panel">
+      <h2>{{ t('oracle.assumptions') }}</h2>
+      <p>
+        {{ t('oracle.facts') }}: {{ r.baseline.free.starting_balance | money }} {{ currency() }} ·
+        {{ r.baseline.free.from_on | textDate }}
+      </p>
+      <p>{{ t('oracle.overdueCount', { count: r.baseline.free.overdue_excluded_count }) }}</p>
+      <ul>
+        @for (code of r.assumptions; track code) {
+          <li>{{ assumption(code) }}</li>
+        }
+      </ul>
+    </section>
+  }
+</section>

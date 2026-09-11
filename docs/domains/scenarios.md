@@ -1,85 +1,93 @@
 # Financial scenarios
 
-## Owner-confirmed direction
+## Direction and implemented boundary
 
-Scenarios answer: “What will change if I make this financial decision?” A
-scenario is a temporary, hypothetical overlay over one coherent baseline
-forecast. It does not mutate actual operations, expected occurrences, funds or
-other domain state.
+Oracle answers “What changes if I make this financial decision?” The owner
+confirmed the read-only deterministic direction on 2026-08-18 and authorized
+the first implementation on 2026-09-11. See [ADR 0006](../decisions/0006-deterministic-oracle.md)
+for engineering defaults and alternatives, and [project status](../project-status.md)
+for verification rather than release assumptions.
 
-The future capability is named **Oracle**; its primary user action is **What
-if?**. The name is product language, not a claim of certain prediction.
+Scenarios owns typed temporary decisions, comparisons, risk assessments and
+source explanations. Forecasting owns the shared exact projection; financial
+owning modules expose reads. The module does not own tables or financial writes.
 
-## Financial truth boundary
+## Supported decisions
 
-The authoritative calculation remains deterministic and exact. It consumes
-public read contracts and applies structured hypothetical inputs using the same
-financial semantics as the baseline forecast.
+- New expense or income with an explicit active account, positive exact amount
+  and calendar date. A hypothetical expense uses free money, never an inferred fund.
+- Replacement amount on one pending/postponed expected occurrence.
+- New date for one pending/postponed expected occurrence, including movement
+  across the selected comparison horizon within the next calendar year.
 
-A local AI adapter may:
-
-- translate natural language into a structured scenario draft;
-- identify missing material inputs and request clarification;
-- select a supported scenario command;
-- explain an already calculated comparison.
-
-It may not calculate balances authoritatively, bypass domain validation, write
-to another module, post an operation or silently create a planned occurrence.
-Every supported scenario must also be constructible without AI.
-
-## Conceptual model
-
-- `ScenarioBaseline`: coherent source snapshot, scope, horizon and assumptions.
-- `ScenarioDraft`: typed hypothetical changes supplied or approved by the user.
-- `ScenarioComparison`: baseline and alternative outcomes plus exact deltas.
-- `ScenarioRiskBoundary`: user stop-loss or explainable system suggestion.
-- `SavedScenario`: optional named hypothesis, separate from confirmed plans.
-
-These names describe future concepts, not approved tables or API DTOs.
+Dates range from application today through its inclusive calendar-year end.
+Past/overdue, confirmed and cancelled events are not editable scenario sources.
+A comparison uses all accounts or one account involved in the decision. Archived
+accounts remain part of actual history; new hypothetical events require active
+references. Existing archived references are retained in projected plans, without
+claiming that those plans can currently be posted.
 
 ## Invariants
 
-- Running, editing or discarding a scenario is read-only for every financial
-  owning module.
-- Baseline and alternative use the same source snapshot, scope, currency and
-  horizon.
-- Money remains `Decimal`/`NUMERIC` and exact decimal strings; AI never parses
-  authoritative amounts through binary floating point.
-- A scenario distinguishes actual facts, confirmed plans, hypothetical changes
-  and model-derived estimates.
-- Missing amount, date, account/fund scope or other material input is not
-  invented silently.
-- A saved scenario remains hypothetical. Converting it into a plan creates a
-  draft for the owning composer and requires an explicit ordinary confirmation.
-- Conversation text is not persisted by default.
-- Failure or absence of the local model cannot disable structured scenario
-  calculation.
+- Running, editing and discarding a scenario never mutate financial state.
+  PostgreSQL enforces a read-only source transaction; no materialization occurs.
+- Baseline and alternative use one MVCC snapshot, currency, application date,
+  scope and horizon. Concurrent confirmation cannot duplicate planned money.
+- The caller's source identity and selected occurrence version must match;
+  changes return a conflict rather than silently switching the baseline.
+- Financial inputs reject floats, non-finite values, nonpositive event amounts,
+  more than four fractional digits, out-of-envelope values and unknown fields.
+  Money remains Decimal and exact JSON strings. Display rounding is separate.
+- The overlay replaces one event or adds one hypothetical event in memory.
+  It never edits a recurring rule, sibling occurrence or factual operation.
+- Chronological fund allocations are recalculated in both branches from their
+  identical starting balances. Dynamic allocations observe earlier projected
+  replenishments; no cached final delta substitutes for this calculation.
+- Internal transfers remain neutral in all-account physical totals. Fund
+  allocations can reduce free money. A selected account's fund effects still
+  depend on the global replenishment sequence.
+- Initial balance and exact daily closings determine minima and risks; annual
+  chart aggregation cannot hide a recovered daily cash gap.
+- Actual starting balances, planned events, hypothetical changes and derived
+  boundaries have distinct provenance. Source links never treat a synthetic
+  event as a stored occurrence.
+- A projected deficit is a valid result, not authorization for an overdraft or
+  a guarantee of posting feasibility.
 
 ## Stop-loss and suggested boundary
 
-A user-defined stop-loss is a preference indicating an undesirable lower bound;
-it does not mutate ledger rules and does not by itself reject a valid operation.
+Stop-loss is an optional, nonnegative user preference in the current form and
+scope. It never changes ledger validation. Strictly-below intervals include
+start/end, minimum/date and recovery date, or explicit non-recovery within the
+horizon. The starting snapshot is evaluated before today's closing balance.
 
-A system-suggested boundary is derived from explainable structured facts and/or
-historical statistics. It must expose its method, period and inputs, remain
-separate from the user value and be omitted when evidence is insufficient.
-Whether either boundary becomes an enforceable policy is explicitly deferred.
+The separate suggested boundary is the baseline's maximum cumulative free-money
+drawdown: `max(0, starting - minimum)`. It names its method, source events and
+period and is omitted without nonzero planned effects. It is an initial buffer,
+shown as a conservative constant warning boundary, not a statistical estimate
+of living expenses. Unknown spending and missing plans remain unknown. The
+owner can hide the suggestion; it never replaces their own value.
 
-## Persistence
+## Sources, lifetime and errors
 
-The default scenario is ephemeral. Optional saved scenarios require a future
-retention and invalidation design: source data may change after saving, so a
-reopened scenario must identify its original baseline and recalculate or declare
-it stale. Saving raw conversations is out of scope.
+`GET /scenarios/context` reads existing materialized plans through one year,
+account choices, application date and source identity. `POST /scenarios/compare`
+returns both cash perspectives, exact deltas, risks, funds and changed events.
+The frontend explicitly offers source refresh and preserves draft fields after
+network, validation or source-conflict errors. Failed/partial sources are not
+presented as zero or replaced with speculative explanations.
 
-## Open design questions
+Source freshness is limited to persisted occurrences: the user synchronizes
+Calendar separately. Closing, resetting, reloading or leaving Oracle discards
+the draft. No scenario or conversation is saved in the database or browser
+storage. Existing source-combobox recent-selection preferences are UI metadata,
+not saved financial hypotheses.
 
-- Initial set of supported hypothetical commands and ranges.
-- Snapshot/version strategy for saved scenario comparison.
-- Scope and inheritance of user stop-loss settings.
-- Explainable method for suggesting a risk boundary.
-- Whether scenario calculation belongs inside Forecasting or behind a separate
-  read-side Scenarios module once detailed contracts are designed.
-- Local model packaging, resource limits and update policy.
-- Whether semantic retrieval proves useful; a vector index is optional,
-  derived and rebuildable, never a source of financial truth.
+## Deferred capabilities
+
+Named saved scenarios, multi-decision comparison, persistence/retention and
+backup policy, fund-funded purchases, plan-draft transfer and series changes
+require a future scope. Local AI may eventually translate intent into a reviewed
+draft and explain deterministic results; it may never post facts or plans or
+calculate authoritative balances. Historical prediction, model packaging,
+resource limits and optional retrieval remain undesigned.

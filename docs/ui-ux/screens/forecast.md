@@ -73,7 +73,7 @@ change, and closing balance.
 - confirm, postpone, or cancel an expected event in its Scheduling workflow;
 - open a specific account;
 - reset filters;
-- in the future, open “What if?” with the current scope and horizon.
+- open “What if?” with the current account scope and horizon.
 
 The future scenario flow is documented in [Oracle · What if?](scenarios.md).
 
@@ -175,7 +175,8 @@ unavailable source and offers retry; actual balance may appear separately.
 - The default selection is all accounts and one calendar month.
 - Forecast uses exact daily closing balance with no intraday model.
 - Overdue events are explicitly excluded; postponed future events are included.
-- Approximate amounts, ranges, and what-if scenarios are not implemented.
+- Approximate amounts and ranges are not implemented. Oracle now provides a
+  separate exact What if? mode, as described below.
 - One forecast view model derives current, end, minimum, first-negative, total
   income and expense, net flow, and `safeToSpend`. Safe to spend is
   `max(0, minimumBalance)`, so a projected shortfall never leads the interface
@@ -230,3 +231,8 @@ The implemented RU/EN presentation follows the shared
 [internationalization contract](../internationalization.md). Language changes
 update screen copy and accessible labels while preserving financial semantics,
 user-entered data, dates, selected context and exact monetary payloads.
+
+
+The Oracle entry preserves account and horizon in route context and starts a
+separate temporary free-money comparison. It never posts an operation or creates
+a plan. See [Oracle](scenarios.md) for implemented boundaries and source freshness.

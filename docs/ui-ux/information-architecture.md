@@ -104,8 +104,8 @@ sidebar on every top-level page.
 ## Global quick actions
 
 - A permanently available “New operation” action.
-- The future “What if?” decision action from dashboard and forecast; it never
-  replaces creation of an actual operation.
+- “What if?” is available in Plan navigation and Forecast; it never replaces
+  creation of an actual operation. A dashboard shortcut remains future work.
 - Contextual actions such as “Add account”, “Allocate money”, and “Add expected
   event”.
 - A keyboard entry point for operation creation after shortcut conflicts are

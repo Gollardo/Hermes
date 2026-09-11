@@ -2,6 +2,10 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
+    path: 'oracle',
+    loadComponent: () => import('./pages/scenarios/scenarios').then((m) => m.ScenariosPage),
+  },
+  {
     path: 'imports',
     loadComponent: () => import('./pages/imports/imports').then((m) => m.ImportsPage),
   },

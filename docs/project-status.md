@@ -14,8 +14,8 @@ source built with Docker Compose; no registry image is published.
 The product is a single-owner modular monolith supported in a protected
 environment. Direct public-internet exposure and multi-user hosting are unsupported.
 Publication did not deploy the owner server. Operational hardening remains
-explicitly deferred; the next product milestone is Oracle `2.0.0`, whose detailed
-design still requires approval.
+explicitly deferred; the Oracle `2.0.0` vertical slice is implemented but unreleased.
+Owner acceptance and a separate release decision remain before publication.
 
 ## Implemented capabilities
 
@@ -28,6 +28,7 @@ design still requires approval.
 | Funds | Virtual allocations, targets, manual/dynamic percentages, per-account coverage and reserve | [Funds](domains/funds.md) |
 | Plans | Recurring rules and one-off plans, postpone/cancel/confirm lifecycle, series shifts and compact calendar | [Scheduling](domains/scheduling.md) |
 | Forecast | Read-only exact free/total projections, fund effects, risks and event explanations | [Forecasting](domains/forecasting.md) |
+| Oracle | Unreleased temporary decisions, coherent comparisons, daily risk windows and explainable cash/fund effects | [Scenarios](domains/scenarios.md) |
 | Reports | Posted income/expense totals, category breakdown and source operations | [Reports](domains/reports.md) |
 | Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions and explicit fact dates | [Import/export](domains/import-export.md) |
 | Portability | Schema-1 JSON and protected Hermes V1 backup, validated atomic restore | [Import/export](domains/import-export.md) |
@@ -139,7 +140,8 @@ was changed, and private fixtures/screenshots are outside the repository.
 ## Scope boundaries
 
 The [roadmap](roadmap.md) tracks unimplemented capabilities and deferred work.
-Current exclusions include Oracle scenarios/AI, debts, budgeting, multi-currency, multi-user access and background workers.
+Current exclusions include saved Oracle scenarios, AI and historical prediction,
+debts, budgeting, multi-currency, multi-user access and background workers.
 Implemented domain documentation records narrower limits such as recurrence
 ranges, account overdraft policy and one-fund-per-operation support.
 
@@ -147,7 +149,8 @@ ranges, account overdraft policy and one-fund-per-operation support.
 
 For deployment, validate a protected backup before upgrading to `v1.1.0`, then
 verify health and primary financial screens using the [release runbook](operations/release.md).
-For product development, agree the bounded `2.0.0` scenario design before coding.
+For Oracle, review the implemented scenarios against a disposable restored backup,
+then make a separate `2.0.0` release decision. Do not assume this task deployed production.
 
 ## Unreleased statement-import slice
 
@@ -174,3 +177,43 @@ processing, browser-memory drafts, manual overlap reconciliation and no pending
 bank reservation model. The production build warns about the initial bundle (527.64 kB against a
 500 kB warning budget) and inherited stylesheet budgets. Imports reuses the
 account/directory styles. No runtime infrastructure or dependency was added.
+
+
+## Unreleased Oracle vertical slice
+
+Implementation authorized on 2026-09-11. A separate Scenarios module uses public
+source contracts and Forecasting's detached exact projection. A database-enforced
+read-only repeatable-read snapshot supplies both branches, with source/version
+conflicts, daily stress windows, optional ephemeral stop-loss, an explainable
+known-plan drawdown boundary, global fund/reserve effects and a complete RU/EN
+interface. The shared forecast now correctly subtracts dynamic overflow placed
+in reserve from future free money. See [ADR 0006](decisions/0006-deterministic-oracle.md)
+and the [acceptance record](operations/oracle-acceptance-2026-09-11.md).
+
+Migration `0016_oracle_read_index` adds only an actionable-occurrence read index;
+upgrade/downgrade preserves financial rows. No scenario tables or backup format
+changes are introduced. Existing published migrations and the import slice are
+preserved. Application release metadata remains `1.1.0` until a release decision.
+
+Verification: 154 default backend tests passed (88 PostgreSQL-gated tests skipped
+there), all 89 PostgreSQL 17 integration tests passed, and 187 frontend tests
+passed. Lint, formatting, catalog checks, mypy, TypeScript, documentation checks,
+frontend production build and production Compose image build passed. The image
+returned health `ok`, served `/oracle` and passed `alembic check` at
+`0016_oracle_read_index`. Focused Oracle frontend tests passed again after the
+final typed-provenance refinement. Browser checks used synthetic data and covered
+purchase/move/amount/income consequences, distinct risk thresholds, source
+choices, day details, keyboard selection/submission, RU/EN and responsive widths.
+They do not certify all browser/assistive-technology combinations or a production
+upgrade of the owner's data.
+
+Limits: one decision at a time, known materialized plans only, no automatic
+Calendar synchronization, no fund-funded synthetic expenses, no saved scenarios,
+no plan-draft conversion and no AI/history-based prediction. The annual snapshot
+and complete explanations remain synchronous and can become expensive on large
+histories. Snapshot identities conservatively include global fund/source changes.
+The suggested boundary is a disclosed planning heuristic, not a living-cost
+model. The initial frontend bundle is approximately 545 kB against the existing
+500 kB warning budget; shared eager RU/EN catalogs increased it. Inherited
+stylesheet budget warnings remain. Index creation can briefly block schedule
+writes during migration; use a maintenance upgrade with a verified backup.
