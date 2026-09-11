@@ -121,4 +121,37 @@ describe('Statement import', () => {
     page.invalidate();
     expect(page.rows()).toHaveLength(0);
   });
+  it('keeps mapping values when format-specific controls are hidden and settings are collapsed', async () => {
+    const page = fixture.componentInstance;
+    page.file = { filename: 'statement.XLSX', content: 'YQ==' };
+    page.profile = 'Bank';
+    page.mapping.encoding = 'cp1251';
+    page.mapping.delimiter = ';';
+    fixture.detectChanges();
+    const element: HTMLElement = fixture.nativeElement;
+    expect(element.querySelector('.format-settings')?.hasAttribute('open')).toBe(false);
+    expect(element.textContent).not.toContain('Кодировка CSV');
+    expect(element.textContent).toContain('Лист');
+    page.file = { filename: 'statement.csv', content: 'YQ==' };
+    fixture.changeDetectorRef.markForCheck();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(element.textContent).toContain('Кодировка CSV');
+    expect(page.mapping.encoding).toBe('cp1251');
+    expect(page.mapping.delimiter).toBe(';');
+    http.expectNone('/api/v1/imports/inspect');
+    http.expectNone('/api/v1/imports/commit');
+  });
+  it('keeps completed rows and source details accessible without an inactive action selector', () => {
+    const page = preview();
+    page.rows.set(page.rows().map((row) => ({ ...row, imported_id: 'fact' })));
+    fixture.detectChanges();
+    const element: HTMLElement = fixture.nativeElement;
+    expect(element.querySelector('.row-action')).toBeNull();
+    expect(element.querySelector('.source-details')).not.toBeNull();
+    expect(element.querySelector('.row a')?.getAttribute('href')).toContain('focus=fact');
+    expect(element.textContent).toContain('изменения по счетам отсутствуют');
+    expect(page.selected()).toHaveLength(0);
+    http.expectNone('/api/v1/imports/commit');
+  });
 });

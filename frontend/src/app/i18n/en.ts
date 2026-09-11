@@ -1,6 +1,15 @@
 import type { ru } from './ru';
 
 export const en = {
+  'imports.formatSettings': 'Format settings and column mapping',
+  'imports.manualFormat': 'Manual settings',
+  'imports.commaHint': 'Separate multiple values with commas.',
+  'imports.rowNumber': 'Row {row}',
+  'imports.unnamedRow': 'No description',
+  'imports.action': 'Row action',
+  'imports.noSelection': 'No rows selected — there are no account changes.',
+  'imports.windowSummary': 'Search ± {days} days',
+  'imports.unrecognized': 'Unrecognized',
   'imports.rowError': 'Row {row}: {message}',
   'imports.utf8': 'UTF-8',
   'imports.cp1251': 'Windows-1251',
@@ -35,8 +44,8 @@ export const en = {
   'imports.debit': 'Separate debit column',
   'imports.credit': 'Separate credit column',
   'imports.separator': 'Decimal separator',
-  'imports.expenseValues': 'Debit values, comma separated',
-  'imports.incomeValues': 'Credit values, comma separated',
+  'imports.expenseValues': 'Debit values',
+  'imports.incomeValues': 'Credit values',
   'imports.profile': 'Format profile',
   'imports.profileName': 'Profile name',
   'imports.saveProfile': 'Save profile',

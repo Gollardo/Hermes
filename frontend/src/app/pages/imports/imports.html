@@ -1,24 +1,31 @@
-<section>
+<section class="imports-page">
   <header class="page-header">
-    <div>
+    <div class="page-header-copy">
       <h1>{{ t('imports.title') }}</h1>
       <p>{{ t('imports.intro') }}</p>
     </div>
-    <a routerLink="/operations">{{ t('operations.operationJournal') }}</a>
+    <a class="button-link secondary journal-link" routerLink="/operations">{{
+      t('operations.operationJournal')
+    }}</a>
   </header>
   @if (error(); as message) {
     <p role="alert" class="form-error">{{ message }}</p>
   }
   @if (notice(); as message) {
-    <p role="status">{{ message }}</p>
+    <p role="status" class="form-success">{{ message }}</p>
   }
-  <fieldset [disabled]="busy()">
-    <legend>{{ t('imports.file') }}</legend>
-    <label
-      >{{ t('imports.file') }}<input type="file" accept=".csv,.xlsx" (change)="upload($event)"
-    /></label>
-    <p>{{ t('imports.limit') }}</p>
-    <div class="fields">
+  <fieldset class="panel import-setup" [disabled]="busy()" [attr.aria-label]="t('imports.file')">
+    <label class="file-field"
+      >{{ t('imports.file') }}
+      <input
+        type="file"
+        accept=".csv,.xlsx"
+        aria-describedby="import-limit"
+        (change)="upload($event)"
+      />
+    </label>
+    <p id="import-limit" class="hint">{{ t('imports.limit') }}</p>
+    <div class="fields context-fields">
       <label
         >{{ t('imports.profile')
         }}<select [(ngModel)]="profile" (change)="useProfile()">
@@ -29,76 +36,6 @@
         </select></label
       >
       <label
-        >{{ t('imports.sheet')
-        }}<select [(ngModel)]="mapping.sheet" (change)="inspect()">
-          <option value="">{{ t('imports.auto') }}</option>
-          @for (s of sheets(); track s) {
-            <option [value]="s">{{ s }}</option>
-          }
-        </select></label
-      >
-      <label
-        >{{ t('imports.header')
-        }}<input
-          type="number"
-          min="1"
-          max="100"
-          [(ngModel)]="mapping.header_row"
-          (change)="inspect()"
-      /></label>
-      <label
-        >{{ t('imports.encoding')
-        }}<select [(ngModel)]="mapping.encoding" (change)="inspect()">
-          <option value="utf-8-sig">{{ t('imports.utf8') }}</option>
-          <option value="cp1251">{{ t('imports.cp1251') }}</option>
-        </select></label
-      >
-      <label
-        >{{ t('imports.delimiter')
-        }}<select [(ngModel)]="mapping.delimiter" (change)="inspect()">
-          <option value="">{{ t('imports.auto') }}</option>
-          <option value=";">;</option>
-          <option value=",">,</option>
-          <option [value]="'	'">{{ t('imports.tab') }}</option>
-        </select></label
-      >
-      @for (column of columns; track column) {
-        <label
-          >{{ columnLabel(column)
-          }}<select [(ngModel)]="mapping[column]" (change)="invalidate()">
-            @if (column !== 'amount' && column !== 'description') {
-              <option [ngValue]="null">{{ t('imports.none') }}</option>
-            }
-            @for (h of headers(); track $index) {
-              <option [ngValue]="$index">{{ $index + 1 }} · {{ h }}</option>
-            }
-          </select></label
-        >
-      }
-      <label
-        >{{ t('imports.separator')
-        }}<select [(ngModel)]="mapping.decimal_separator" (change)="invalidate()">
-          <option value=".">.</option>
-          <option value=",">,</option>
-        </select></label
-      >
-      <label
-        >{{ t('imports.expenseValues')
-        }}<input [(ngModel)]="mapping.expense_values" (change)="invalidate()"
-      /></label>
-      <label
-        >{{ t('imports.incomeValues')
-        }}<input [(ngModel)]="mapping.income_values" (change)="invalidate()"
-      /></label>
-      <label
-        >{{ t('imports.profileName') }}<input [(ngModel)]="profileName" maxlength="120" /></label
-      ><button type="button" (click)="saveProfile()" [disabled]="!profileName.trim()">
-        {{ t('imports.saveProfile') }}
-      </button>
-    </div>
-    <p>{{ t('imports.currencyHint') }}</p>
-    <div class="fields">
-      <label
         >{{ t('imports.account')
         }}<select [(ngModel)]="account" (change)="invalidate()">
           <option value="">{{ t('imports.choose') }}</option>
@@ -107,39 +44,142 @@
           }
         </select></label
       ><label
-        >{{ t('imports.date')
-        }}<input type="date" [(ngModel)]="date" (change)="invalidate()" /></label
-      ><label
-        >{{ t('imports.window')
-        }}<input type="number" min="0" max="3660" [(ngModel)]="window" (change)="invalidate()"
+        >{{ t('imports.date') }}<input type="date" [(ngModel)]="date" (change)="invalidate()"
       /></label>
     </div>
-    <button type="button" (click)="preview()" [disabled]="!file || !account || !date">
-      {{ t('imports.preview') }}
-    </button>
+    <details class="format-settings" [open]="!!file && !profile && !rows().length">
+      <summary>
+        {{ t('imports.formatSettings')
+        }}<span class="hint"
+          >{{ profile || t('imports.manualFormat') }} ·
+          {{ t('imports.windowSummary', { days: window }) }}</span
+        >
+      </summary>
+      <div class="fields mapping-fields">
+        @if (file?.filename?.toLowerCase()?.endsWith('.xlsx')) {
+          <label
+            >{{ t('imports.sheet')
+            }}<select [(ngModel)]="mapping.sheet" (change)="inspect()">
+              <option value="">{{ t('imports.auto') }}</option>
+              @for (s of sheets(); track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select></label
+          >
+        }
+        <label class="compact-field"
+          >{{ t('imports.header')
+          }}<input
+            type="number"
+            min="1"
+            max="100"
+            [(ngModel)]="mapping.header_row"
+            (change)="inspect()"
+        /></label>
+        @if (!file || file.filename.toLowerCase().endsWith('.csv')) {
+          <label
+            >{{ t('imports.encoding')
+            }}<select [(ngModel)]="mapping.encoding" (change)="inspect()">
+              <option value="utf-8-sig">{{ t('imports.utf8') }}</option>
+              <option value="cp1251">{{ t('imports.cp1251') }}</option>
+            </select></label
+          >
+          <label
+            >{{ t('imports.delimiter')
+            }}<select [(ngModel)]="mapping.delimiter" (change)="inspect()">
+              <option value="">{{ t('imports.auto') }}</option>
+              <option value=";">;</option>
+              <option value=",">,</option>
+              <option [value]="'	'">{{ t('imports.tab') }}</option>
+            </select></label
+          >
+        }
+        @for (column of columns; track column) {
+          <label
+            >{{ columnLabel(column)
+            }}<select [(ngModel)]="mapping[column]" (change)="invalidate()">
+              @if (column !== 'amount' && column !== 'description') {
+                <option [ngValue]="null">{{ t('imports.none') }}</option>
+              }
+              @for (h of headers(); track $index) {
+                <option [ngValue]="$index">{{ $index + 1 }} · {{ h }}</option>
+              }
+            </select></label
+          >
+        }
+        <label class="compact-field"
+          >{{ t('imports.separator')
+          }}<select [(ngModel)]="mapping.decimal_separator" (change)="invalidate()">
+            <option value=".">.</option>
+            <option value=",">,</option>
+          </select></label
+        >
+        <label class="wide-field"
+          >{{ t('imports.expenseValues')
+          }}<input [(ngModel)]="mapping.expense_values" (change)="invalidate()" /><span
+            class="hint"
+            >{{ t('imports.commaHint') }}</span
+          ></label
+        >
+        <label class="wide-field"
+          >{{ t('imports.incomeValues')
+          }}<input [(ngModel)]="mapping.income_values" (change)="invalidate()" /><span
+            class="hint"
+            >{{ t('imports.commaHint') }}</span
+          ></label
+        >
+      </div>
+      <p class="hint">{{ t('imports.currencyHint') }}</p>
+      <div class="profile-save">
+        <label
+          >{{ t('imports.profileName') }}<input [(ngModel)]="profileName" maxlength="120" /></label
+        ><button
+          class="secondary"
+          type="button"
+          (click)="saveProfile()"
+          [disabled]="!profileName.trim()"
+        >
+          {{ t('imports.saveProfile') }}
+        </button>
+      </div>
+      <div class="fields search-fields">
+        <label class="search-window"
+          >{{ t('imports.window')
+          }}<input type="number" min="0" max="3660" [(ngModel)]="window" (change)="invalidate()"
+        /></label>
+      </div>
+    </details>
+    <div class="setup-actions">
+      <button type="button" (click)="preview()" [disabled]="!file || !account || !date">
+        {{ t('imports.preview') }}
+      </button>
+    </div>
   </fieldset>
   @if (busy()) {
     <p role="status">{{ t('imports.loading') }}</p>
   }
   @for (row of rows(); track row.row) {
-    <fieldset class="row" [disabled]="busy() || !!row.imported_id">
-      <legend>{{ row.row }} · {{ row.description }}</legend>
-      <details>
-        <summary>{{ t('imports.raw') }}</summary>
-        <dl>
-          @for (value of row.raw; track $index) {
-            <dt>{{ headers()[$index] || $index + 1 }}</dt>
-            <dd>{{ value }}</dd>
-          }
-        </dl>
-      </details>
-      @if (row.amount) {
-        <p>
-          <strong
-            >{{ row.amount | money }} {{ currencySymbol(row.currency || baseCurrency()) }}</strong
-          >
-        </p>
-      }
+    <fieldset
+      class="panel row"
+      [class.imported-row]="!!row.imported_id"
+      [disabled]="busy() || !!row.imported_id"
+      [attr.aria-label]="t('imports.rowNumber', { row: row.row })"
+    >
+      <div class="row-heading">
+        <h2>
+          <span class="row-number">{{ t('imports.rowNumber', { row: row.row }) }}</span
+          >{{
+            row.description || (row.error ? t('imports.unrecognized') : t('imports.unnamedRow'))
+          }}
+        </h2>
+        @if (row.amount) {
+          <p>
+            <strong
+              >{{ row.amount | money }} {{ currencySymbol(row.currency || baseCurrency()) }}</strong
+            >
+          </p>
+        }
+      </div>
       @if (row.imported_deleted) {
         <p>{{ t('imports.deleted') }}</p>
       }
@@ -152,17 +192,19 @@
         </p>
       }
       @if (row.error) {
-        <p role="alert">{{ t('imports.invalidRow') }}</p>
+        <p role="alert" class="form-error">{{ t('imports.invalidRow') }}</p>
       }
-      <label
-        >{{ t('imports.choose')
-        }}<select [(ngModel)]="row.action" (change)="changeAction(row)">
-          <option value="skip">{{ t('imports.skip') }}</option>
-          <option value="new" [disabled]="!!row.error">{{ t('imports.new') }}</option>
-          <option value="plan" [disabled]="!!row.error">{{ t('imports.plan') }}</option>
-          <option value="existing" [disabled]="!!row.error">{{ t('imports.existing') }}</option>
-        </select></label
-      >
+      @if (!row.imported_id) {
+        <label class="row-action"
+          >{{ t('imports.action')
+          }}<select [(ngModel)]="row.action" (change)="changeAction(row)">
+            <option value="skip">{{ t('imports.skip') }}</option>
+            <option value="new" [disabled]="!!row.error">{{ t('imports.new') }}</option>
+            <option value="plan" [disabled]="!!row.error">{{ t('imports.plan') }}</option>
+            <option value="existing" [disabled]="!!row.error">{{ t('imports.existing') }}</option>
+          </select></label
+        >
+      }
       @if (row.action !== 'skip') {
         <div class="fields">
           @if (row.action === 'plan') {
@@ -257,13 +299,26 @@
           /></label>
         </div>
       }
+      <details class="source-details">
+        <summary>{{ t('imports.raw') }}</summary>
+        <dl>
+          @for (value of row.raw; track $index) {
+            <dt>{{ headers()[$index] || $index + 1 }}</dt>
+            <dd>{{ value }}</dd>
+          }
+        </dl>
+      </details>
     </fieldset>
   }
   @if (rows().length) {
-    <section class="panel">
-      <p>{{ t('imports.review') }}</p>
-      <p>{{ t('imports.selected', { count: selected().length }) }}</p>
-      <h3>{{ t('imports.effect') }}</h3>
+    <section class="panel review-summary">
+      <h2>{{ t('imports.selected', { count: selected().length }) }}</h2>
+      <p class="hint">{{ t('imports.review') }}</p>
+      @if (selected().length) {
+        <h3>{{ t('imports.effect') }}</h3>
+      } @else {
+        <p class="empty-selection">{{ t('imports.noSelection') }}</p>
+      }
       @for (effect of effects(); track effect.name) {
         <p>{{ effect.name }}: {{ effect.amount | money }} {{ currencySymbol(baseCurrency()) }}</p>
       }

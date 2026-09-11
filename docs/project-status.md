@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-09-10. This is the current release snapshot, not a task log.
+Last reviewed: 2026-09-11. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -55,6 +55,30 @@ RU/EN findings. Calendar follow-up verified all seven columns at 1440 px and
 internal-only scrolling at 390 px in both languages. Browser checks do not
 constitute exhaustive Safari/VoiceOver certification. Historical test counts and
 transient build failures from superseded development snapshots are omitted.
+
+## Unreleased import presentation refinement
+
+The statement-import screen now groups primary setup separately from disclosed
+format settings, uses shared visual treatments, and presents compact completed
+rows with source details below financial context. Empty selection and invalid
+row states are explicit. Domain handlers, APIs, parsing, financial arithmetic,
+and migration files are unchanged. See [screen direction](ui-ux/screens/imports.md).
+
+Verification on 2026-09-11: `make setup`, `make lint`, `make typecheck`,
+`make test` (123 default backend tests, 79 PostgreSQL integration tests and 178
+frontend tests) and the production frontend build passed. The default backend
+pass skipped 78 PostgreSQL-gated tests before the dedicated integration run.
+Build budget warnings remain for the initial bundle and unrelated stylesheets.
+
+The owner-provided JSON backup was restored through the existing setup API into
+an isolated temporary local PostgreSQL 15 cluster. Native FastAPI and Angular
+servers were used after development Compose image downloads did not complete;
+this run does not verify the PostgreSQL 17 Compose image. In-app browser checks
+covered the provided XLSX (five completed rows and one unrecognized trailing
+row), format disclosure, source disclosure, empty selection, and 390 px reflow
+without page overflow. A synthetic CSV exercised editable operation fields and
+an exact negative account effect without posting. No production data or service
+was changed, and private fixtures/screenshots are outside the repository.
 
 ## Release assumptions and technical debt
 

@@ -30,3 +30,25 @@ The user must rerun review after a stale fact/plan conflict. Empty selections
 cannot post. Desktop forms reorganize into one column on narrow screens;
 source details wrap instead of overflowing. Financial effects are text, never
 color-only. File/draft state is browser memory only and is lost on reload.
+
+## Presentation refinement (2026-09-11)
+
+The file, format profile, account and explicit fact date form the primary setup
+block. Existing native details disclose format and column settings; the summary
+keeps the selected profile and search window visible. Settings start collapsed
+before upload, open for a file without a selected profile, and collapse for
+review. Manual expansion remains available. XLSX exposes worksheet selection;
+CSV exposes encoding and delimiter controls. Hiding controls preserves mapping
+values and does not change parser or API behavior.
+
+The screen reuses global panel, secondary action, hint and error treatments,
+without importing another page's stylesheet. Local grids own field spacing;
+long mapping values receive full rows, short numeric settings are bounded, and
+the profile name stays beside its save action. Narrow layouts stack controls.
+
+Review rows lead with their description and exact formatted amount. Completed
+rows retain status, operation link and source details without a disabled action
+selector. Unrecognized rows remain visible with a textual error. Source data
+follows financial context and retains its original values. An empty selection
+explicitly states that it causes no account changes. Posting rules, all-row
+review, matching, receipts and financial calculations are unchanged.
