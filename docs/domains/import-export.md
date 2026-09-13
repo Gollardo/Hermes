@@ -133,3 +133,19 @@ Profiles and receipts are optional schema-1 payload fields with empty defaults
 for older backups. Restore validates profile mappings and unique receipt keys.
 These new backups require a reader that understands the extension; this is not
 forward compatibility with older releases. Raw bank files are not backed up.
+
+## Saved Oracle workspace portability
+
+Unreleased migration `0017_saved_scenarios` adds independent saved hypothesis
+metadata. Schema-1 exports add optional `data.saved_scenarios` and its preview
+count: IDs, names, optimistic versions, timestamps and exact structured inputs.
+No result, conversation, cached balance or raw history copy is saved. Protected
+exports wrap the same payload using the unchanged Hermes V1 envelope.
+
+Restore validates workspace structure through Scenarios' public backup surface
+before any replacement; all saved rows restore in the same transaction as the
+financial data. A stale or missing source reference remains a reviewable draft,
+not a financial integrity error. Calculation requires refreshed current sources.
+Old schema-1 documents without the collection restore it as empty, with their
+original checksum semantics preserved. Old readers may reject the new field;
+forward compatibility is not claimed. Downgrade drops saved hypotheses only.

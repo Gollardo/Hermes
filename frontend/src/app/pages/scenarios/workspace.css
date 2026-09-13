@@ -1,0 +1,100 @@
+.workspace-form,
+.workspace-form > fieldset {
+  display: grid;
+  gap: 1.2rem;
+  min-width: 0;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+legend {
+  font-weight: 700;
+}
+.program-row {
+  padding-block: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.program-row h3 {
+  margin-block: 0.3rem 0.8rem;
+}
+.program-row.disabled-row {
+  border-left: 3px dashed var(--ink-soft);
+  padding-left: 1rem;
+}
+.variant-tabs,
+.variant-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-block: 1rem;
+}
+.variant-tabs [aria-pressed='true'],
+.variant-results [aria-pressed='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.variant-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+.variant-result {
+  display: grid;
+  gap: 0.5rem;
+  text-align: left;
+  white-space: normal;
+}
+.history-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding-block: 0.4rem;
+}
+.history-row input {
+  flex-shrink: 0;
+}
+.account-risk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  padding-block: 0.7rem;
+  border-top: 1px solid var(--line);
+}
+.account-risk p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.stress-settings {
+  margin-block: 1rem;
+}
+.stress-settings summary,
+details summary {
+  cursor: pointer;
+}
+.saved-entry {
+  border-top: 1px solid var(--line);
+  padding-block: 0.8rem;
+}
+.source-conflict {
+  border-left: 3px solid var(--accent);
+}
+.panel {
+  min-width: 0;
+}
+.panel h2 {
+  margin-top: 0;
+}
+button,
+strong,
+.history-row span {
+  overflow-wrap: anywhere;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

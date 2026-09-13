@@ -12,3 +12,8 @@ returned as exact decimal strings.
 Oracle. It returns free money, physical totals and sequential fund allocations
 from one source dataset, including dynamic overflow assigned to reserve. The
 legacy HTTP builders retain their existing shared-lock source policy.
+
+`contracts.project_program` extends that calculation for composed Oracle inputs:
+explicit fund expenses, chronological reserve refill, per-account free/physical
+results and funding failures. Scenarios supplies ordinary-spending estimates as
+provenance-labelled events; Forecasting does not fit a historical model.

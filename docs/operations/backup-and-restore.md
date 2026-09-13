@@ -85,3 +85,13 @@ version and domain-level counts/invariants.
    destination credential/current session and ends other sessions; first-run
    restore creates a new destination credential/session in the restore
    transaction.
+
+## Oracle workspaces (unreleased)
+
+Migration `0017_saved_scenarios` includes explicitly saved scenario inputs in
+JSON and protected backups. Results and conversations are not stored. Restoring
+an older backup without this optional collection removes current saved scenarios
+as part of full replacement. Restored hypotheses may need source refresh and
+review before calculation. New exports containing this field require a compatible
+reader; use a verified pre-upgrade backup for rollback. Downgrade to 0016 deletes
+scenario metadata but preserves financial rows.

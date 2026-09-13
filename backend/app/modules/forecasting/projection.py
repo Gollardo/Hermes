@@ -32,6 +32,8 @@ class ProjectionSnapshot:
     overdue_count: int
     overdue_by_account: tuple[tuple[UUID, int], ...] = ()
     reserve_total: Decimal = Decimal(0)
+    fund_positions: tuple[tuple[UUID, UUID, Decimal], ...] = ()
+    reserve_by_account: tuple[tuple[UUID, Decimal], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

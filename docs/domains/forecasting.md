@@ -138,3 +138,15 @@ Scenarios supplies hypothetical event replacements without importing private
 Forecasting services. Its MVCC source policy is documented in
 [ADR 0006](../decisions/0006-deterministic-oracle.md); the existing Forecast HTTP
 routes and their shared-lock behavior remain compatible.
+
+## Composed Oracle projection
+
+`forecasting.contracts.project_program` adds a chronological program projection
+with account fund positions, reserve refill and per-account free/physical results.
+It reuses the existing exact cash and Funds calculators. Scenarios adds living
+estimates as typed events before projection; Forecasting does not infer history.
+Explicit fund spending consumes coverage on the chosen account, then dynamic
+reserve can refill targets without physical transfers. Coverage failures remain
+explicit diagnostics. Existing Forecast endpoints and materialization policy
+are unchanged. Full constraints and same-day limits are in
+[Scenarios](scenarios.md#snapshot-projection-and-invariants).

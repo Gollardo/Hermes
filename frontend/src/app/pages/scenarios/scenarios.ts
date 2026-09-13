@@ -8,6 +8,8 @@ import {
   computed,
   inject,
   signal,
+  input,
+  effect,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -40,6 +42,17 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScenariosPage implements OnInit, OnDestroy {
+  readonly embedded = input(false);
+  readonly comparison = input<Comparison | null>(null);
+  constructor() {
+    effect(() => {
+      const value = this.comparison();
+      if (this.embedded()) {
+        this.result.set(value);
+        if (value) this.selectedDate.set(value.alternative.free.minimum_on);
+      }
+    });
+  }
   protected readonly t = t;
   protected readonly isHypothesis = isHypothesis;
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -120,6 +133,7 @@ export class ScenariosPage implements OnInit, OnDestroy {
   ]);
 
   ngOnInit(): void {
+    if (this.embedded()) return;
     const params = this.route.snapshot.queryParamMap;
     const horizon = params.get('horizon');
     if (this.horizons().some((item) => item.value === horizon))
@@ -253,6 +267,9 @@ export class ScenariosPage implements OnInit, OnDestroy {
   }
   protected assumption(code: string): string {
     const keys = {
+      complete_read_only_schedule: 'workbench.completeSources',
+      living_cost_envelopes: 'workbench.costMethod',
+      history_coverage_unverified: 'workbench.historyLimit',
       materialized_plans_only: 'oracle.materialized',
       overdue_excluded: 'oracle.overdue',
       daily_closing: 'oracle.daily',

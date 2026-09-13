@@ -127,12 +127,13 @@ class AllocationChange(BaseModel):
 
 
 class EventChange(BaseModel):
+    source_available: bool = True
     occurrence_id: UUID
     description: str | None
     before_on: date | None
-    after_on: date
+    after_on: date | None
     before_amount: str | None
-    after_amount: str
+    after_amount: str | None
     baseline_allocation: str
     alternative_allocation: str
     hypothetical: bool

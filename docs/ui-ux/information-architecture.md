@@ -195,7 +195,7 @@ looks like an already posted journal row.
 The forecast is the baseline of known facts and plans. “What if?” applies a
 temporary hypothesis to the same snapshot and shows the delta without changing
 the baseline. A saved scenario remains hypothetical. A separate action may
-move its reviewed fields into a plan-draft composer; normal composer
+eventually move its reviewed fields into a plan-draft composer (not implemented); normal composer
 confirmation remains the only write path.
 
 ### Fact and plan ↔ forecast
@@ -240,3 +240,8 @@ time order. Every point reveals its starting balance and influencing events.
 The implemented RU/EN selector is available throughout setup, on login and in
 Settings. It is a browser preference independent of server-owned financial
 settings. See the [internationalization contract](internationalization.md).
+
+The implemented Oracle workspace compares up to five decision sets against one
+baseline, optionally including explicit everyday-spending estimates in both.
+Saved hypotheses have a separate lifecycle; account feasibility and assumptions
+precede the supplementary chart. See the [workspace flow](screens/scenarios.md).

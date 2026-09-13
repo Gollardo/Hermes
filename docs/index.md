@@ -73,7 +73,8 @@ design system.
 ## Decisions and operations
 
 - [ADR registry and candidates](decisions/README.md)
-- [Oracle acceptance](operations/oracle-acceptance-2026-09-11.md)
+- [Oracle workspace acceptance](operations/oracle-workspace-acceptance-2026-09-13.md)
+- [Original Oracle acceptance](operations/oracle-acceptance-2026-09-11.md)
 - [Statement import acceptance](operations/statement-import-acceptance-2026-09-10.md)
 - [Local development](operations/local-development.md)
 - [Deployment runbook](operations/deployment.md)

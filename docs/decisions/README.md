@@ -71,9 +71,9 @@ register below. This cleanup does not retroactively approve a new ADR.
 
 ### Saved scenario lifecycle
 
-The first deterministic boundary is implemented in ADR 0006. Persistence,
-retention, saved-source invalidation and reviewed plan-draft transfer remain
-future design work for 2.1.0.
+ADR 0007 implements explicit saved-input persistence, bounded retention and
+stale-source review. Reviewed plan-draft transfer, autosave and stored result
+history remain future design work.
 
 ### Optional local assistant boundary
 
@@ -91,3 +91,7 @@ pipeline and the owner's explicit all-status/user-selected-date decisions.
 
 - [ADR 0006: Deterministic Oracle](0006-deterministic-oracle.md) records the
   implemented read-only snapshot, overlay, risk and migration boundary.
+
+- [ADR 0007: Oracle decision workspaces](0007-oracle-decision-workspaces.md)
+  records saved inputs, composed projections, ordinary-spending envelopes,
+  bounded search and the distinction between approved direction and defaults.

@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: 'oracle',
-    loadComponent: () => import('./pages/scenarios/scenarios').then((m) => m.ScenariosPage),
+    loadComponent: () => import('./pages/scenarios/workspace').then((m) => m.WorkspacePage),
   },
   {
     path: 'imports',

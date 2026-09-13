@@ -187,6 +187,8 @@ def operation_history_references(
 
 
 __all__ = [
+    "ExpenseFact",
+    "expense_history",
     "import_candidates",
     "import_existing",
     "post_import_operation",
@@ -263,3 +265,38 @@ def validate_import_date(session: Session, occurred_on: date) -> None:
     from app.modules.operations.service import reject_future_operation_date
 
     reject_future_operation_date(session, occurred_on)
+
+
+@dataclass(frozen=True, slots=True)
+class ExpenseFact:
+    id: UUID
+    account_id: UUID
+    category_id: UUID
+    on: date
+    amount: Decimal
+    description: str | None
+
+
+def expense_history(
+    session: Session, *, from_on: date, through_on: date
+) -> tuple[ExpenseFact, ...]:
+    """Exact posted expenses only; transfers/adjustments never train living-cost estimates."""
+    rows = session.execute(
+        select(FinancialOperation, AccountMovement)
+        .join(AccountMovement, AccountMovement.operation_id == FinancialOperation.id)
+        .where(
+            FinancialOperation.type == OperationType.EXPENSE,
+            FinancialOperation.occurred_on.between(from_on, through_on),
+        )
+        .order_by(FinancialOperation.occurred_on, FinancialOperation.id)
+        .limit(20001)
+    ).all()
+    if len(rows) > 20000:
+        raise ValueError("scenario_history_limit")
+    return tuple(
+        ExpenseFact(
+            o.id, m.account_id, o.category_id, o.occurred_on, -Decimal(m.amount), o.description
+        )
+        for o, m in rows
+        if o.category_id is not None
+    )

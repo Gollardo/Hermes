@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from sqlalchemy import or_, select
@@ -85,6 +85,10 @@ class PlannedOccurrence:
     status: OccurrenceStatus
     source_kind: OccurrenceSourceKind = OccurrenceSourceKind.RECURRING
     version: int = 1
+    category_id: UUID | None = None
+    scheduled_on: date | None = None
+    fund_id: UUID | None = None
+    origin: Literal["plan", "scenario", "estimate", "virtual"] = "plan"
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,6 +141,8 @@ def forecast_schedule_snapshot(
             PlannedOccurrence(
                 id=item.id,
                 version=item.version,
+                category_id=item.category_id,
+                scheduled_on=item.scheduled_on,
                 source_kind=item.source_kind,
                 rule_id=item.rule_id,
                 due_on=item.due_on,
@@ -236,6 +242,8 @@ __all__ = [
     "category_has_schedule_reference",
     "confirm_occurrence",
     "forecast_schedule_snapshot",
+    "projection_schedule",
+    "scenario_recurrence_dates",
     "has_schedule_data",
 ]
 
@@ -326,3 +334,65 @@ def lock_import_occurrences(session: Session, ids: set[UUID]) -> None:
         .order_by(ExpectedOccurrence.id)
         .with_for_update()
     ).all()
+
+
+def projection_schedule(
+    session: Session, *, today: date, through_on: date
+) -> ForecastScheduleSnapshot:
+    """Complete read-only horizon. Persisted exceptions always win over virtual dates."""
+    from uuid import uuid5
+
+    from app.modules.scheduling.service import _materialization_dates
+
+    result = forecast_schedule_snapshot(
+        session, today=today, due_to=through_on, account_id=None, shared_lock=False
+    )
+    rules = session.scalars(select(RecurringRule).where(RecurringRule.active.is_(True))).all()
+    existing = set(
+        session.execute(
+            select(ExpectedOccurrence.rule_id, ExpectedOccurrence.scheduled_on).where(
+                ExpectedOccurrence.rule_id.is_not(None)
+            )
+        ).all()
+    )
+    for rule in rules:
+        for scheduled_on in sorted(
+            _materialization_dates(rule, horizon_from=today, horizon_to=through_on)
+        ):
+            if (rule.id, scheduled_on) in existing:
+                continue
+            from datetime import timedelta
+
+            result.occurrences.append(
+                PlannedOccurrence(
+                    id=uuid5(rule.id, scheduled_on.isoformat()),
+                    rule_id=rule.id,
+                    due_on=scheduled_on + timedelta(days=rule.series_shift_days),
+                    scheduled_on=scheduled_on,
+                    type=rule.type,
+                    amount=Decimal(rule.amount),
+                    description=rule.description,
+                    account_id=rule.account_id,
+                    destination_account_id=rule.destination_account_id,
+                    category_id=rule.category_id,
+                    allocate_to_funds=rule.allocate_to_funds,
+                    status=OccurrenceStatus.PENDING,
+                    version=rule.version,
+                    origin="virtual",
+                )
+            )
+    result.occurrences.sort(key=lambda item: (item.due_on, item.id))
+    return result
+
+
+def scenario_recurrence_dates(*, frequency: str, start: date, end: date) -> list[date]:
+    from app.modules.scheduling.models import RecurrenceFrequency
+    from app.modules.scheduling.service import recurrence_dates
+
+    return recurrence_dates(
+        frequency=RecurrenceFrequency(frequency),
+        anchor=start,
+        range_from=start,
+        range_to=end,
+        end_on=end,
+    )

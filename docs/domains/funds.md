@@ -149,3 +149,12 @@ Funds exposes `projection_funds` for active definitions and balances inside
 Oracle's repeatable-read, read-only transaction. Ordinary list/posting callers
 retain the existing locking defaults. Oracle reuses the public manual/dynamic
 allocation calculators; it adds no virtual movements or automatic expense funding.
+
+The workspace extension also exposes per-account fund positions, reserves and
+fund-backed operation IDs. An explicitly funded scenario expense consumes only
+its chosen account's position. Dynamic reserve refill uses existing allocation
+policy and reserve-account order; later projected replenishments observe it.
+Insufficient coverage is an explicit infeasible diagnostic, never permission to
+pay automatically from free money. Fund-backed facts are excluded from ordinary
+spending estimation. Both manual and dynamic projections are integration-tested
+against actual expense posting and reserve refill on synthetic data.

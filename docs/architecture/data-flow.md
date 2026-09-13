@@ -247,7 +247,8 @@ load it does not disguise or invalidate a successfully calculated cash forecast.
 
 ## Future what-if scenario
 
-This flow records confirmed direction, not implemented runtime components:
+Structured drafts, deterministic comparison and explicit saving are implemented.
+The optional AI adapter and plan-draft output in this direction diagram remain future work:
 
 ```mermaid
 flowchart LR
@@ -291,4 +292,18 @@ fresh coherent snapshot, then projects baseline and a temporary overlay from
 those same values. It returns both outcomes, exact deltas, daily stress windows,
 source events and global fund effects. A mismatch returns a conflict; no branch
 is silently calculated from a different source state. No materialization,
-financial write, saved conversation or scenario table participates.
+financial write or saved conversation participates in calculation. Explicit saved
+workspace CRUD is a separate metadata transaction.
+
+## Oracle decision workspace
+
+Read-only MVCC snapshot → public source reads → pure annual schedule completion
+and source identity → validation of common assumptions and each decision set →
+baseline/alternative monthly spending envelopes → exact chronological cash/fund
+projection → per-account/fund/scope feasibility, comparison and evidence.
+
+A bounded solver evaluates the same pipeline with one eligible amount/date
+changed. It returns a proposal; explicit UI application updates the draft and
+recalculates. Explicit saving writes only structured inputs/version to Scenarios.
+Backup exports/restores those inputs atomically through its public backup surface.
+No calculation, history estimate or save calls Calendar or Operations commands.

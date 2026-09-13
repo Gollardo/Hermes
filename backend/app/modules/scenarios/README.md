@@ -1,11 +1,17 @@
 # Scenarios
 
-Owns temporary decision validation, exact before/after comparisons, daily stress
-windows and explainable boundaries. `snapshot.py` consumes public financial read
-contracts inside Core's read-only repeatable-read transaction. `service.py`
-applies a detached overlay through `forecasting.contracts` and owns no posting
-command or financial table. API composition adds authentication and CSRF.
+Owns structured decision workspaces, independent alternatives, ordinary-spending
+assumptions, constraints, bounded exact searches and explicitly saved input
+metadata. `workspace_snapshot.py` consumes public financial reads inside Core's
+read-only repeatable-read transaction; `workspace_engine.py` composes inputs and
+calls `forecasting.contracts.project_program`. `living_costs.py` owns the disclosed
+monthly envelope/estimation policy. No module path posts financial data.
 
-See [Scenarios](../../../../docs/domains/scenarios.md) and
-[ADR 0006](../../../../docs/decisions/0006-deterministic-oracle.md) for scope and
-risk methodology. Persisted hypotheses and AI adapters are not implemented.
+`persistence.py` owns versioned CRUD for `saved_scenarios`; `backup.py` exposes
+only its persistence model and structural validator to Backup. The old
+`snapshot.py`/`service.py` comparison contract remains compatible. API composition
+supplies authentication and CSRF.
+
+See [Scenarios](../../../../docs/domains/scenarios.md),
+[ADR 0006](../../../../docs/decisions/0006-deterministic-oracle.md) and
+[ADR 0007](../../../../docs/decisions/0007-oracle-decision-workspaces.md).

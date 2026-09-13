@@ -75,12 +75,13 @@ export interface Comparison {
     occurrence_id: string;
     description: string | null;
     before_on: string | null;
-    after_on: string;
+    after_on: string | null;
     before_amount: string | null;
-    after_amount: string;
+    after_amount: string | null;
     baseline_allocation: string;
     alternative_allocation: string;
     hypothetical: boolean;
+    source_available?: boolean;
     baseline_reserve: string;
     alternative_reserve: string;
     allocations: { fund_id: string; name: string; baseline: string; alternative: string }[];

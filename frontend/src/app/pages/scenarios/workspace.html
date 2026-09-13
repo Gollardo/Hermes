@@ -1,0 +1,764 @@
+<section class="oracle-page">
+  <header class="oracle-header">
+    <div>
+      <p class="eyebrow">{{ t('oracle.title') }}</p>
+      <h1>{{ t('workbench.title') }}</h1>
+      <p>{{ t('workbench.intro') }}</p>
+    </div>
+    <a class="button-link secondary" routerLink="/forecast">{{ t('app.forecast') }}</a>
+  </header>
+  @if (error(); as message) {
+    <p class="form-error" role="alert" tabindex="-1">{{ message }}</p>
+  }
+  @if (notice(); as message) {
+    <p role="status">{{ message }}</p>
+  }
+  @if (loading()) {
+    <p role="status">{{ t('oracle.loading') }}</p>
+  }
+  <div class="source-actions">
+    <button
+      type="button"
+      class="secondary"
+      (click)="refresh()"
+      [disabled]="loading() || busy() || saving()"
+    >
+      {{ t('oracle.refresh') }}
+    </button>
+    @if (context(); as ctx) {
+      <span>{{ t('oracle.actualDate') }} {{ ctx.today | textDate }}</span>
+    }
+  </div>
+  @if (context(); as ctx) {
+    <p class="hint">
+      {{ t('workbench.completeSources') }}
+      {{ t('oracle.overdueCount', { count: ctx.overdue_excluded_count }) }}
+    </p>
+    @if (stale()) {
+      <section class="panel source-conflict" role="status">
+        <h2>{{ t('workbench.sourcesChanged') }}</h2>
+        <p>{{ t('workbench.reviewSources') }}</p>
+        <ul>
+          @for (change of changedSources(); track $index) {
+            <li>
+              {{ change.variant }} ·
+              {{ change.decision.description || typeLabel(change.decision.action) }}:
+              @if (change.current; as plan) {
+                {{ plan.amount | money }} {{ currency() }} · {{ plan.due_on | textDate }}
+              } @else {
+                {{ t('workbench.missingReference') }}
+              }
+            </li>
+          }
+        </ul>
+        <button
+          type="button"
+          (click)="adoptSources()"
+          [disabled]="refreshRequired() || loading() || busy() || saving()"
+        >
+          {{ t('workbench.adoptSources') }}
+        </button>
+      </section>
+    }
+    <form (ngSubmit)="calculate()" class="workspace-form">
+      <fieldset [disabled]="loading() || busy() || saving()">
+        <legend class="visually-hidden">{{ t('workbench.title') }}</legend>
+        <section class="panel">
+          <div class="form-grid">
+            <label
+              >{{ t('workbench.name')
+              }}<input
+                name="workspace-name"
+                maxlength="120"
+                [ngModel]="name()"
+                (ngModelChange)="name.set($event); dirty.set(true)"
+            /></label>
+            <label
+              >{{ t('forecast.period')
+              }}<select
+                name="horizon"
+                [ngModel]="draft().horizon"
+                (ngModelChange)="edit({ horizon: $event })"
+              >
+                @for (h of horizons; track h) {
+                  <option [value]="h">{{ horizonLabel(h) }}</option>
+                }
+              </select></label
+            >
+            <div>
+              <label for="workspace-scope">{{ t('oracle.scope') }}</label
+              ><app-entity-combobox
+                inputId="workspace-scope"
+                name="scope"
+                [options]="accountOptions()"
+                [allowEmpty]="true"
+                [placeholder]="t('accounts.allAccounts')"
+                [emptyLabel]="t('accounts.allAccounts')"
+                [ngModel]="draft().scope_account_id || ''"
+                (ngModelChange)="edit({ scope_account_id: $event || null })"
+              />
+            </div>
+            <label
+              >{{ t('workbench.minimumBuffer') }} · {{ currency()
+              }}<input
+                name="buffer"
+                appDecimalInput
+                inputmode="decimal"
+                [ngModel]="draft().stop_loss"
+                (ngModelChange)="edit({ stop_loss: $event })"
+            /></label>
+          </div>
+          <p class="hint">{{ t('workbench.constraintHint') }}</p>
+          <div class="actions">
+            <button type="button" class="secondary" (click)="save()">
+              {{ t('workbench.save') }}
+            </button>
+            @if (savedId()) {
+              <button type="button" class="secondary" (click)="save(true)">
+                {{ t('workbench.saveCopy') }}
+              </button>
+            }
+            <span>{{ dirty() ? t('workbench.unsaved') : t('workbench.draftHint') }}</span>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="source-actions">
+            <h2>{{ t('workbench.livingCosts') }}</h2>
+            <button
+              type="button"
+              class="secondary"
+              (click)="addCost()"
+              [disabled]="draft().living_costs.length >= 10"
+            >
+              {{ t('workbench.addCost') }}
+            </button>
+          </div>
+          <p>{{ t('workbench.costMethod') }}</p>
+          <p class="hint">{{ t('workbench.historyLimit') }}</p>
+          @if (!draft().living_costs.length) {
+            <p class="empty-state">{{ t('workbench.noCosts') }}</p>
+          }
+          @for (cost of draft().living_costs; track cost.id; let index = $index) {
+            <div class="program-row">
+              <div class="source-actions">
+                <h3>{{ t('workbench.costNumber', { number: index + 1 }) }}</h3>
+                <button type="button" class="secondary" (click)="removeCost(cost.id)">
+                  {{ t('workbench.remove') }}
+                </button>
+              </div>
+              <div class="form-grid">
+                <div>
+                  <label [for]="'cost-account-' + cost.id">{{ t('forecast.account') }}</label
+                  ><app-entity-combobox
+                    [inputId]="'cost-account-' + cost.id"
+                    [name]="'cost-account-' + cost.id"
+                    [options]="activeAccounts()"
+                    [ngModel]="cost.account_id"
+                    (ngModelChange)="
+                      updateCost(cost.id, { account_id: $event, excluded_operation_ids: [] })
+                    "
+                  />
+                </div>
+                <div>
+                  <label [for]="'cost-category-' + cost.id">{{ t('operations.category') }}</label
+                  ><app-entity-combobox
+                    [inputId]="'cost-category-' + cost.id"
+                    [name]="'cost-category-' + cost.id"
+                    [options]="categoryOptions('expense')"
+                    [ngModel]="cost.category_id"
+                    (ngModelChange)="
+                      updateCost(cost.id, { category_id: $event, excluded_operation_ids: [] })
+                    "
+                  />
+                </div>
+                <label
+                  >{{ t('workbench.estimateMethod')
+                  }}<select
+                    [name]="'cost-mode-' + cost.id"
+                    [ngModel]="cost.mode"
+                    (ngModelChange)="
+                      updateCost(cost.id, {
+                        mode: $event,
+                        monthly_amount: $event === 'history' ? undefined : '',
+                      })
+                    "
+                  >
+                    <option value="manual">{{ t('workbench.manual') }}</option>
+                    <option value="history">{{ t('workbench.history') }}</option>
+                  </select></label
+                >
+                @if (cost.mode === 'manual') {
+                  <label
+                    >{{ t('workbench.monthlyAmount') }} · {{ currency()
+                    }}<input
+                      [name]="'cost-amount-' + cost.id"
+                      appDecimalInput
+                      inputmode="decimal"
+                      required
+                      [ngModel]="cost.monthly_amount"
+                      (ngModelChange)="updateCost(cost.id, { monthly_amount: $event })"
+                  /></label>
+                }
+              </div>
+              <p class="hint">{{ t('workbench.exclusionsHint') }}</p>
+              <button
+                type="button"
+                class="secondary"
+                (click)="
+                  historyCost.set(historyCost() === cost.id ? '' : cost.id); historyPage.set(0)
+                "
+              >
+                {{ t('workbench.reviewHistory') }} · {{ costHistory(cost).length }}
+              </button>
+              @if (historyCost() === cost.id) {
+                <p>{{ ctx.history_from | textDate }} — {{ ctx.history_through | textDate }}</p>
+                @for (fact of historySlice(cost); track fact.id) {
+                  <label class="history-row"
+                    ><input
+                      type="checkbox"
+                      [name]="'history-' + cost.id + '-' + fact.id"
+                      [ngModel]="cost.excluded_operation_ids.includes(fact.id)"
+                      (ngModelChange)="toggleExcluded(cost, fact.id)"
+                    />
+                    <span
+                      >{{ t('workbench.excludeFact') }} · {{ fact.on | textDate }} ·
+                      {{ fact.amount | money }} {{ currency() }} ·
+                      {{ fact.description || categoryName(fact.category_id) }}</span
+                    >
+                  </label>
+                }
+                @if (!costHistory(cost).length) {
+                  <p>{{ t('workbench.noHistory') }}</p>
+                }
+                <div class="actions">
+                  <button
+                    type="button"
+                    class="secondary"
+                    [disabled]="historyPage() === 0"
+                    (click)="historyPage.set(historyPage() - 1)"
+                  >
+                    {{ t('workbench.previous') }}</button
+                  ><span>{{ historyPage() + 1 }}</span
+                  ><button
+                    type="button"
+                    class="secondary"
+                    [disabled]="(historyPage() + 1) * 30 >= costHistory(cost).length"
+                    (click)="historyPage.set(historyPage() + 1)"
+                  >
+                    {{ t('workbench.next') }}
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </section>
+        <section class="panel">
+          <div class="source-actions">
+            <h2>{{ t('workbench.variants') }}</h2>
+            <div class="actions">
+              <button
+                type="button"
+                class="secondary"
+                (click)="addVariant()"
+                [disabled]="draft().variants.length >= 5"
+              >
+                {{ t('workbench.addVariant') }}</button
+              ><button
+                type="button"
+                class="secondary"
+                (click)="addVariant(true)"
+                [disabled]="draft().variants.length >= 5"
+              >
+                {{ t('workbench.copyVariant') }}
+              </button>
+            </div>
+          </div>
+          <div class="variant-tabs" [attr.aria-label]="t('workbench.variants')">
+            @for (v of draft().variants; track v.id) {
+              <button
+                type="button"
+                class="secondary"
+                [attr.aria-pressed]="active().id === v.id"
+                (click)="selectVariant(v.id)"
+              >
+                {{ v.name }}
+              </button>
+            }
+          </div>
+          <div class="form-grid">
+            <label
+              >{{ t('workbench.variantName')
+              }}<input
+                name="variant-name"
+                required
+                maxlength="120"
+                [ngModel]="active().name"
+                (ngModelChange)="editVariant({ name: $event })"
+            /></label>
+          </div>
+          <div class="source-actions">
+            <p>{{ t('workbench.decisionsCount', { count: active().decisions.length }) }}</p>
+            <button
+              type="button"
+              class="secondary"
+              (click)="addDecision()"
+              [disabled]="active().decisions.length >= 50"
+            >
+              {{ t('workbench.addDecision') }}
+            </button>
+          </div>
+          @if (!active().decisions.length) {
+            <p class="empty-state">{{ t('workbench.emptyDecisions') }}</p>
+          }
+          @for (d of active().decisions; track d.id; let index = $index) {
+            <div class="program-row" [class.disabled-row]="!d.enabled">
+              <div class="source-actions">
+                <h3>{{ t('workbench.decisionNumber', { number: index + 1 }) }}</h3>
+                <div class="actions">
+                  <label
+                    ><input
+                      type="checkbox"
+                      [name]="'enabled-' + d.id"
+                      [ngModel]="d.enabled"
+                      (ngModelChange)="updateDecision(d.id, { enabled: $event })"
+                    />
+                    {{ t('workbench.include') }}</label
+                  ><button
+                    type="button"
+                    class="secondary"
+                    (click)="copyDecision(d)"
+                    [disabled]="active().decisions.length >= 50"
+                  >
+                    {{ t('workbench.copy') }}</button
+                  ><button type="button" class="secondary" (click)="removeDecision(d.id)">
+                    {{ t('workbench.remove') }}
+                  </button>
+                </div>
+              </div>
+              <div class="form-grid">
+                <label
+                  >{{ t('oracle.action')
+                  }}<select
+                    [name]="'action-' + d.id"
+                    [ngModel]="d.action"
+                    (ngModelChange)="changeAction(d, $event)"
+                  >
+                    <option value="expense">{{ t('oracle.expense') }}</option>
+                    <option value="income">{{ t('oracle.income') }}</option>
+                    <option value="transfer">{{ t('oracle.transfer') }}</option>
+                    <option value="edit">{{ t('workbench.editPlan') }}</option>
+                    <option value="exclude">{{ t('workbench.excludePlan') }}</option>
+                  </select></label
+                >
+                <label
+                  >{{ t('workbench.description')
+                  }}<input
+                    [name]="'description-' + d.id"
+                    maxlength="200"
+                    [ngModel]="d.description"
+                    (ngModelChange)="updateDecision(d.id, { description: $event })"
+                /></label>
+                @if (d.action === 'edit' || d.action === 'exclude') {
+                  <div>
+                    <label [for]="'source-' + d.id">{{ t('oracle.plan') }}</label
+                    ><app-entity-combobox
+                      [inputId]="'source-' + d.id"
+                      [name]="'source-' + d.id"
+                      [options]="planOptions()"
+                      [ngModel]="d.occurrence_id || ''"
+                      (ngModelChange)="choosePlan(d, $event)"
+                    />
+                  </div>
+                  <label
+                    >{{ t('workbench.applyTo')
+                    }}<select
+                      [name]="'apply-' + d.id"
+                      [ngModel]="d.apply_to"
+                      (ngModelChange)="updateDecision(d.id, { apply_to: $event })"
+                    >
+                      <option value="one">{{ t('workbench.oneOccurrence') }}</option>
+                      <option value="following">{{ t('workbench.following') }}</option>
+                    </select></label
+                  >
+                } @else {
+                  <div>
+                    <label [for]="'account-' + d.id">{{ t('forecast.account') }}</label
+                    ><app-entity-combobox
+                      [inputId]="'account-' + d.id"
+                      [name]="'account-' + d.id"
+                      [options]="activeAccounts()"
+                      [ngModel]="d.account_id || ''"
+                      (ngModelChange)="updateDecision(d.id, { account_id: $event })"
+                    />
+                  </div>
+                  @if (d.action === 'transfer') {
+                    <div>
+                      <label [for]="'destination-' + d.id">{{ t('workbench.destination') }}</label
+                      ><app-entity-combobox
+                        [inputId]="'destination-' + d.id"
+                        [name]="'destination-' + d.id"
+                        [options]="activeAccounts()"
+                        [ngModel]="d.destination_account_id || ''"
+                        (ngModelChange)="updateDecision(d.id, { destination_account_id: $event })"
+                      />
+                    </div>
+                    <label
+                      ><input
+                        type="checkbox"
+                        [name]="'allocate-' + d.id"
+                        [ngModel]="d.allocate_to_funds || false"
+                        (ngModelChange)="updateDecision(d.id, { allocate_to_funds: $event })"
+                      />{{ t('workbench.allocate') }}</label
+                    >
+                  } @else {
+                    <div>
+                      <label [for]="'category-' + d.id"
+                        >{{ t('operations.category') }} · {{ t('workbench.optional') }}</label
+                      ><app-entity-combobox
+                        [inputId]="'category-' + d.id"
+                        [name]="'category-' + d.id"
+                        [options]="categoryOptions(d.action)"
+                        [allowEmpty]="true"
+                        [ngModel]="d.category_id || ''"
+                        (ngModelChange)="updateDecision(d.id, { category_id: $event || undefined })"
+                      />
+                    </div>
+                    @if (d.action === 'expense') {
+                      <div>
+                        <label [for]="'fund-' + d.id">{{ t('workbench.funding') }}</label
+                        ><app-entity-combobox
+                          [inputId]="'fund-' + d.id"
+                          [name]="'fund-' + d.id"
+                          [options]="fundOptions()"
+                          [allowEmpty]="true"
+                          [emptyLabel]="t('workbench.freeMoney')"
+                          [placeholder]="t('workbench.freeMoney')"
+                          [ngModel]="d.fund_id || ''"
+                          (ngModelChange)="updateDecision(d.id, { fund_id: $event || undefined })"
+                        />
+                      </div>
+                    }
+                  }
+                }
+                @if (d.action !== 'exclude') {
+                  <label
+                    >{{ t('oracle.amount') }} · {{ currency()
+                    }}<input
+                      [name]="'amount-' + d.id"
+                      appDecimalInput
+                      inputmode="decimal"
+                      required
+                      [ngModel]="d.amount"
+                      (ngModelChange)="updateDecision(d.id, { amount: $event })"
+                  /></label>
+                  <label
+                    >{{ t('oracle.date')
+                    }}<input
+                      type="date"
+                      [name]="'date-' + d.id"
+                      required
+                      [min]="ctx.today"
+                      [max]="ctx.maximum_on"
+                      [ngModel]="d.due_on"
+                      (ngModelChange)="updateDecision(d.id, { due_on: $event })"
+                  /></label>
+                }
+                @if (d.action !== 'edit' && d.action !== 'exclude') {
+                  <label
+                    >{{ t('workbench.repeat')
+                    }}<select
+                      [name]="'repeat-' + d.id"
+                      [ngModel]="d.repeat"
+                      (ngModelChange)="
+                        updateDecision(d.id, {
+                          repeat: $event,
+                          repeat_until: $event === 'once' ? undefined : ctx.maximum_on,
+                        })
+                      "
+                    >
+                      @for (frequency of repeatValues; track frequency) {
+                        <option [value]="frequency">{{ repeatLabel(frequency) }}</option>
+                      }
+                    </select></label
+                  >
+                  @if (d.repeat !== 'once') {
+                    <label
+                      >{{ t('workbench.until')
+                      }}<input
+                        type="date"
+                        [name]="'until-' + d.id"
+                        required
+                        [min]="d.due_on"
+                        [max]="ctx.maximum_on"
+                        [ngModel]="d.repeat_until"
+                        (ngModelChange)="updateDecision(d.id, { repeat_until: $event })"
+                    /></label>
+                  }
+                }
+              </div>
+              @if (d.repeat === 'monthly' || d.repeat === 'yearly') {
+                <p class="hint">{{ t('workbench.recurrenceHint') }}</p>
+              }
+            </div>
+          }
+          <details class="stress-settings">
+            <summary>{{ t('workbench.stress') }}</summary>
+            <p>{{ t('workbench.stressHint') }}</p>
+            <div class="form-grid">
+              <label
+                >{{ t('workbench.expenseIncrease')
+                }}<input
+                  name="expense-increase"
+                  appDecimalInput
+                  inputmode="decimal"
+                  [ngModel]="active().expense_increase_percent"
+                  (ngModelChange)="editVariant({ expense_increase_percent: $event })"
+              /></label>
+              <label
+                >{{ t('workbench.incomeDelay')
+                }}<input
+                  name="income-delay"
+                  type="number"
+                  min="0"
+                  max="90"
+                  step="1"
+                  [ngModel]="active().income_delay_days"
+                  (ngModelChange)="editVariant({ income_delay_days: $event })"
+              /></label>
+            </div>
+          </details>
+          <button
+            type="button"
+            class="secondary"
+            (click)="removeVariant()"
+            [disabled]="draft().variants.length <= 1"
+          >
+            {{ t('workbench.removeVariant') }}
+          </button>
+        </section>
+      </fieldset>
+      <div class="actions">
+        <button type="submit" [disabled]="loading() || busy() || saving() || stale()">
+          {{ busy() ? t('oracle.calculating') : t('workbench.compare') }}</button
+        ><span class="hint">{{ t('workbench.readOnly') }}</span>
+      </div>
+    </form>
+    <section class="panel">
+      <h2>{{ t('workbench.solver') }}</h2>
+      <p>{{ t('workbench.solverHint') }}</p>
+      <fieldset [disabled]="loading() || busy() || saving() || stale()">
+        <legend class="visually-hidden">{{ t('workbench.solver') }}</legend>
+        <div class="form-grid">
+          <label
+            >{{ t('workbench.objective')
+            }}<select
+              name="objective"
+              [ngModel]="objective()"
+              (ngModelChange)="objective.set($event); solution.set(null); solveDecision.set('')"
+            >
+              <option value="maximum_amount">{{ t('workbench.maxAmount') }}</option>
+              <option value="earliest_date">{{ t('workbench.earliestDate') }}</option>
+            </select></label
+          >
+          <div>
+            <label for="solve-decision">{{ t('workbench.solverDecision') }}</label
+            ><app-entity-combobox
+              inputId="solve-decision"
+              name="solve-decision"
+              [options]="solverOptions()"
+              [ngModel]="solveDecision()"
+              (ngModelChange)="solveDecision.set($event); solution.set(null)"
+            />
+          </div>
+          @if (objective() === 'maximum_amount') {
+            <label
+              >{{ t('workbench.ceiling') }} · {{ currency()
+              }}<input
+                name="ceiling"
+                appDecimalInput
+                inputmode="decimal"
+                [ngModel]="ceiling()"
+                (ngModelChange)="ceiling.set($event); solution.set(null)"
+            /></label>
+          }
+        </div>
+        <button type="button" class="secondary" (click)="solve()">{{ t('workbench.find') }}</button>
+      </fieldset>
+      @if (solution(); as found) {
+        <div role="status">
+          @if (found.status === 'found') {
+            <p>
+              {{ t('workbench.found') }}:
+              <strong
+                >{{ found.amount | money }} {{ currency() }} · {{ found.due_on | textDate }}</strong
+              >
+            </p>
+            <button type="button" (click)="applySolution()" [disabled]="busy() || saving()">
+              {{ t('workbench.applySolution') }}
+            </button>
+          } @else {
+            <p>{{ t('workbench.noSolution') }}</p>
+          }
+        </div>
+      }
+    </section>
+  }
+  @if (result(); as compared) {
+    <section class="panel">
+      <h2>{{ t('workbench.comparison') }}</h2>
+      <p>{{ t('workbench.feasibilityHint') }}</p>
+      <div class="variant-results">
+        @for (v of compared.variants; track v.id) {
+          <button
+            type="button"
+            class="secondary variant-result"
+            [attr.aria-pressed]="active().id === v.id"
+            (click)="selectVariant(v.id)"
+            [disabled]="busy() || saving()"
+          >
+            <strong>{{ v.name }}</strong
+            ><span>{{ v.feasible ? t('workbench.feasible') : t('workbench.infeasible') }}</span
+            ><span
+              >{{ t('oracle.minimum') }}:
+              {{ v.comparison.alternative.free.minimum_balance | money }} {{ currency() }} ·
+              {{ v.comparison.alternative.free.minimum_on | textDate }}</span
+            ><span
+              >{{ t('oracle.endingFree') }}:
+              {{ v.comparison.alternative.free.ending_balance | money }} {{ currency() }}</span
+            ><span
+              >{{ t('oracle.delta') }} {{ v.comparison.ending_free_delta | money }}
+              {{ currency() }}</span
+            >
+          </button>
+        }
+      </div>
+    </section>
+    @if (selectedResult(); as selected) {
+      <section class="panel">
+        <h2>{{ t('workbench.accountRisks') }} · {{ selected.name }}</h2>
+        <p>
+          {{ t('workbench.requiredBuffer') }}: {{ selected.required_buffer | money }}
+          {{ currency() }}
+        </p>
+        @for (a of selected.accounts; track a.account_id) {
+          <div class="account-risk">
+            <strong>{{ a.name }}</strong
+            ><span
+              >{{ t('workbench.freeMinimum') }}: {{ a.minimum_free | money }} {{ currency() }}</span
+            ><span
+              >{{ t('workbench.totalMinimum') }}: {{ a.minimum_total | money }}
+              {{ currency() }}</span
+            >
+            @for (window of a.windows; track $index) {
+              <p>
+                {{ window.from_on | textDate }} — {{ window.through_on | textDate }} ·
+                {{ window.minimum_balance | money }} {{ currency() }}
+              </p>
+            }
+          </div>
+        }
+        @for (issue of selected.funding_issues; track $index) {
+          <p class="form-error">
+            {{ t('workbench.fundShortfall') }} · {{ fundName(issue.fund_id) }} ·
+            {{ accountName(issue.account_id) }} · {{ issue.on | textDate }}:
+            {{ issue.shortfall | money }} {{ currency() }}
+          </p>
+        }
+      </section>
+      @if (selected.estimates.length) {
+        <section class="panel">
+          <h2>{{ t('workbench.estimateEvidence') }}</h2>
+          <p>{{ t('workbench.historyMethod') }}</p>
+          @for (e of selected.estimates; track e.id) {
+            <details>
+              <summary>
+                {{ e.mode === 'history' ? t('workbench.history') : t('workbench.manual') }} ·
+                {{ categoryName(e.category_id) }} · {{ accountName(e.account_id) }} ·
+                {{ e.monthly_amount | money }} {{ currency() }} / {{ t('workbench.month') }}
+              </summary>
+              <p>
+                {{ t('workbench.residual') }}: {{ e.projected_residual | money }} {{ currency() }}
+              </p>
+              <p>
+                {{ t('workbench.plannedOffset') }}: {{ e.planned_offset | money }} {{ currency() }}
+              </p>
+              <p>{{ t('workbench.sourceCount', { count: e.operation_ids.length }) }}</p>
+              @if (e.mode === 'history' && e.mean_absolute_error !== null) {
+                <p>
+                  {{ t('workbench.backtest') }}: {{ e.mean_absolute_error | money }}
+                  {{ currency() }}
+                </p>
+              } @else {
+                <p>{{ t('workbench.noBacktest') }}</p>
+              }
+              <div class="history-months">
+                @for (m of e.history; track m.month) {
+                  <p>
+                    {{ m.month | textDate }} · {{ t('workbench.actual') }} {{ m.actual | money }}
+                    {{ currency() }} · {{ t('workbench.predicted') }} {{ m.predicted | money }}
+                    {{ currency() }}
+                  </p>
+                }
+              </div>
+              <p class="hint">{{ t('workbench.historyLimit') }}</p>
+            </details>
+          }
+        </section>
+      }
+      <app-scenarios-page [embedded]="true" [comparison]="selected.comparison" />
+    }
+  }
+  <section class="panel">
+    <div class="source-actions">
+      <h2>{{ t('workbench.savedScenarios') }}</h2>
+      <button type="button" class="secondary" (click)="reloadSaved()" [disabled]="saving()">
+        {{ t('workbench.reloadSaved') }}
+      </button>
+    </div>
+    @if (!saved().length) {
+      <p>{{ t('workbench.noSaved') }}</p>
+    }
+    @if (pendingOpen(); as pending) {
+      <div role="alert">
+        <p>{{ t('workbench.replaceDraft') }}</p>
+        <button type="button" (click)="open(pending)">{{ t('workbench.openReplace') }}</button
+        ><button type="button" class="secondary" (click)="pendingOpen.set(null)">
+          {{ t('workbench.cancel') }}
+        </button>
+      </div>
+    }
+    @for (entry of saved(); track entry.id) {
+      <div class="source-actions saved-entry">
+        <span
+          ><strong>{{ entry.name }}</strong> · {{ entry.workspace.variants.length }}
+          {{ t('workbench.variants') }}</span
+        >
+        <div class="actions">
+          <button
+            type="button"
+            class="secondary"
+            (click)="requestOpen(entry)"
+            [disabled]="busy() || loading() || saving()"
+          >
+            {{ t('workbench.open') }}</button
+          ><button
+            type="button"
+            class="secondary"
+            (click)="pendingDelete.set(entry.id)"
+            [disabled]="saving()"
+          >
+            {{ t('workbench.remove') }}
+          </button>
+        </div>
+        @if (pendingDelete() === entry.id) {
+          <p>{{ t('workbench.deleteHint') }}</p>
+          <button type="button" (click)="removeSaved(entry)" [disabled]="saving()">
+            {{ t('workbench.confirmDelete') }}</button
+          ><button type="button" class="secondary" (click)="pendingDelete.set('')">
+            {{ t('workbench.cancel') }}
+          </button>
+        }
+      </div>
+    }
+  </section>
+</section>

@@ -99,6 +99,8 @@ def fund_response(session: Session, fund_id: UUID) -> FundResponse:
 
 
 __all__ = [
+    "projection_positions",
+    "funded_expense_ids",
     "projection_funds",
     "FundBalanceError",
     "DynamicFundTargetsRequiredError",
@@ -160,3 +162,34 @@ __all__ = [
     "update_fund",
     "validate_account_coverage",
 ]
+
+
+def projection_positions(session: Session) -> tuple[tuple[UUID, UUID, Decimal], ...]:
+    from sqlalchemy import func, select
+
+    from app.modules.funds.models import FundMovement
+
+    return tuple(
+        (fund, account, Decimal(amount))
+        for fund, account, amount in session.execute(
+            select(FundMovement.fund_id, FundMovement.account_id, func.sum(FundMovement.amount))
+            .group_by(FundMovement.fund_id, FundMovement.account_id)
+            .order_by(FundMovement.fund_id, FundMovement.account_id)
+        ).all()
+    )
+
+
+def funded_expense_ids(session: Session) -> frozenset[UUID]:
+    from sqlalchemy import select
+
+    from app.modules.funds.models import FundMovement
+
+    return frozenset(
+        value
+        for value in session.scalars(
+            select(FundMovement.operation_id).where(
+                FundMovement.operation_id.is_not(None), FundMovement.amount < 0
+            )
+        ).all()
+        if value is not None
+    )

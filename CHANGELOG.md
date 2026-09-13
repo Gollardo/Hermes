@@ -1,14 +1,21 @@
 # Changelog
 
-## Unreleased — Oracle deterministic scenarios
+## Unreleased — Oracle decision workspaces
 
+- Add composed expense, income, transfer, recurrence, amount/date and exclusion
+  alternatives, saved inputs, bounded amount/date search and per-account/fund
+  feasibility with a complete RU/EN workspace.
+- Add explicit everyday-spending envelopes from manual input or three completed
+  months of history, outlier review, rolling error evidence and no double counting.
+- Add migration `0017_saved_scenarios` and compatible optional schema-1 backup
+  metadata; preserve financial rows and old single-decision API compatibility.
 - Add temporary purchase, income, amount-change and date-move comparisons from
   one database-enforced read-only MVCC snapshot, with exact cash/fund projections.
 - Add separate user/system risk boundaries, daily stress intervals, provenance,
   source-conflict recovery and a complete RU/EN What if? interface.
 - Correct free-money forecasting for dynamic overflow placed in reserve.
-- Add migration `0016_oracle_read_index`; no scenario persistence or backup
-  format change. Existing Forecast, Scheduling and import workflows remain intact.
+- The original `0016_oracle_read_index` remains unchanged; 0017 adds separate
+  hypothesis persistence. Existing Forecast, Scheduling and import workflows remain intact.
 
 
 All notable changes to this project will be documented in this file.

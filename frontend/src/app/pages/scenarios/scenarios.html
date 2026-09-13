@@ -1,155 +1,158 @@
 <section class="oracle-page">
-  <header class="oracle-header">
-    <div>
-      <p class="eyebrow">{{ t('oracle.title') }}</p>
-      <h1>{{ t('oracle.whatIf') }}</h1>
-      <p>{{ t('oracle.intro') }}</p>
-    </div>
-    <a class="button-link secondary" routerLink="/forecast">{{ t('app.forecast') }}</a>
-  </header>
-  <p class="source-note">
-    {{ t('oracle.materialized') }} <a routerLink="/calendar">{{ t('forecast.openCalendar') }}</a>
-  </p>
-  @if (error(); as message) {
-    <p class="form-error" role="alert">{{ message }}</p>
-  }
-  @if (loading()) {
-    <p role="status">{{ t('oracle.loading') }}</p>
-  }
-  <div class="source-actions">
-    <button
-      type="button"
-      class="secondary"
-      (click)="refresh()"
-      [disabled]="loading() || calculating()"
-    >
-      {{ t('oracle.refresh') }}
-    </button>
-    @if (context(); as ctx) {
-      <span>{{ t('oracle.actualDate') }} {{ ctx.today | textDate }}</span>
+  @if (!embedded()) {
+    <header class="oracle-header">
+      <div>
+        <p class="eyebrow">{{ t('oracle.title') }}</p>
+        <h1>{{ t('oracle.whatIf') }}</h1>
+        <p>{{ t('oracle.intro') }}</p>
+      </div>
+      <a class="button-link secondary" routerLink="/forecast">{{ t('app.forecast') }}</a>
+    </header>
+    <p class="source-note">
+      {{ t('oracle.materialized') }} <a routerLink="/calendar">{{ t('forecast.openCalendar') }}</a>
+    </p>
+    @if (error(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
     }
-  </div>
-  @if (context(); as ctx) {
-    <form class="panel scenario-form" (ngSubmit)="calculate()">
-      <fieldset [disabled]="loading() || calculating()">
-        <legend>{{ t('oracle.hypothesis') }}</legend>
-        <div class="form-grid">
-          <label
-            >{{ t('oracle.action') }}
-            <select name="action" [ngModel]="action()" (ngModelChange)="changeAction($event)">
-              <option value="expense">{{ t('oracle.expense') }}</option>
-              <option value="income">{{ t('oracle.income') }}</option>
-              <option value="amount">{{ t('oracle.amountChange') }}</option>
-              <option value="move">{{ t('oracle.move') }}</option>
-            </select>
-          </label>
-          <div>
-            <label for="oracle-scope">{{ t('oracle.scope') }}</label>
-            <app-entity-combobox
-              inputId="oracle-scope"
-              name="scope"
-              [options]="accountOptions()"
-              [allowEmpty]="true"
-              [placeholder]="t('accounts.allAccounts')"
-              [emptyLabel]="t('accounts.allAccounts')"
-              [ngModel]="scope()"
-              (ngModelChange)="scope.set($event); invalidate()"
-            />
-          </div>
-          <label
-            >{{ t('forecast.period') }}
-            <select
-              name="horizon"
-              [ngModel]="horizon()"
-              (ngModelChange)="horizon.set($event); invalidate()"
-            >
-              @for (item of horizons(); track item.value) {
-                <option [value]="item.value">{{ item.label }}</option>
-              }
-            </select>
-          </label>
-          @if (isNew()) {
-            <div>
-              <label for="oracle-account">{{ t('forecast.account') }}</label>
-              <app-entity-combobox
-                inputId="oracle-account"
-                name="account"
-                [options]="activeOptions()"
-                [ngModel]="account()"
-                (ngModelChange)="account.set($event); invalidate()"
-                [accessibleLabel]="t('forecast.account')"
-              />
-            </div>
-          } @else {
-            <div class="plan-choice">
-              <label for="oracle-plan">{{ t('oracle.plan') }}</label>
-              <app-entity-combobox
-                inputId="oracle-plan"
-                name="plan"
-                [options]="planOptions()"
-                [ngModel]="occurrence()"
-                (ngModelChange)="choosePlan($event)"
-                [accessibleLabel]="t('oracle.plan')"
-              />
-              @if (selectedPlan(); as plan) {
-                <small
-                  >{{ plan.due_on | textDate }} · {{ plan.amount | money }} {{ currency() }}</small
-                >
-              }
-              @if (!plans().length) {
-                <small>{{ t('oracle.noPlans') }}</small>
-              }
-            </div>
-          }
-          @if (action() !== 'move') {
+    @if (loading()) {
+      <p role="status">{{ t('oracle.loading') }}</p>
+    }
+    <div class="source-actions">
+      <button
+        type="button"
+        class="secondary"
+        (click)="refresh()"
+        [disabled]="loading() || calculating()"
+      >
+        {{ t('oracle.refresh') }}
+      </button>
+      @if (context(); as ctx) {
+        <span>{{ t('oracle.actualDate') }} {{ ctx.today | textDate }}</span>
+      }
+    </div>
+    @if (context(); as ctx) {
+      <form class="panel scenario-form" (ngSubmit)="calculate()">
+        <fieldset [disabled]="loading() || calculating()">
+          <legend>{{ t('oracle.hypothesis') }}</legend>
+          <div class="form-grid">
             <label
-              >{{ t('oracle.amount') }} · {{ currency() }}
+              >{{ t('oracle.action') }}
+              <select name="action" [ngModel]="action()" (ngModelChange)="changeAction($event)">
+                <option value="expense">{{ t('oracle.expense') }}</option>
+                <option value="income">{{ t('oracle.income') }}</option>
+                <option value="amount">{{ t('oracle.amountChange') }}</option>
+                <option value="move">{{ t('oracle.move') }}</option>
+              </select>
+            </label>
+            <div>
+              <label for="oracle-scope">{{ t('oracle.scope') }}</label>
+              <app-entity-combobox
+                inputId="oracle-scope"
+                name="scope"
+                [options]="accountOptions()"
+                [allowEmpty]="true"
+                [placeholder]="t('accounts.allAccounts')"
+                [emptyLabel]="t('accounts.allAccounts')"
+                [ngModel]="scope()"
+                (ngModelChange)="scope.set($event); invalidate()"
+              />
+            </div>
+            <label
+              >{{ t('forecast.period') }}
+              <select
+                name="horizon"
+                [ngModel]="horizon()"
+                (ngModelChange)="horizon.set($event); invalidate()"
+              >
+                @for (item of horizons(); track item.value) {
+                  <option [value]="item.value">{{ item.label }}</option>
+                }
+              </select>
+            </label>
+            @if (isNew()) {
+              <div>
+                <label for="oracle-account">{{ t('forecast.account') }}</label>
+                <app-entity-combobox
+                  inputId="oracle-account"
+                  name="account"
+                  [options]="activeOptions()"
+                  [ngModel]="account()"
+                  (ngModelChange)="account.set($event); invalidate()"
+                  [accessibleLabel]="t('forecast.account')"
+                />
+              </div>
+            } @else {
+              <div class="plan-choice">
+                <label for="oracle-plan">{{ t('oracle.plan') }}</label>
+                <app-entity-combobox
+                  inputId="oracle-plan"
+                  name="plan"
+                  [options]="planOptions()"
+                  [ngModel]="occurrence()"
+                  (ngModelChange)="choosePlan($event)"
+                  [accessibleLabel]="t('oracle.plan')"
+                />
+                @if (selectedPlan(); as plan) {
+                  <small
+                    >{{ plan.due_on | textDate }} · {{ plan.amount | money }}
+                    {{ currency() }}</small
+                  >
+                }
+                @if (!plans().length) {
+                  <small>{{ t('oracle.noPlans') }}</small>
+                }
+              </div>
+            }
+            @if (action() !== 'move') {
+              <label
+                >{{ t('oracle.amount') }} · {{ currency() }}
+                <input
+                  name="amount"
+                  appDecimalInput
+                  inputmode="decimal"
+                  required
+                  [ngModel]="amount()"
+                  (ngModelChange)="amount.set($event); invalidate()"
+                />
+              </label>
+            }
+            @if (action() !== 'amount') {
+              <label
+                >{{ t('oracle.date') }}
+                <input
+                  name="date"
+                  type="date"
+                  required
+                  [min]="ctx.today"
+                  [max]="ctx.maximum_on"
+                  [ngModel]="dueOn()"
+                  (ngModelChange)="dueOn.set($event); invalidate()"
+                />
+              </label>
+            }
+            <label
+              >{{ t('oracle.stopLoss') }} · {{ currency() }}
               <input
-                name="amount"
+                name="stopLoss"
                 appDecimalInput
                 inputmode="decimal"
-                required
-                [ngModel]="amount()"
-                (ngModelChange)="amount.set($event); invalidate()"
+                [ngModel]="stopLoss()"
+                (ngModelChange)="stopLoss.set($event); invalidate()"
               />
             </label>
-          }
-          @if (action() !== 'amount') {
-            <label
-              >{{ t('oracle.date') }}
-              <input
-                name="date"
-                type="date"
-                required
-                [min]="ctx.today"
-                [max]="ctx.maximum_on"
-                [ngModel]="dueOn()"
-                (ngModelChange)="dueOn.set($event); invalidate()"
-              />
-            </label>
-          }
-          <label
-            >{{ t('oracle.stopLoss') }} · {{ currency() }}
-            <input
-              name="stopLoss"
-              appDecimalInput
-              inputmode="decimal"
-              [ngModel]="stopLoss()"
-              (ngModelChange)="stopLoss.set($event); invalidate()"
-            />
-          </label>
+          </div>
+          <p class="hint">{{ t('oracle.freeOnly') }} {{ t('oracle.stopHint') }}</p>
+        </fieldset>
+        <div class="actions">
+          <button type="submit" [disabled]="loading() || calculating() || stale()">
+            {{ calculating() ? t('oracle.calculating') : t('oracle.calculate') }}
+          </button>
+          <button type="button" class="secondary" (click)="discard()" [disabled]="loading()">
+            {{ t('oracle.discard') }}
+          </button>
         </div>
-        <p class="hint">{{ t('oracle.freeOnly') }} {{ t('oracle.stopHint') }}</p>
-      </fieldset>
-      <div class="actions">
-        <button type="submit" [disabled]="loading() || calculating() || stale()">
-          {{ calculating() ? t('oracle.calculating') : t('oracle.calculate') }}
-        </button>
-        <button type="button" class="secondary" (click)="discard()" [disabled]="loading()">
-          {{ t('oracle.discard') }}
-        </button>
-      </div>
-    </form>
+      </form>
+    }
   }
   @if (result(); as r) {
     <section class="panel answer" aria-live="polite">
@@ -195,11 +198,12 @@
       @if (r.suggested_boundary; as suggestion) {
         <details [open]="showSuggestion()" (toggle)="showSuggestion.set($any($event.target).open)">
           <summary>
-            {{ t('oracle.suggestion') }}: {{ suggestion.amount | money }} {{ currency() }}
+            {{ t(embedded() ? 'workbench.suggestion' : 'oracle.suggestion') }}:
+            {{ suggestion.amount | money }} {{ currency() }}
           </summary>
           <p>{{ t('oracle.method') }}</p>
           <p>{{ suggestion.from_on | textDate }} — {{ suggestion.through_on | textDate }}</p>
-          <p>{{ t('oracle.methodLimit') }}</p>
+          <p>{{ t(embedded() ? 'workbench.methodLimit' : 'oracle.methodLimit') }}</p>
         </details>
       } @else {
         <p>{{ t('oracle.noSuggestion') }}</p>
@@ -220,7 +224,7 @@
                 { key: 'stop', title: t('oracle.stopLoss'), value: side.branch.stop_loss_risk },
                 {
                   key: 'suggested',
-                  title: t('oracle.suggestion'),
+                  title: t(embedded() ? 'workbench.suggestion' : 'oracle.suggestion'),
                   value: showSuggestion() ? side.branch.suggested_risk : null,
                 },
               ];
@@ -326,7 +330,13 @@
                     @for (event of point.events; track event.occurrence_id) {
                       <li>
                         <strong>{{
-                          isHypothesis(event) ? t('oracle.hypothesis') : t('oracle.plan')
+                          event.origin === 'estimate'
+                            ? t('workbench.estimate')
+                            : event.origin === 'virtual'
+                              ? t('workbench.virtual')
+                              : isHypothesis(event)
+                                ? t('oracle.hypothesis')
+                                : t('oracle.plan')
                         }}</strong>
                         · {{ event.description || typeLabel(event.type) }} ·
                         {{ event.account_name }}
@@ -334,7 +344,7 @@
                           {{ t('oracle.effect') }}: {{ event.effect | money }} {{ currency() }} ·
                           {{ t('oracle.amount') }}: {{ event.amount | money }} {{ currency() }}
                         </p>
-                        @if (!isHypothesis(event)) {
+                        @if (!event.origin || event.origin === 'plan') {
                           <a
                             routerLink="/calendar"
                             [queryParams]="{
@@ -383,7 +393,7 @@
                 }
               </ul>
             }
-            @if (event.before_on) {
+            @if (event.before_on && event.source_available !== false) {
               <a
                 routerLink="/calendar"
                 [queryParams]="{ month: event.before_on.slice(0, 7), focus: event.occurrence_id }"

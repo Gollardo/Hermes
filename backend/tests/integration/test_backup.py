@@ -468,7 +468,7 @@ def test_restore_complete_backup_into_clean_initialized_target(
         restored_occurrence = next(
             item
             for item in client.get("/api/v1/scheduling/occurrences?page_size=367").json()["items"]
-            if item["rule_id"] == restored_rule["id"]
+            if item["id"] == occurrence["id"]
         )
         assert restored_occurrence["series_shift_days"] == 4
         assert restored_occurrence["due_on"] == shifted_due_on.isoformat()

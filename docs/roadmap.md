@@ -72,34 +72,35 @@ The hosted platform remains a separate architectural program.
 
 ## 2.0.0 — Oracle: deterministic What if? mode
 
-Implemented and verified on 2026-09-11; unreleased. See [ADR 0006](decisions/0006-deterministic-oracle.md)
-and [acceptance](operations/oracle-acceptance-2026-09-11.md) for bounded commands,
-source completeness and remaining owner/release review.
+The first slice was verified on 2026-09-11. The owner authorized its expansion
+on 2026-09-13 after reviewing the limited usefulness of isolated decisions.
+Saved comparison capabilities formerly planned under 2.1.0 are moved into this
+unreleased scope. See [ADR 0007](decisions/0007-oracle-decision-workspaces.md)
+and [workspace acceptance](operations/oracle-workspace-acceptance-2026-09-13.md).
+Release publication remains a separate owner decision.
 
-- [x] Create a temporary purchase, income, amount-change, or date-shift scenario
-  without changing the ledger or confirmed plan.
-- [x] Provide an ordinary structured form that does not depend on AI.
-- [x] Calculate baseline and alternative forecasts from one snapshot, scope,
-  and horizon.
-- [x] Answer “what changes” before showing a chart: delta in free money,
-  minimum, date, stress window, and affected funds or events.
-- [x] Support a user-defined stop-loss and a separate, explainable risk boundary
-  suggested by the system.
-- [x] Expose assumptions and sources, and distinguish facts, plans, scenarios,
-  and estimates.
-- [x] Discard a scenario on reset, leave or reload; no implicit saving or plan
-  creation. Explicit saving and plan-draft transfer remain scoped to `2.1.0`.
-- [x] Cover scenario calculation with exact-decimal, snapshot-consistency, and
-  no-side-effect tests.
+- [x] Compose multiple expenses, incomes, transfers and recurring changes.
+- [x] Edit amount/date together or exclude one/following actionable sources.
+- [x] Complete missing annual schedule dates without writing Calendar rows.
+- [x] Compare up to five alternatives from one coherent snapshot.
+- [x] Explicitly save, copy and reopen named hypothesis inputs with version conflicts.
+- [x] Include saved scenarios in validated atomic backup/restore.
+- [x] Add manual or history-derived ordinary-spending envelopes without double
+  counting named plans; expose exclusions, incomplete coverage and rolling MAE.
+- [x] Apply manual expense/income stress assumptions with disclosed bounds.
+- [x] Check scope buffer, account cash and explicit fund coverage together.
+- [x] Find a bounded maximum expense amount or earliest feasible one-off date.
+- [x] Preserve exact arithmetic, source provenance, stale-source review, daily
+  risks and no financial side effects, with unit/integration/browser checks.
 
-## 2.1.0 — save and compare scenarios
+## 2.1.0 — reviewed scenario-to-plan workflow
 
-- [ ] Named scenarios that do not become confirmed plans.
-- [ ] Compare several amount, date, or decision-set alternatives.
-- [ ] Detect a stale baseline and recalculate explicitly from new facts.
-- [ ] Transfer reviewed fields only into the plan-draft composer.
-- [ ] Define a backup/restore policy for saved scenarios without conversation
-  history.
+Saved comparison and backup work is implemented in the expanded 2.0.0 scope.
+The remaining plan-write boundary is deliberately deferred:
+
+- [ ] Transfer reviewed fields only into a plan-draft composer.
+- [ ] Define reconciliation of recurring edits, exclusions and virtual sources
+  before proposing a plan write; never treat an estimate as an approved payment.
 
 ## 2.2.0 — local conversational input for Oracle
 
@@ -196,6 +197,10 @@ may ship as `4.x` minor versions without changing import ownership.
   methodology.
 
 ## 6.1.0 — history-informed Oracle
+
+The expanded 2.0.0 slice already provides a bounded three-month category mean
+and rolling backtest for explicit ordinary-spending envelopes. It does not
+complete the broader statistical/model capabilities below.
 
 - [ ] Optional local execution without sending financial data to an external AI
   service.

@@ -176,6 +176,11 @@ confirmation keeps its existing date policy. See [ADR 0005](../decisions/0005-st
 The public planned-occurrence snapshot now includes its optimistic version.
 Oracle requests the lock-free variant only inside a caller-owned repeatable-read
 transaction. The ordinary Forecast caller retains shared locks by default.
-Oracle neither generates nor modifies occurrences; explicit Calendar
-materialization remains the way to refresh missing future plans. Revision
+Legacy Oracle comparison consumes materialized occurrences. Decision workspaces
+use public `projection_schedule`: actionable persisted occurrences plus missing
+recurrence dates generated in memory. Every persisted `(rule, scheduled_on)`
+identity suppresses a virtual duplicate, including confirmed/cancelled exceptions.
+Virtual IDs derive deterministically from rule and scheduled date; rule versions
+and source identity protect review. No occurrence is written or modified.
+The ordinary Calendar materialization flow remains unchanged. Revision
 `0016_oracle_read_index` adds a partial due-date/identity index for actionable reads.

@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-09-11. This is the current release snapshot, not a task log.
+Last reviewed: 2026-09-13. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -28,7 +28,7 @@ Owner acceptance and a separate release decision remain before publication.
 | Funds | Virtual allocations, targets, manual/dynamic percentages, per-account coverage and reserve | [Funds](domains/funds.md) |
 | Plans | Recurring rules and one-off plans, postpone/cancel/confirm lifecycle, series shifts and compact calendar | [Scheduling](domains/scheduling.md) |
 | Forecast | Read-only exact free/total projections, fund effects, risks and event explanations | [Forecasting](domains/forecasting.md) |
-| Oracle | Unreleased temporary decisions, coherent comparisons, daily risk windows and explainable cash/fund effects | [Scenarios](domains/scenarios.md) |
+| Oracle | Unreleased composed/saved alternatives, ordinary-spending envelopes, stress, exact search and account/fund feasibility | [Scenarios](domains/scenarios.md) |
 | Reports | Posted income/expense totals, category breakdown and source operations | [Reports](domains/reports.md) |
 | Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions and explicit fact dates | [Import/export](domains/import-export.md) |
 | Portability | Schema-1 JSON and protected Hermes V1 backup, validated atomic restore | [Import/export](domains/import-export.md) |
@@ -140,7 +140,7 @@ was changed, and private fixtures/screenshots are outside the repository.
 ## Scope boundaries
 
 The [roadmap](roadmap.md) tracks unimplemented capabilities and deferred work.
-Current exclusions include saved Oracle scenarios, AI and historical prediction,
+Current exclusions include Oracle plan-draft conversion, AI and probabilistic prediction,
 debts, budgeting, multi-currency, multi-user access and background workers.
 Implemented domain documentation records narrower limits such as recurrence
 ranges, account overdraft policy and one-fund-per-operation support.
@@ -179,41 +179,55 @@ bank reservation model. The production build warns about the initial bundle (527
 account/directory styles. No runtime infrastructure or dependency was added.
 
 
-## Unreleased Oracle vertical slice
+## Unreleased Oracle decision workspaces
 
-Implementation authorized on 2026-09-11. A separate Scenarios module uses public
-source contracts and Forecasting's detached exact projection. A database-enforced
-read-only repeatable-read snapshot supplies both branches, with source/version
-conflicts, daily stress windows, optional ephemeral stop-loss, an explainable
-known-plan drawdown boundary, global fund/reserve effects and a complete RU/EN
-interface. The shared forecast now correctly subtracts dynamic overflow placed
-in reserve from future free money. See [ADR 0006](decisions/0006-deterministic-oracle.md)
-and the [acceptance record](operations/oracle-acceptance-2026-09-11.md).
+The first deterministic slice was verified on 2026-09-11; its historical checks
+remain in [the original acceptance record](operations/oracle-acceptance-2026-09-11.md).
+The owner authorized the broader decision-workspace scope on 2026-09-13.
 
-Migration `0016_oracle_read_index` adds only an actionable-occurrence read index;
-upgrade/downgrade preserves financial rows. No scenario tables or backup format
-changes are introduced. Existing published migrations and the import slice are
-preserved. Application release metadata remains `1.1.0` until a release decision.
+Implemented: multiple typed and recurring decisions, one/following source edits
+and exclusions, up to five independent alternatives, explicit saved inputs and
+backup support, manual/history ordinary-spending envelopes, reviewed exclusions,
+rolling MAE, manual expense/income stress, account/fund/scope constraints and
+bounded amount/date search. Missing annual recurrence dates are completed purely
+in memory. Baseline and alternatives share one read-only repeatable-read snapshot;
+no calculation writes facts or plans. See [ADR 0007](decisions/0007-oracle-decision-workspaces.md).
 
-Verification: 154 default backend tests passed (88 PostgreSQL-gated tests skipped
-there), all 89 PostgreSQL 17 integration tests passed, and 187 frontend tests
-passed. Lint, formatting, catalog checks, mypy, TypeScript, documentation checks,
-frontend production build and production Compose image build passed. The image
-returned health `ok`, served `/oracle` and passed `alembic check` at
-`0016_oracle_read_index`. Focused Oracle frontend tests passed again after the
-final typed-provenance refinement. Browser checks used synthetic data and covered
-purchase/move/amount/income consequences, distinct risk thresholds, source
-choices, day details, keyboard selection/submission, RU/EN and responsive widths.
-They do not certify all browser/assistive-technology combinations or a production
-upgrade of the owner's data.
+Migration `0017_saved_scenarios` adds independent versioned JSONB hypothesis
+metadata and its constraints. Upgrade/downgrade preserves financial rows;
+downgrade removes saved inputs. Older schema-1 backups restore with an empty
+saved collection. New exports require a compatible reader. Published migrations
+are unchanged; release metadata remains `1.1.0`.
 
-Limits: one decision at a time, known materialized plans only, no automatic
-Calendar synchronization, no fund-funded synthetic expenses, no saved scenarios,
-no plan-draft conversion and no AI/history-based prediction. The annual snapshot
-and complete explanations remain synchronous and can become expensive on large
-histories. Snapshot identities conservatively include global fund/source changes.
-The suggested boundary is a disclosed planning heuristic, not a living-cost
-model. The initial frontend bundle is approximately 545 kB against the existing
-500 kB warning budget; shared eager RU/EN catalogs increased it. Inherited
-stylesheet budget warnings remain. Index creation can briefly block schedule
-writes during migration; use a maintenance upgrade with a verified backup.
+Verification is maintained in the
+[workspace acceptance record](operations/oracle-workspace-acceptance-2026-09-13.md).
+Lint, formatting, catalog checks, mypy, TypeScript, Markdown checks and the
+frontend production build passed. A fresh Compose build timed out resolving its
+Docker Registry syntax image; a cached-runtime image with current code/static
+assets passed health, `/oracle` and Alembic drift checks at 0017. Repeat a clean
+registry-based build before release. The initial bundle is 570.05 kB against
+the 500 kB warning budget; inherited style-budget warnings remain.
+
+The full test run passed 179 default backend tests (95 PostgreSQL-gated skips),
+96 PostgreSQL 17 integration tests and 197 frontend tests. The backup regression
+now selects the restored occurrence by ID: a shifted series can introduce an
+earlier actionable date, so list position was not stable identity.
+
+The estimator is deliberately simple and does not certify history completeness.
+Three completed training months, six displayed historical months and bounded
+manual stress are engineering defaults. Missing records, seasonality and partial
+categories can mislead; daily allocation is uniform by assumption. No probability
+or guaranteed future balance is claimed. Daily feasibility does not validate
+intraday execution order. Unsaved edits remain browser-memory only.
+
+Measured local detached calculation with 1,000 source events, 5 alternatives,
+50 changes each, 1 annual envelope and 2 accounts: 0.305 seconds to compare,
+1.468 seconds/33 evaluations for amount search, and 15.118 seconds/366 evaluations
+for a full-year date search without a solution. The detailed comparison serialized
+to 10.63 MB; explanation duplication and bounded synchronous searches are known
+performance debt. These are synthetic measurements, not latency guarantees or
+maximum-capacity certification. No external infrastructure/dependency was added.
+
+Next: review representative owner decisions and ordinary-spending categories on a
+disposable restored backup; assess estimate quality and acceptable response sizes,
+then make a separate release decision. No production deployment occurred.

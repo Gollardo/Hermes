@@ -20,7 +20,7 @@
 | `imports` | parse, map, preview, duplicate candidates | owning modules' validation/write commands |
 | `backup` | versioned plaintext/protected export, crypto envelope and restore orchestration | module-owned export/import contracts |
 
-`scenarios` is implemented as a read-side module. It uses Forecasting's public
+`scenarios` is implemented with read-only calculations and a separate saved-input metadata lifecycle. It uses Forecasting's public
 snapshot/projection contract and owning modules' public source reads. `assistant`,
 `liabilities` and `debts` remain planned; Imports is implemented separately.
 Oracle owns no financial tables and never uses a posting command.
@@ -149,3 +149,14 @@ contracts once and passes detached values to Forecasting. Forecasting owns
 exact free/total and sequential fund projection; Scenarios owns overlays,
 comparison and explainable boundaries. See [ADR 0006](../decisions/0006-deterministic-oracle.md).
 Existing Forecast routes keep their established shared-lock behavior.
+
+## Oracle workspace extension
+
+Scenarios consumes Categories' projection identities, Operations' bounded expense
+history, Funds' account positions/reserve/funded-fact identities and Scheduling's
+virtual schedule through public `contracts.py` surfaces. Forecasting exposes
+`project_program` for chronological cash and fund effects; Scenarios never
+imports its private services. `saved_scenarios` is Scenarios-owned metadata.
+Backup imports only Scenarios' `backup.py` persistence/validation surface. Compare
+and solve retain the read-only transaction; metadata CRUD uses ordinary atomic
+transactions and optimistic versions. See [ADR 0007](../decisions/0007-oracle-decision-workspaces.md).

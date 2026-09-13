@@ -36,6 +36,7 @@ from app.modules.backup.schemas import (
     OperationRecord,
     RecurringRuleRecord,
     RestoreResponse,
+    SavedScenarioRecord,
     SettingsRecord,
 )
 from app.modules.categories.backup import Category
@@ -51,6 +52,7 @@ from app.modules.imports.backup import ImportProfile, ImportReceipt
 from app.modules.imports.schemas import Mapping
 from app.modules.operations.backup import AccountMovement, FinancialOperation
 from app.modules.operations.contracts import OperationType
+from app.modules.scenarios.backup import SavedScenario, validate_saved_workspace
 from app.modules.scheduling.backup import (
     ExpectedOccurrence,
     OccurrenceSourceKind,
@@ -66,6 +68,7 @@ SCHEMA_VERSION = 1
 RESTORE_CONFIRMATION = "ЗАМЕНИТЬ ВСЕ ДАННЫЕ"
 
 _TABLES = (
+    "saved_scenarios",
     "import_profiles",
     "import_receipts",
     "application_settings",
@@ -131,6 +134,7 @@ def create_backup(session: Session) -> BackupDocument:
     if settings is None:
         raise BackupInvariantError("Application settings are missing")
     data = BackupData(
+        saved_scenarios=[_record(SavedScenarioRecord, row) for row in _all(session, SavedScenario)],
         import_profiles=[_record(ImportProfileRecord, row) for row in _all(session, ImportProfile)],
         import_receipts=[_record(ImportReceiptRecord, row) for row in _all(session, ImportReceipt)],
         settings=_record(SettingsRecord, settings),
@@ -225,6 +229,12 @@ def preview_backup(document: BackupDocument) -> BackupPreviewResponse:
 
 
 def validate_document(data: BackupData) -> None:
+    if len({s.id for s in data.saved_scenarios}) != len(data.saved_scenarios):
+        raise BackupInvariantError("Duplicate saved scenario identity")
+    for saved in data.saved_scenarios:
+        if not saved.name.strip():
+            raise BackupInvariantError("Saved scenario name is blank")
+        validate_saved_workspace(saved.workspace)
     for profile in data.import_profiles:
         Mapping.model_validate(profile.mapping)
     for records, metadata_key in (
@@ -661,6 +671,7 @@ def restore_backup(session: Session, document: BackupDocument) -> RestoreRespons
     validate_document(document.data)
     _lock_tables(session, "ACCESS EXCLUSIVE")
     for model in (
+        SavedScenario,
         ImportReceipt,
         ImportProfile,
         ExpectedOccurrence,
@@ -683,6 +694,7 @@ def restore_backup(session: Session, document: BackupDocument) -> RestoreRespons
     settings.default_account_id = None
     for field, value in settings_values.items():
         setattr(settings, field, value)
+    _insert(session, SavedScenario, document.data.saved_scenarios)
     _insert(session, ImportProfile, document.data.import_profiles)
     _insert(session, ImportReceipt, document.data.import_receipts)
     _insert(session, Account, document.data.accounts)

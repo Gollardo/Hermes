@@ -60,7 +60,8 @@ class ForecastInputEvent:
     amount: Decimal
     allocated_to_funds: Decimal = Decimal(0)
     source_kind: OccurrenceSourceKind = OccurrenceSourceKind.RECURRING
-    origin: Literal["plan", "scenario"] = "plan"
+    origin: Literal["plan", "scenario", "estimate", "virtual"] = "plan"
+    free_adjustments: tuple[tuple[UUID, Decimal], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -481,7 +482,7 @@ def build_fund_forecast(
     )
 
 
-def _scope_effect(
+def _physical_scope_effect(
     event: ForecastInputEvent,
     account_id: UUID | None,
     balance_mode: ForecastBalanceMode,
@@ -546,3 +547,15 @@ def _event_response(
 
 def _money(value: Decimal) -> str:
     return format(value, "f")
+
+
+def _scope_effect(
+    event: ForecastInputEvent, account_id: UUID | None, balance_mode: ForecastBalanceMode
+) -> Decimal:
+    effect = _physical_scope_effect(event, account_id, balance_mode)
+    if balance_mode == ForecastBalanceMode.FREE:
+        effect += sum(
+            (value for account, value in event.free_adjustments if account_id in {None, account}),
+            Decimal(0),
+        )
+    return effect

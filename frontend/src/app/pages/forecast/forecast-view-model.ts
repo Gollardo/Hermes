@@ -3,7 +3,7 @@ export type ForecastBalanceMode = 'free' | 'total';
 export type ForecastOperationType = 'income' | 'expense' | 'transfer';
 
 export interface ForecastEvent {
-  origin?: 'plan' | 'scenario';
+  origin?: 'plan' | 'scenario' | 'estimate' | 'virtual';
   occurrence_id: string;
   due_on: string;
   type: ForecastOperationType;

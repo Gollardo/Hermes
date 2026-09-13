@@ -34,7 +34,7 @@ class ForecastBalanceMode(StrEnum):
 
 
 class ForecastEventResponse(BaseModel):
-    origin: Literal["plan", "scenario"] = "plan"
+    origin: Literal["plan", "scenario", "estimate", "virtual"] = "plan"
     occurrence_id: UUID
     rule_id: UUID | None
     source_kind: OccurrenceSourceKind

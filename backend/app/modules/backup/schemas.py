@@ -236,7 +236,17 @@ class ImportReceiptRecord(BackupModel):
     operation_id: UUID
 
 
+class SavedScenarioRecord(BackupModel):
+    id: UUID
+    name: str = Field(min_length=1, max_length=120)
+    version: int = Field(ge=1)
+    workspace: dict[str, Any]
+    created_at: AwareDatetime
+    updated_at: AwareDatetime
+
+
 class BackupData(BackupModel):
+    saved_scenarios: list[SavedScenarioRecord] = Field(default_factory=list, max_length=100)
     import_profiles: list[ImportProfileRecord] = Field(default_factory=list)
     import_receipts: list[ImportReceiptRecord] = Field(default_factory=list)
     settings: SettingsRecord
@@ -308,6 +318,7 @@ BackupEnvelope = BackupDocument | HermesBackup
 
 
 class BackupCounts(BackupModel):
+    saved_scenarios: int = 0
     accounts: int
     categories: int
     operations: int

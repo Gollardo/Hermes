@@ -44,6 +44,18 @@ export function apiErrorMessage(error: unknown, fallback: string | (() => string
     typeof detail.code === 'string'
   ) {
     const localized: Record<string, string> = {
+      scenario_overlap: t('workbench.errorOverlap'),
+      scenario_history_insufficient: t('workbench.errorHistory'),
+      scenario_history_source: t('workbench.errorHistorySource'),
+      scenario_event_limit: t('workbench.errorLimit'),
+      scenario_history_limit: t('workbench.errorHistoryLimit'),
+      scenario_saved_conflict: t('workbench.errorSavedConflict'),
+      scenario_saved_missing: t('workbench.errorSavedMissing'),
+      scenario_saved_limit: t('workbench.errorSavedLimit'),
+      scenario_category: t('workbench.errorCategory'),
+      scenario_fund: t('workbench.errorFund'),
+      scenario_series: t('workbench.errorSeries'),
+      scenario_solver_target: t('workbench.errorSolver'),
       scenario_stale: t('oracle.stale'),
       scenario_source: t('oracle.stale'),
       scenario_account: t('oracle.accountError'),

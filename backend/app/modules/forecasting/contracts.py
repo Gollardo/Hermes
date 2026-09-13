@@ -1,5 +1,6 @@
 """Public exact projection contract for read-side consumers."""
 
+from app.modules.forecasting.program import ProgramResult, project_program
 from app.modules.forecasting.projection import (
     ProjectionResult,
     ProjectionSnapshot,
@@ -16,3 +17,6 @@ __all__ = [
     "ForecastResponse",
     "horizon_end",
 ]
+
+
+__all__ += ["ProgramResult", "project_program"]

@@ -1,62 +1,75 @@
 # Oracle · What if?
 
-## Implemented first slice
+## Implemented workspace
 
-The owner authorized the bounded implementation on 2026-09-11. Oracle uses the
-existing light surfaces, forms, searchable source selectors and RU/EN contract.
-This does not approve a new design system. Its calculation and limits are in
-[Scenarios](../../domains/scenarios.md) and [ADR 0006](../../decisions/0006-deterministic-oracle.md).
+The 2026-09-13 owner-authorized expansion reuses the established light panels,
+forms, searchable account/category/plan selectors, details disclosures, inline
+confirmation and RU/EN contracts. It does not approve a new design system.
+See [domain rules](../../domains/scenarios.md) and
+[ADR 0007](../../decisions/0007-oracle-decision-workspaces.md).
 
-The Plan navigation contains “What if?”. Forecast also opens Oracle with its
-account and horizon. The mode compares free money by default and separately
-shows period-end physical totals; entering it never creates a plan.
+“What if?” remains in Plan navigation; Forecast passes its scope and horizon.
+The workspace starts without ordinary-spending assumptions and says so explicitly.
 
-## Flow
+## Flow and reading order
 
-1. Load source choices and show application date and the materialized-plan limit.
-2. Select a purchase/expense, income, occurrence amount replacement or date move.
-   Choose scope, horizon and all material inputs explicitly. New expenses do not
-   offer a fund source in this slice. Optional stop-loss remains visible.
-3. Calculate both branches from one coherent source snapshot.
-4. Read the consequence sentence, before/after end balance, minimum/date and exact
-   deltas before the chart. Risk sections compare zero, user and system boundaries.
-5. Inspect a date, the exact daily opening/closing balance and source events.
-   Synthetic events are labeled as hypotheses and have no Calendar source link.
-6. Change amount/date and explicitly recalculate, reset, or leave. There is no
-   save or plan-creation button in this slice.
+1. Inspect source date and the read-only annual schedule expansion policy.
+2. Choose name, comparison scope/horizon and minimum free-money buffer. Explicit
+   saving is separate from calculating; saved inputs never become plans.
+3. Add ordinary-spending categories with exact account/category choices. Select
+   a manual monthly total or three-month historical mean. Explain the subtraction
+   of actual and planned spending before presenting a prediction. Open history
+   to review or exclude exceptional facts, 30 entries per page.
+4. Create/copy up to five alternatives. Each contains multiple typed changes,
+   explicit funding, recurrence and one/following source edits or exclusions.
+   Show the active alternative, change count and enabled state. Disclose manual
+   expense/income stress below the decisions.
+5. Calculate all alternatives. Summary choices show constraint status, minimum,
+   end balance and delta before the comparison chart. Selecting one shows each
+   account's free/physical minimum, cash-gap windows and any fund shortfall.
+6. Inspect everyday-spending evidence, six historical months, available rolling
+   predictions/MAE, monthly amount, planned offset and projected residual.
+   Evidence distinguishes manual input, estimate and incomplete history.
+7. Inspect the existing exact chart, daily details, sources and downstream funds.
+   Stored plans have Calendar links; virtual plans and estimates have labels.
+8. Optionally choose an eligible expense for bounded amount/date search. Explain
+   eligibility and bounds. Review the proposed result, then explicitly apply and
+   recalculate. No solution does not clear inputs.
+9. Save, save as new, open or delete a named workspace. Replacing a dirty draft
+   requires inline confirmation. Saved-list version conflicts do not overwrite
+   another window; reload the list or save a separate copy.
 
-## Explanation and risk
+## Shared patterns and states
 
-The system suggestion explains maximum known planned drawdown and its period.
-It does not pretend to infer mandatory living expenses or sufficient historical
-coverage. Its disclosure can be hidden without changing the user's stop-loss.
-Stress intervals include exact minimum/date and recovery or non-recovery; buttons
-select the corresponding day in the shared details. Exact annual risks remain
-daily even when the chart displays monthly closings.
+The repeatable decision/envelope rows and alternative buttons are necessary to
+represent jointly evaluated decisions. They reuse existing form controls and
+panels; they are a local composition pattern, not a new global component system.
+The previous Oracle comparison component renders the selected alternative, so
+chart formatting, risk presentation and day exploration remain consistent.
 
-Baseline is dashed, alternative solid, zero and stop-loss have textual legends.
-The chart is supplementary: a keyboard-operable date input exposes exact daily
-values and source links. Affected events include changed downstream allocations;
-fund before/after values are explicitly global across accounts. The assumptions
-section distinguishes starting facts, known plans and unknown future spending.
+- Source loading and calculations disable dependent controls; duplicate requests
+  and late responses cannot relabel stale values.
+- Any input edit clears previous calculation and solver results.
+- Source conflicts preserve the workspace. Refresh displays changed sources;
+  explicit adoption updates versions while retaining edited amount/date. Missing
+  sources remain visible errors until replaced or removed.
+- API/network/resource-limit errors use stable localized messages and preserve
+  the draft. Incomplete history offers manual entry, never silent zero.
+- Unsaved drafts are browser-memory only; a visible dirty notice says that
+  leaving loses them. No autosave or navigation guard is promised.
+- Exact comma/dot input, two-place financial formatting and semantic labels apply
+  to every amount, percentage, source option and result. No financial calculation
+  uses JavaScript floating point.
+- Narrow screens retain the reading order and stack controls. Large results use
+  existing supplementary charts/details; risk is never encoded by color alone.
 
-## States and responsive behavior
+## Interpretation and exclusions
 
-- Loading sources disables entry; loading calculation prevents duplicate submit.
-- Changes clear the old result, so controls never relabel old amounts.
-- Stale sources require refresh and review before another explicit calculation;
-  entered amount/date/stop-loss remain intact.
-- Validation and network failures preserve recoverable input. Unknown server
-  prose is not rendered; stable codes use shared localized errors.
-- No plans does not disable a standalone hypothetical expense or income.
-- A change beyond the display horizon is explicitly disclosed.
-- Closing, resetting and leaving discard the scenario; late responses cannot
-  restore a discarded result.
-- On narrow screens the same reading order stacks into one column. Amounts keep
-  exact shared formatting, risk is not color-only, and input accepts comma/dot.
+Feasible means the stated daily/account/fund constraints pass under the selected
+assumptions. It is not a guarantee about unknown spending or intraday execution.
+Baseline drawdown includes configured ordinary-spending estimates and remains a
+separate warning boundary. Manual stress is not a confidence interval.
 
-## Deferred flows
-
-Saved alternatives and reviewed transfer into a plan composer belong to 2.1.0.
-AI-assisted input belongs to 2.2.0 and will not be required for structured use.
-Ranges, series edits and expense-from-fund scenarios are not implied by this UI.
+Plan creation, AI input, automatic categorization, probability bands, generic
+optimization, autosave and stored calculation history remain deferred. This
+screen does not contain a financial posting action.

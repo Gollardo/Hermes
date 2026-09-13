@@ -148,6 +148,8 @@ def category_name(session: Session, category_id: UUID) -> str | None:
 
 
 __all__ = [
+    "ProjectionCategory",
+    "projection_categories",
     "CategoryTemplateLanguage",
     "CategoryReferenceError",
     "CategoryPath",
@@ -161,3 +163,19 @@ __all__ = [
     "create_onboarding_categories",
     "validate_category_reference",
 ]
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectionCategory:
+    id: UUID
+    name: str
+    type: CategoryType
+    archived: bool
+
+
+def projection_categories(session: Session) -> tuple[ProjectionCategory, ...]:
+    paths = category_path_map(session)
+    return tuple(
+        ProjectionCategory(c.id, paths[c.id].name, c.type, c.archived_at is not None)
+        for c in session.scalars(select(Category).order_by(Category.id)).all()
+    )

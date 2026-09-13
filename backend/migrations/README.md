@@ -34,7 +34,10 @@ Later revisions extend the same linear history:
   Downgrade removes only this index. Upgrade builds the index transactionally
   and may briefly block schedule writes.
 
-`0016_oracle_read_index` is the current single head. Revision identifiers,
+- `0017_saved_scenarios` adds versioned named JSONB workspace metadata. Downgrade
+  discards those hypotheses only; financial tables and rows are preserved.
+
+`0017_saved_scenarios` is the current single head. Revision identifiers,
 rather than migration filenames, are the stable Alembic chain.
 
 Downgrading below `0013_fund_reserve` removes reserve movements and causal
