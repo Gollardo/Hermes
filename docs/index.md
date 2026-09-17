@@ -40,6 +40,7 @@ question by itself.
 - [Operations](domains/operations.md)
 - [Categories](domains/categories.md)
 - [Virtual funds](domains/funds.md)
+- [Replacement savings](domains/depreciation.md)
 - [Scheduling](domains/scheduling.md)
 - [Forecasting](domains/forecasting.md)
 - [Financial scenarios](domains/scenarios.md)
@@ -57,6 +58,7 @@ question by itself.
   [dashboard](ui-ux/screens/dashboard.md),
   [operation entry](ui-ux/screens/operation-entry.md),
   [funds](ui-ux/screens/funds.md),
+  [replacement savings](ui-ux/screens/depreciation.md),
   [calendar](ui-ux/screens/calendar.md),
   [forecast](ui-ux/screens/forecast.md),
   [Oracle · What if?](ui-ux/screens/scenarios.md),
@@ -82,3 +84,5 @@ design system.
 
 Each document distinguishes owner-confirmed rules, initialization decisions,
 assumptions, open questions and future work where those categories apply.
+
+- [Replacement savings acceptance](operations/depreciation-acceptance-2026-09-17.md)

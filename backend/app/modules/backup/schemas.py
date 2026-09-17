@@ -82,6 +82,7 @@ class AccountMovementRecord(BackupModel):
 
 
 class FundRecord(BackupModel):
+    managed: bool = False
     id: UUID
     name: str = Field(min_length=1, max_length=120)
     description: str | None = Field(max_length=2000)
@@ -236,7 +237,27 @@ class ImportReceiptRecord(BackupModel):
     operation_id: UUID
 
 
+class DepreciationPurchaseRecord(BackupModel):
+    id: UUID
+    fund_id: UUID
+    cost: Money = Field(gt=0)
+    purchase_month: str = Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
+    months: StrictInt = Field(ge=1, le=600)
+    inflation: Money = Field(ge=0, le=100)
+    version: int = Field(ge=1)
+    created_at: AwareDatetime
+
+
+class DepreciationReceiptRecord(BackupModel):
+    id: UUID
+    purchase_id: UUID
+    event_id: UUID
+    fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 class BackupData(BackupModel):
+    depreciation_purchases: list[DepreciationPurchaseRecord] = Field(default_factory=list)
+    depreciation_receipts: list[DepreciationReceiptRecord] = Field(default_factory=list)
     import_profiles: list[ImportProfileRecord] = Field(default_factory=list)
     import_receipts: list[ImportReceiptRecord] = Field(default_factory=list)
     settings: SettingsRecord
@@ -308,6 +329,8 @@ BackupEnvelope = BackupDocument | HermesBackup
 
 
 class BackupCounts(BackupModel):
+    depreciation_purchases: int = 0
+    depreciation_receipts: int = 0
     accounts: int
     categories: int
     operations: int

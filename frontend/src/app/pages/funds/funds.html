@@ -50,6 +50,12 @@
       </div>
     </section>
 
+    @if (data.depreciation_reserved && data.depreciation_reserved !== '0') {
+      <p>
+        <a routerLink="/depreciation">{{ t('depreciation.reserved') }}</a
+        >: {{ data.depreciation_reserved | money }} {{ baseCurrency() }}
+      </p>
+    }
     @if (reserveVisible()) {
       <section class="panel coverage" aria-labelledby="reserve-title">
         <div class="panel-heading">
@@ -269,6 +275,12 @@
                 <dt>{{ t('funds.inFunds') }}</dt>
                 <dd>{{ account.fund_reserved_balance | money }} {{ baseCurrency() }}</dd>
               </div>
+              @if (account.depreciation_reserved_balance) {
+                <div>
+                  <dt>{{ t('depreciation.reserved') }}</dt>
+                  <dd>{{ account.depreciation_reserved_balance | money }} {{ baseCurrency() }}</dd>
+                </div>
+              }
               <div>
                 <dt>{{ t('funds.inReserve') }}</dt>
                 <dd>{{ account.reserve_balance | money }} {{ baseCurrency() }}</dd>

@@ -240,3 +240,9 @@ time order. Every point reveals its starting balance and influencing events.
 The implemented RU/EN selector is available throughout setup, on login and in
 Settings. It is a browser preference independent of server-owned financial
 settings. See the [internationalization contract](internationalization.md).
+
+## Replacement savings navigation
+
+The primary financial navigation includes Replacement savings (`/depreciation`).
+It holds purchase plans, month recommendations and reservation history separately
+from ordinary percentage-based funds. Both screens share physical accounts.

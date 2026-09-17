@@ -1,0 +1,308 @@
+<section class="directory-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ t('depreciation.eyebrow') }}</p>
+      <h1>{{ t('depreciation.title') }}</h1>
+      <p>{{ t('depreciation.intro') }}</p>
+    </div>
+    <button type="button" (click)="openCreate()" [disabled]="loading() || !currentMonth()">
+      {{ t('depreciation.add') }}
+    </button>
+  </header>
+  @if (error(); as message) {
+    <div class="form-error" role="alert">
+      {{ message }}
+      <button class="secondary" type="button" (click)="load()" [disabled]="loading() || saving()">
+        {{ t('depreciation.refresh') }}
+      </button>
+    </div>
+  }
+  @if (loading()) {
+    <p aria-live="polite">{{ t('depreciation.loading') }}</p>
+  }
+  @if (!loading() && !error() && purchases().length === 0) {
+    <section class="panel empty-state">
+      <p>{{ t('depreciation.empty') }}</p>
+    </section>
+  }
+  <div class="purchase-list">
+    @for (purchase of purchases(); track purchase.id) {
+      <article class="panel purchase">
+        <header class="purchase-heading">
+          <div>
+            <h2>{{ purchase.name }}</h2>
+            <span class="badge">{{ status(purchase.status) }}</span>
+          </div>
+          <p>{{ t('depreciation.until') }} {{ month(purchase.end_month) }}</p>
+        </header>
+        <div class="amounts">
+          <div>
+            <span>{{ t('depreciation.saved') }}</span
+            ><strong>{{ purchase.balance | money }} {{ currency() }}</strong>
+          </div>
+          <div>
+            <span>{{ t('depreciation.target') }}</span
+            ><strong>{{ purchase.target | money }} {{ currency() }}</strong>
+          </div>
+          @if (current(purchase); as period) {
+            <div>
+              <span>{{ t('depreciation.plan') }} · {{ month(period.month) }}</span
+              ><strong>{{ period.planned | money }} {{ currency() }}</strong>
+            </div>
+            <div>
+              <span>{{ t('depreciation.still') }}</span
+              ><strong>{{ period.remaining | money }} {{ currency() }}</strong>
+            </div>
+          }
+        </div>
+        @if (purchase.status === 'expired') {
+          <p class="form-error">
+            {{ t('depreciation.expiredHint') }} {{ purchase.remaining | money }} {{ currency() }}
+          </p>
+        }
+        <div class="item-actions">
+          @if (purchase.status !== 'archived') {
+            <button
+              type="button"
+              (click)="openPayment(purchase, 'contribute')"
+              [disabled]="saving() || purchase.status === 'funded'"
+            >
+              {{ t('depreciation.contribute') }}
+            </button>
+            <button
+              type="button"
+              class="secondary"
+              (click)="openPayment(purchase, 'release')"
+              [disabled]="saving() || purchase.positions.length === 0"
+            >
+              {{ t('depreciation.release') }}
+            </button>
+          }
+          <button
+            type="button"
+            class="secondary"
+            (click)="expanded.set(expanded() === purchase.id ? null : purchase.id)"
+            [attr.aria-expanded]="expanded() === purchase.id"
+          >
+            {{ t('depreciation.details') }}
+          </button>
+        </div>
+        @if (expanded() === purchase.id) {
+          <section class="purchase-details">
+            <p>
+              {{ t('depreciation.cost') }}: {{ purchase.cost | money }} {{ currency() }} ·
+              {{ month(purchase.purchase_month) }} · {{ purchase.months }}
+              {{ t('depreciation.months') }} · {{ t('depreciation.inflation') }}:
+              {{ purchase.inflation | money }}%
+            </p>
+            <p>{{ t('depreciation.rule') }}</p>
+            <h3>{{ t('depreciation.location') }}</h3>
+            @for (position of purchase.positions; track position.account_id) {
+              <p>{{ position.account_name }} — {{ position.balance | money }} {{ currency() }}</p>
+            } @empty {
+              <p>{{ t('depreciation.noSavings') }}</p>
+            }
+            <h3>{{ t('depreciation.schedule') }}</h3>
+            <p>{{ t('depreciation.projectionHint') }}</p>
+            <div class="month-list">
+              @for (period of purchase.schedule; track period.month) {
+                <div class="month-row" [class.current]="period.state === 'current'">
+                  <strong>{{ month(period.month) }}</strong>
+                  <span
+                    >{{ t('depreciation.plan') }}: {{ period.planned | money }}
+                    {{ currency() }}</span
+                  >
+                  <span
+                    >{{ t('depreciation.actual') }}: {{ period.actual | money }}
+                    {{ currency() }}</span
+                  >
+                  <span>{{
+                    period.state === 'closed'
+                      ? t('depreciation.closed')
+                      : period.state === 'current'
+                        ? t('depreciation.current')
+                        : t('depreciation.estimate')
+                  }}</span>
+                </div>
+              }
+            </div>
+            <h3>{{ t('depreciation.history') }}</h3>
+            @for (entry of purchase.history; track entry.id) {
+              <p>
+                {{ month(entry.month) }} ·
+                {{
+                  entry.action === 'contribute'
+                    ? t('depreciation.contribution')
+                    : t('depreciation.released')
+                }}
+                · {{ entry.amount | money }} {{ currency() }} · {{ accountName(entry.account_id) }}
+                @if (entry.operation_id) {
+                  <a routerLink="/operations" [queryParams]="{ focus: entry.operation_id }">{{
+                    t('depreciation.operation')
+                  }}</a>
+                }
+              </p>
+            } @empty {
+              <p>{{ t('depreciation.noHistory') }}</p>
+            }
+            @if (purchase.status !== 'archived' && purchase.positions.length === 0) {
+              <p>{{ t('depreciation.archiveHint') }}</p>
+              <button
+                type="button"
+                class="secondary"
+                (click)="archive(purchase)"
+                [disabled]="saving()"
+              >
+                {{ t('depreciation.archive') }}
+              </button>
+            }
+          </section>
+        }
+      </article>
+    }
+  </div>
+  @if (createOpen() || selected()) {
+    <div class="modal-backdrop" (keydown.escape)="close()" role="presentation">
+      <section
+        #modal
+        (keydown)="trapFocus($event)"
+        class="modal-card panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="depreciation-form-title"
+        tabindex="-1"
+      >
+        <header class="panel-heading">
+          <h2 id="depreciation-form-title">
+            {{ createOpen() ? t('depreciation.add') : selected()?.name }}
+          </h2>
+          <button type="button" class="secondary" (click)="close()" [disabled]="saving()">
+            {{ t('depreciation.close') }}
+          </button>
+        </header>
+        @if (error(); as message) {
+          <p class="form-error" role="alert">{{ message }}</p>
+          <button
+            type="button"
+            class="secondary"
+            (click)="load()"
+            [disabled]="loading() || saving()"
+          >
+            {{ t('depreciation.refresh') }}
+          </button>
+        }
+        @if (createOpen()) {
+          <form [formGroup]="form" (ngSubmit)="savePurchase()">
+            <fieldset [disabled]="saving()">
+              <label for="purchase-name">{{ t('depreciation.name') }}</label
+              ><input id="purchase-name" formControlName="name" maxlength="120" required />
+              <label for="purchase-cost">{{ t('depreciation.cost') }} · {{ currency() }}</label
+              ><input
+                id="purchase-cost"
+                appDecimalInput
+                inputmode="decimal"
+                formControlName="cost"
+                required
+              />
+              <label for="purchase-month">{{ t('depreciation.purchaseMonth') }}</label
+              ><input
+                id="purchase-month"
+                type="month"
+                formControlName="purchase_month"
+                [max]="currentMonth()"
+                required
+              />
+              <label for="purchase-months">{{ t('depreciation.term') }}</label
+              ><input
+                id="purchase-months"
+                type="number"
+                formControlName="months"
+                min="1"
+                max="600"
+                step="1"
+                required
+              />
+              <label for="purchase-inflation">{{ t('depreciation.inflation') }} · %</label
+              ><input
+                id="purchase-inflation"
+                appDecimalInput
+                inputmode="decimal"
+                formControlName="inflation"
+                required
+              />
+              <p>{{ t('depreciation.estimateHint') }}</p>
+              @if (preview(); as result) {
+                <div class="preview">
+                  <p>
+                    {{ t('depreciation.target') }}:
+                    <strong>{{ result.target | money }} {{ currency() }}</strong>
+                  </p>
+                  <p>
+                    {{ t('depreciation.initial') }}: {{ result.monthly | money }} {{ currency() }}
+                  </p>
+                </div>
+              }
+              <button type="submit" [disabled]="saving()">
+                {{
+                  saving()
+                    ? t('depreciation.saving')
+                    : preview()
+                      ? t('depreciation.create')
+                      : t('depreciation.calculate')
+                }}
+              </button>
+            </fieldset>
+          </form>
+        } @else {
+          <form [formGroup]="payment" (ngSubmit)="submitPayment()">
+            <fieldset [disabled]="saving()">
+              <p>
+                {{
+                  payment.controls.action.value === 'release'
+                    ? t('depreciation.releaseHint')
+                    : t('depreciation.paymentHint')
+                }}
+              </p>
+              <label for="payment-account">{{ t('depreciation.account') }}</label
+              ><app-entity-combobox
+                inputId="payment-account"
+                formControlName="account_id"
+                [options]="options()"
+                [accessibleLabel]="t('depreciation.account')"
+              />
+              @if (payment.controls.action.value === 'contribute') {
+                <label for="payment-source">{{ t('depreciation.source') }}</label
+                ><app-entity-combobox
+                  inputId="payment-source"
+                  formControlName="source_account_id"
+                  [options]="options()"
+                  [allowEmpty]="true"
+                  [accessibleLabel]="t('depreciation.source')"
+                />
+                <p>{{ t('depreciation.sourceHint') }}</p>
+              }
+              <label for="payment-amount">{{ t('depreciation.amount') }} · {{ currency() }}</label
+              ><input
+                id="payment-amount"
+                appDecimalInput
+                inputmode="decimal"
+                formControlName="amount"
+                required
+              />
+              <p>{{ t('depreciation.monthOfFact') }} {{ month(currentMonth()) }}</p>
+              <button type="submit" [disabled]="saving()">
+                {{
+                  saving()
+                    ? t('depreciation.saving')
+                    : payment.controls.action.value === 'release'
+                      ? t('depreciation.release')
+                      : t('depreciation.contribute')
+                }}
+              </button>
+            </fieldset>
+          </form>
+        }
+      </section>
+    </div>
+  }
+</section>

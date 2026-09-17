@@ -342,6 +342,8 @@ def test_migration_refuses_to_discard_release_facts(release_setup: Any) -> None:
     after = balances(client)
     with pytest.raises(DBAPIError, match="Cannot downgrade while fund release events exist"):
         command.downgrade(Config("alembic.ini"), "0015_statement_imports")
+    # Newer independent migrations may have downgraded before the guarded revision.
+    command.upgrade(Config("alembic.ini"), "head")
     assert balances(client) == after
 
 

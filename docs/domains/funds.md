@@ -16,7 +16,7 @@ posting model is recorded in [ADR 0002](../decisions/0002-virtual-fund-ledger.md
   most 100%. Changing a percentage or mode never moves existing money.
 - Fund totals and positions are sums of `NUMERIC(20,4)` movements; there is no
   mutable authoritative balance.
-- Account coverage is `physical = funds + reserve + free`, with non-negative
+- Account coverage is `physical = ordinary funds + replacement savings + reserve + free`, with non-negative
   individual fund positions and a non-negative reserve on every account.
 - Explicit allocation reserves a selected part of one account's free balance;
   the remainder stays free.
@@ -176,3 +176,13 @@ zero-balance invariant of an archived fund would be violated.
 
 This slice does not link a release to a purchase, prove that a reimbursement is
 unique per purchase, split it across funds, create plans, or initiate payments.
+
+## Managed replacement reservations
+
+[Replacement savings](depreciation.md) uses managed fund positions with zero
+percentage and a derived target. They participate in physical coverage and free
+balance exactly once, but not in ordinary lists, manual/dynamic distribution or
+reserve refills. Their writes belong to the explicit managed posting contract.
+Summary responses separate replacement totals and per-account replacement
+positions from ordinary fund balances. Generic fund operations cannot change
+managed definitions or their positions.

@@ -121,6 +121,7 @@ class FundPositionResponse(BaseModel):
 
 
 class AccountCoverageResponse(BaseModel):
+    depreciation_reserved_balance: str = "0"
     account_id: UUID
     account_name: str
     physical_balance: str
@@ -132,6 +133,7 @@ class AccountCoverageResponse(BaseModel):
 
 
 class FundSummaryResponse(BaseModel):
+    depreciation_reserved: str = "0"
     funds: list[FundResponse]
     positions: list[FundPositionResponse]
     accounts: list[AccountCoverageResponse]

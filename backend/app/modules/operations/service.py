@@ -27,6 +27,7 @@ from app.modules.funds.contracts import (
     lock_operation_dependent_allocation,
     operation_fund_movements,
     operation_has_fund_release,
+    operation_has_managed_reservation,
     rebalance_reserve,
     remove_operation_dependent_events,
     remove_operation_reserve_distributions,
@@ -64,6 +65,10 @@ class OperationLinkedError(RuntimeError):
 
 
 class OperationAllocationLinkedError(RuntimeError):
+    pass
+
+
+class OperationDepreciationLinkedError(RuntimeError):
     pass
 
 
@@ -265,7 +270,9 @@ def update_operation(
     old_amounts = _amounts_for_operation(session, operation.id)
     legacy_transfer_allocation = _legacy_transfer_allocation_match(operation, old_amounts)
     old_fund_amounts = operation_fund_movements(session, operation.id)
-    has_release = operation_has_fund_release(session, operation.id)
+    has_release = operation_has_fund_release(
+        session, operation.id
+    ) or operation_has_managed_reservation(session, operation.id)
     draft = _draft(payload)
     _validate_category(session, draft, operation.category_id)
     new_amounts = _movement_amounts(draft)
@@ -281,6 +288,8 @@ def update_operation(
         new_amounts=new_amounts,
         extra_account_ids=extra_ids,
     )
+    if operation_has_managed_reservation(session, operation.id):
+        raise OperationDepreciationLinkedError
     if has_release:
         raise OperationFundReleaseLinkedError
     if lock_operation_dependent_allocation(
@@ -321,11 +330,15 @@ def update_operation(
 
 def delete_operation(session: Session, operation_id: UUID, *, expected_version: int) -> None:
     operation = _get_operation(session, operation_id, lock=True)
+    if operation_has_managed_reservation(session, operation.id):
+        raise OperationDepreciationLinkedError
     if operation.version != expected_version:
         raise OperationConflictError
     old_amounts = _amounts_for_operation(session, operation.id)
     old_fund_amounts = operation_fund_movements(session, operation.id)
-    has_release = operation_has_fund_release(session, operation.id)
+    has_release = operation_has_fund_release(
+        session, operation.id
+    ) or operation_has_managed_reservation(session, operation.id)
     extra_ids = (
         {item.id for item in list_account_identities(session)}
         if old_fund_amounts or has_release

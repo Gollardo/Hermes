@@ -10,6 +10,7 @@
 | `categories` | category tree | category reference validation |
 | `operations` | posted operations and physical money movements | atomic posting commands and ledger reads |
 | `funds` | fund definitions, percentages, virtual movements | fund posting contracts and application coordination with physical ledger reads |
+| `depreciation` | purchase replacement terms, month calculations and request receipts | Funds managed reservations and Operations transfer contracts in one transaction |
 | `scheduling` | recurrence rules and expected occurrences | application-coordinated confirmation through operations and optional funds contracts |
 | `forecasting` | future-balance calculations | read contracts from ledger, funds and plans |
 | `scenarios` | hypothetical decision drafts, comparisons and optional saved scenarios | forecasting projection and owning modules' public reads |
@@ -151,3 +152,12 @@ through public Accounts, Funds and Operations contracts. Funds owns negative
 release events, replay comparison inputs and causal linkage; Operations retains
 physical posting and deletion ownership. No external service or runtime
 dependency is added.
+
+## Replacement saving lifecycle
+
+Depreciation owns the source purchase lifecycle and coordinates only public
+Accounts, Funds, Operations and Settings contracts. This uses the existing
+one-way source-lifecycle exception to application orchestration. Funds does not
+import Depreciation; a managed flag protects reservations from generic writes.
+Backup imports its narrow persistence surface. See
+[replacement savings](../domains/depreciation.md).

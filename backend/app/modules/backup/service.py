@@ -25,6 +25,8 @@ from app.modules.backup.schemas import (
     BackupIntegrity,
     BackupPreviewResponse,
     CategoryRecord,
+    DepreciationPurchaseRecord,
+    DepreciationReceiptRecord,
     ExpectedOccurrenceRecord,
     FundEventRecord,
     FundMovementRecord,
@@ -40,6 +42,12 @@ from app.modules.backup.schemas import (
 )
 from app.modules.categories.backup import Category
 from app.modules.categories.contracts import CategoryType
+from app.modules.depreciation.backup import (
+    DepreciationPurchase,
+    DepreciationReceipt,
+    PurchaseCreate,
+    inflation_target,
+)
 from app.modules.funds.backup import (
     Fund,
     FundEvent,
@@ -66,6 +74,8 @@ SCHEMA_VERSION = 1
 RESTORE_CONFIRMATION = "ЗАМЕНИТЬ ВСЕ ДАННЫЕ"
 
 _TABLES = (
+    "depreciation_purchases",
+    "depreciation_receipts",
     "import_profiles",
     "import_receipts",
     "application_settings",
@@ -131,6 +141,12 @@ def create_backup(session: Session) -> BackupDocument:
     if settings is None:
         raise BackupInvariantError("Application settings are missing")
     data = BackupData(
+        depreciation_purchases=[
+            _record(DepreciationPurchaseRecord, row) for row in _all(session, DepreciationPurchase)
+        ],
+        depreciation_receipts=[
+            _record(DepreciationReceiptRecord, row) for row in _all(session, DepreciationReceipt)
+        ],
         import_profiles=[_record(ImportProfileRecord, row) for row in _all(session, ImportProfile)],
         import_receipts=[_record(ImportReceiptRecord, row) for row in _all(session, ImportReceipt)],
         settings=_record(SettingsRecord, settings),
@@ -225,6 +241,7 @@ def preview_backup(document: BackupDocument) -> BackupPreviewResponse:
 
 
 def validate_document(data: BackupData) -> None:
+    validate_depreciation(data)
     for profile in data.import_profiles:
         Mapping.model_validate(profile.mapping)
     for records, metadata_key in (
@@ -693,6 +710,8 @@ def restore_backup(session: Session, document: BackupDocument) -> RestoreRespons
     validate_document(document.data)
     _lock_tables(session, "ACCESS EXCLUSIVE")
     for model in (
+        DepreciationReceipt,
+        DepreciationPurchase,
         ImportReceipt,
         ImportProfile,
         ExpectedOccurrence,
@@ -726,6 +745,8 @@ def restore_backup(session: Session, document: BackupDocument) -> RestoreRespons
     _insert(session, FundEvent, document.data.fund_events)
     _insert(session, FundMovement, document.data.fund_movements)
     _insert(session, FundReserveMovement, document.data.fund_reserve_movements)
+    _insert(session, DepreciationPurchase, document.data.depreciation_purchases)
+    _insert(session, DepreciationReceipt, document.data.depreciation_receipts)
     _insert(session, RecurringRule, document.data.recurring_rules)
     _insert(session, ExpectedOccurrence, document.data.expected_occurrences)
     session.flush()
@@ -806,3 +827,71 @@ def validate_restored_state(session: Session) -> None:
         )
         if missing_target is not None:
             raise BackupInvariantError("Dynamic allocation requires targets for all active funds")
+
+
+def validate_depreciation(data: BackupData) -> None:
+    funds = {fund.id: fund for fund in data.funds}
+    purchases = {purchase.id: purchase for purchase in data.depreciation_purchases}
+    receipts = {receipt.event_id: receipt for receipt in data.depreciation_receipts}
+    if (
+        len(purchases) != len(data.depreciation_purchases)
+        or len(receipts) != len(data.depreciation_receipts)
+        or len({r.id for r in data.depreciation_receipts}) != len(data.depreciation_receipts)
+        or len({p.fund_id for p in purchases.values()}) != len(purchases)
+    ):
+        raise BackupInvariantError("Duplicate depreciation identity")
+    if {p.fund_id for p in purchases.values()} != {f.id for f in data.funds if f.managed}:
+        raise BackupInvariantError("Managed funds must belong to exactly one purchase")
+    for purchase in purchases.values():
+        fund = funds[purchase.fund_id]
+        try:
+            PurchaseCreate(
+                name=fund.name,
+                cost=purchase.cost,
+                purchase_month=purchase.purchase_month,
+                months=purchase.months,
+                inflation=purchase.inflation,
+            )
+        except ValueError as error:
+            raise BackupInvariantError("Invalid depreciation parameters") from error
+        if fund.allocation_percentage != 0 or fund.target_amount != inflation_target(
+            purchase.cost, purchase.inflation, purchase.months
+        ):
+            raise BackupInvariantError("Managed target or percentage differs from purchase")
+        movements = [m for m in data.fund_movements if m.fund_id == fund.id]
+        if any(m.operation_id is not None or m.event_id not in receipts for m in movements):
+            raise BackupInvariantError("Managed movements require depreciation receipts")
+        if sum((m.amount for m in movements), Decimal(0)) > fund.target_amount:
+            raise BackupInvariantError("Depreciation savings exceed target")
+    events = {e.id: e for e in data.fund_events}
+    for receipt in receipts.values():
+        linked_purchase = purchases.get(receipt.purchase_id)
+        event = events.get(receipt.event_id)
+        movements = [m for m in data.fund_movements if m.event_id == receipt.event_id]
+        if (
+            linked_purchase is None
+            or event is None
+            or receipt.id != receipt.event_id
+            or len(movements) != 1
+            or movements[0].fund_id != linked_purchase.fund_id
+            or event.type not in (FundEventType.ALLOCATION, FundEventType.FUND_RELEASE)
+            or (event.type == FundEventType.ALLOCATION) != (movements[0].amount > 0)
+            or any(m.event_id == receipt.event_id for m in data.fund_reserve_movements)
+        ):
+            raise BackupInvariantError("Invalid depreciation receipt or movement")
+
+        if event.caused_by_operation_id is not None:
+            incoming = [
+                m
+                for m in data.account_movements
+                if m.operation_id == event.caused_by_operation_id and m.amount > 0
+            ]
+            if (
+                event.type != FundEventType.ALLOCATION
+                or len(incoming) != 1
+                or incoming[0].account_id != movements[0].account_id
+                or incoming[0].amount != movements[0].amount
+            ):
+                raise BackupInvariantError(
+                    "Managed contribution must reserve the complete transfer"
+                )

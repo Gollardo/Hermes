@@ -15,6 +15,10 @@ export function apiErrorMessage(error: unknown, fallback: string | (() => string
       timezone: 'settings.timezone',
       category_template_language: 'setup.templateLanguage',
       amount: 'funds.amount',
+      cost: 'depreciation.cost',
+      inflation: 'depreciation.inflation',
+      months: 'depreciation.term',
+      purchase_month: 'depreciation.purchaseMonth',
       name: 'accounts.name',
       description: 'accounts.description',
       confirmation: 'settings.typeReplaceAllData',
@@ -44,6 +48,10 @@ export function apiErrorMessage(error: unknown, fallback: string | (() => string
     typeof detail.code === 'string'
   ) {
     const localized: Record<string, string> = {
+      depreciation_not_found: t('depreciation.notFound'),
+      depreciation_conflict: t('depreciation.conflict'),
+      depreciation_future_purchase: t('depreciation.futurePurchase'),
+      operation_depreciation_linked: t('depreciation.linked'),
       operation_fund_release_linked: t('funds.releaseEditBlocked'),
       import_invalid: t('imports.error'),
       import_currency: t('imports.currencyError'),

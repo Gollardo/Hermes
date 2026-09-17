@@ -12,6 +12,13 @@ assigned.
 
 ## [Unreleased]
 
+### Added
+
+- Monthly replacement savings with annual inflation, computed targets, shared
+  account reservations, atomic contributions, releases, backup/restore and a
+  Russian/English interface.
+
+
 ## [1.1.0] - 2026-09-09
 
 ### Added

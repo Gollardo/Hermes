@@ -142,7 +142,7 @@ describe('FundsPage', () => {
   it('permits editing a fund definition and keeps physical coverage visible', () => {
     flushInitial();
     expect(fixture.nativeElement.textContent).toContain(
-      'Физический остаток = в фондах + в резерве + свободно',
+      'Физический остаток = фонды + амортизационные накопления + резерв + свободно',
     );
     expect(fixture.nativeElement.textContent).toContain('75,00');
     clickButton('Изменить');

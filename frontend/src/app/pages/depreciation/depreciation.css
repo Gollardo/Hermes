@@ -1,0 +1,86 @@
+@import '../directory.css';
+
+.purchase-list {
+  display: grid;
+  gap: 1rem;
+}
+.purchase-heading,
+.amounts {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.purchase-heading h2 {
+  margin: 0 0 0.5rem;
+}
+.amounts {
+  margin: 1.5rem 0;
+}
+.amounts > div {
+  display: grid;
+  gap: 0.4rem;
+}
+.amounts span,
+.purchase-heading p {
+  color: var(--muted);
+}
+.amounts strong {
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.purchase-details {
+  border-top: 1px solid var(--line);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+.month-list {
+  max-height: 26rem;
+  overflow-y: auto;
+}
+.month-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.month-row.current {
+  font-weight: 700;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.modal-card {
+  max-width: 38rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.preview {
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+}
+@media (max-width: 700px) {
+  .page-header,
+  .purchase-heading {
+    display: block;
+  }
+  .page-header button {
+    margin-top: 1rem;
+  }
+  .amounts {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .month-row {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+}

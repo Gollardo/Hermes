@@ -25,6 +25,7 @@ from app.modules.operations.service import (
     InsufficientBalanceError,
     OperationAllocationLinkedError,
     OperationConflictError,
+    OperationDepreciationLinkedError,
     OperationFundReleaseLinkedError,
     OperationLinkedError,
     OperationNotFoundError,
@@ -66,6 +67,8 @@ def _raise_domain_error(error: RuntimeError) -> None:
                 "message": "Confirmed scheduled operation cannot be deleted",
             },
         )
+    if isinstance(error, OperationDepreciationLinkedError):
+        raise HTTPException(409, detail={"code": "operation_depreciation_linked"})
     if isinstance(error, OperationFundReleaseLinkedError):
         raise HTTPException(
             409,
@@ -201,6 +204,7 @@ def replace_operation(
         FundNotFoundError,
         InsufficientBalanceError,
         OperationAllocationLinkedError,
+        OperationDepreciationLinkedError,
         OperationFundReleaseLinkedError,
         OperationConflictError,
         OperationNotFoundError,
@@ -227,6 +231,7 @@ def remove_operation(
         InsufficientBalanceError,
         OperationConflictError,
         OperationLinkedError,
+        OperationDepreciationLinkedError,
         OperationNotFoundError,
     ) as error:
         _raise_domain_error(error)

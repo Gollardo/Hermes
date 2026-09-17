@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-09-11. This is the current release snapshot, not a task log.
+Last reviewed: 2026-09-17. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -26,6 +26,7 @@ design still requires approval.
 | Accounts and categories | Ledger-derived balances, typed category trees, historical archived references | [Accounts](domains/accounts.md), [categories](domains/categories.md) |
 | Operations | Exact income, expense, transfer and adjustment; atomic edits, version conflicts, journal pagination and reviewed occurrence confirmation | [Operations](domains/operations.md) |
 | Funds | Virtual allocations, targets, manual/dynamic percentages, per-account coverage and reserve | [Funds](domains/funds.md) |
+| Replacement savings | Unreleased inflation-adjusted purchase goals, month-end redistribution, explicit contributions and release/archive | [Replacement savings](domains/depreciation.md) |
 | Plans | Recurring rules and one-off plans, postpone/cancel/confirm lifecycle, series shifts and compact calendar | [Scheduling](domains/scheduling.md) |
 | Forecast | Read-only exact free/total projections, fund effects, risks and event explanations | [Forecasting](domains/forecasting.md) |
 | Reports | Posted income/expense totals, category breakdown and source operations | [Reports](domains/reports.md) |
@@ -207,3 +208,27 @@ therefore remains open. No dependency or external infrastructure was added.
 Next action: repeat the container build when registry access is available, then
 review both release forms against an isolated restored owner backup before any
 production migration. Retain a pre-upgrade backup for rollback.
+
+## Unreleased replacement savings slice
+
+The owner-authorized monthly replacement savings feature is implemented with
+annual inflation, a computed target, fixed current-month requirements and
+redistribution after month rollover. Shared-account reservations, atomic
+transfer/contribution, releases, guarded archival, idempotency, backup/restore
+and RU/EN UI are included. Migration `0017_depreciation` adds managed funds,
+purchases and contribution receipts.
+
+Verification: 149 default backend tests and 106 PostgreSQL integration tests
+passed; all 186 frontend tests passed on the final rerun. Lint, formatting,
+catalogs, documentation links, mypy, TypeScript, production frontend and Docker
+builds passed. The final container passed health and Alembic metadata checks.
+Browser acceptance used synthetic data and covered the main flows, modal
+keyboard behavior and a 390 px layout. See the
+[acceptance record](operations/depreciation-acceptance-2026-09-17.md) for evidence,
+limits and exclusions. The successful Docker build also closes the preceding
+fund-release slice's image-build verification gap.
+
+Risks: bundle/style budget warnings, broad account locking and unpaginated
+schedules/history. No dependencies or production infrastructure were added.
+Next action: owner review against an isolated restored backup before separately
+authorized release/deployment; preserve a pre-upgrade backup.

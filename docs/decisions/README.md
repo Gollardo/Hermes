@@ -20,6 +20,9 @@ accepted without an explicit project-owner decision.
   records the owner-confirmed two-level key architecture, protected V1 format,
   legacy JSON compatibility and untrusted-file limits.
 
+- [ADR 0006: Replacement savings](0006-replacement-savings.md) records managed
+  reservations and month-based calculation under the owner-authorized slice.
+
 ## Template for a future ADR
 
 ```markdown

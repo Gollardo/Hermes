@@ -27,6 +27,7 @@ from app.modules.funds.schemas import (
 from app.modules.funds.service import (
     DynamicFundTargetsRequiredError,
     FundAllocationUnavailableError,
+    FundArchiveBalanceError,
     FundArchivedMutationError,
     FundBalanceError,
     FundConflictError,
@@ -43,6 +44,7 @@ from app.modules.funds.service import (
     create_fund,
     create_fund_release,
     create_fund_transfer,
+    create_managed_fund,
     create_redistribution_with_physical_balances,
     dynamic_capacity_allocations,
     dynamic_percentages,
@@ -57,9 +59,12 @@ from app.modules.funds.service import (
     locked_active_funds,
     locked_percentage_allocation_preview_with_free_balance,
     locked_percentage_definitions,
+    managed_fund_snapshot,
     operation_fund_movements,
     operation_has_fund_release,
+    operation_has_managed_reservation,
     percentage_allocations,
+    post_managed_fund,
     rebalance_reserve,
     release_reserve,
     remove_operation_dependent_events,
@@ -100,6 +105,11 @@ def fund_response(session: Session, fund_id: UUID) -> FundResponse:
 
 
 __all__ = [
+    "FundArchiveBalanceError",
+    "create_managed_fund",
+    "managed_fund_snapshot",
+    "post_managed_fund",
+    "operation_has_managed_reservation",
     "FundReleaseRequest",
     "FundReleaseResponse",
     "create_fund_release",
@@ -112,6 +122,7 @@ __all__ = [
     "FundArchivedMutationError",
     "FundAllocationUnavailableError",
     "FundCoverageError",
+    "FundConflictError",
     "FundNotFoundError",
     "FundTargetCapacityError",
     "LegacyTransferAllocationMatch",

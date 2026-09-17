@@ -234,3 +234,9 @@ form and request identity so an unchanged retry can recover a committed response
 Changing fields creates a new request identity. Success reloads coverage and
 history. A linked release history item opens the transfer in the journal.
 RU/EN copy and decimal-comma/dot input retain the shared UI contract.
+
+## Replacement savings coverage
+
+Managed replacement savings are shown separately from ordinary fund totals and
+in account coverage, with a link to [their screen](depreciation.md). They reduce
+free money but do not appear in the percentage list or ordinary fund selectors.

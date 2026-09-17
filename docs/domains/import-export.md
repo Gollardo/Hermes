@@ -133,3 +133,13 @@ Profiles and receipts are optional schema-1 payload fields with empty defaults
 for older backups. Restore validates profile mappings and unique receipt keys.
 These new backups require a reader that understands the extension; this is not
 forward compatibility with older releases. Raw bank files are not backed up.
+
+## Replacement savings portability
+
+Migration `0017_depreciation` adds optional schema-1 purchase and receipt records
+and an unmanaged-by-default fund flag. Both backup envelopes round-trip them.
+Validation checks derived inflation targets, exclusive managed-fund ownership,
+receipt/event linkage and coverage before atomic restore. Old backups remain
+readable by new code; earlier application versions reject new fields. Downgrade
+is refused while replacement purchases exist; use a verified pre-upgrade backup
+for rollback. Statement import does not create depreciation contributions.

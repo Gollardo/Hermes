@@ -57,3 +57,10 @@ caller to overwrite the derived balance.
 - Whether the implemented archive-while-preserving ledger/fund positions policy
   should become the long-term account-closing model.
 - Treatment of pending bank transactions, which are not in current scope.
+
+## Replacement savings
+
+Managed replacement reservations share the Funds coverage ledger. Free money
+subtracts ordinary funds, replacement savings and dynamic reserves once each.
+The per-account summary exposes these purposes separately; no new physical
+account type or editable balance is introduced.

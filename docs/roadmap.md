@@ -70,6 +70,16 @@ explicitly. Deterministic scenarios precede their optional AI input; imported
 facts precede history-informed analytics; multi-currency precedes investments.
 The hosted platform remains a separate architectural program.
 
+## Replacement savings — owner-authorized slice, release number unassigned
+
+Authorized on 2026-09-17 independently of the Oracle milestone. Scope: purchase
+cost, month term and user-supplied annual inflation; a derived target; monthly
+recommendations recalculated after month end; explicit managed reservations,
+optional physical transfer, release/archive and backup portability. No automatic
+banking, daily forecast events or multi-purchase allocation is included.
+
+- [x] Complete implementation and verification; see [project status](project-status.md).
+
 ## 2.0.0 — Oracle: deterministic What if? mode
 
 - [ ] Create a temporary purchase, income, amount-change, or date-shift scenario

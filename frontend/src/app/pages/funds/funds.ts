@@ -53,6 +53,7 @@ interface Coverage {
   physical_balance: string;
   reserved_balance: string;
   fund_reserved_balance: string;
+  depreciation_reserved_balance?: string;
   reserve_balance: string;
   free_balance: string;
   archived: boolean;
@@ -64,6 +65,7 @@ interface Summary {
   accounts: Coverage[];
   active_percentage: string;
   allocation_mode: 'manual' | 'dynamic';
+  depreciation_reserved?: string;
   total_reserved: string;
   total_fund_reserved: string;
   total_reserve: string;

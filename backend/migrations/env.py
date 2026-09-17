@@ -8,6 +8,7 @@ from app.core.database import Base
 from app.modules.accounts import models as accounts_models  # noqa: F401
 from app.modules.auth import models as auth_models  # noqa: F401
 from app.modules.categories import models as categories_models  # noqa: F401
+from app.modules.depreciation import models as depreciation_models  # noqa: F401
 from app.modules.funds import models as funds_models  # noqa: F401
 from app.modules.imports import models as imports_models  # noqa: F401
 from app.modules.operations import models as operations_models  # noqa: F401

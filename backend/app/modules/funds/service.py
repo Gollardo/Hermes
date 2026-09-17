@@ -257,6 +257,7 @@ def _fund_balances(session: Session, fund_ids: set[UUID]) -> dict[UUID, Decimal]
 def _percentages_for(
     mode: FundAllocationMode, funds: list[Fund], balances: dict[UUID, Decimal]
 ) -> list[tuple[UUID, Decimal]]:
+    funds = [fund for fund in funds if not fund.managed]
     if mode == FundAllocationMode.MANUAL:
         return [
             (fund.id, Decimal(fund.allocation_percentage))
@@ -281,7 +282,7 @@ def locked_distribution_snapshot(session: Session, *, shared: bool) -> LockedDis
     _lock_definitions(session, shared=shared)
     query = (
         select(Fund)
-        .where(Fund.archived_at.is_(None))
+        .where(Fund.archived_at.is_(None), Fund.managed.is_(False))
         .order_by(Fund.id)
         .with_for_update(read=shared)
     )
@@ -309,7 +310,7 @@ def snapshot_dynamic_percentages_as_manual(session: Session) -> None:
     """Freeze current derived values, including zero for filled and archived funds."""
     _lock_definitions(session)
     funds = list(session.scalars(select(Fund).order_by(Fund.id).with_for_update()).all())
-    active = [fund for fund in funds if fund.archived_at is None]
+    active = [fund for fund in funds if fund.archived_at is None and not fund.managed]
     balances = _fund_balances(session, {fund.id for fund in active})
     if any(fund.target_amount is None for fund in active):
         raise DynamicFundTargetsRequiredError
@@ -357,6 +358,8 @@ def create_fund(
 def update_fund(session: Session, fund_id: UUID, payload: FundUpdateRequest) -> Fund:
     _lock_definitions(session)
     fund = _get_fund(session, fund_id, lock=True)
+    if fund.managed:
+        raise FundNotFoundError
     if fund.version != payload.version:
         raise FundConflictError
     if fund.archived_at is None:
@@ -458,9 +461,12 @@ def archive_fund(
     *,
     restore: bool,
     expected_version: int,
+    allow_managed: bool = False,
 ) -> Fund:
     _lock_definitions(session)
     fund = _get_fund(session, fund_id, lock=True)
+    if fund.managed and not allow_managed:
+        raise FundNotFoundError
     if fund.version != expected_version:
         raise FundConflictError
     if restore:
@@ -529,9 +535,13 @@ def _fund_response(
     )
 
 
-def list_funds(session: Session, *, include_archived: bool = True) -> list[FundResponse]:
+def list_funds(
+    session: Session, *, include_archived: bool = True, include_managed: bool = False
+) -> list[FundResponse]:
     _lock_definitions(session, shared=True)
     query = select(Fund)
+    if not include_managed:
+        query = query.where(Fund.managed.is_(False))
     if not include_archived:
         query = query.where(Fund.archived_at.is_(None))
     funds = list(
@@ -543,7 +553,7 @@ def list_funds(session: Session, *, include_archived: bool = True) -> list[FundR
     )
     balances = _fund_balances(session, {fund.id for fund in funds})
     mode = fund_allocation_mode(session)
-    active = [fund for fund in funds if fund.archived_at is None]
+    active = [fund for fund in funds if fund.archived_at is None and not fund.managed]
     percentages = dict(_percentages_for(mode, active, balances))
     return [
         _fund_response(
@@ -630,7 +640,20 @@ def summary_with_physical_balances(
     coverage: list[AccountCoverageResponse] = []
     for account in accounts:
         physical = physical_balances[account.id]
-        fund_reserved = reserved_balance(session, account.id) - reserve_balance(session, account.id)
+        regular_ids = {fund.id for fund in funds}
+        depreciation_reserved = sum(
+            (
+                Decimal(amount)
+                for fund_id, account_id, amount in position_rows
+                if account_id == account.id and fund_id not in regular_ids
+            ),
+            Decimal(0),
+        )
+        fund_reserved = (
+            reserved_balance(session, account.id)
+            - reserve_balance(session, account.id)
+            - depreciation_reserved
+        )
         reserve = reserve_balance(session, account.id)
         reserved = reserved_balance(session, account.id)
         coverage.append(
@@ -640,6 +663,7 @@ def summary_with_physical_balances(
                 physical_balance=format(physical, "f"),
                 reserved_balance=format(reserved, "f"),
                 fund_reserved_balance=format(fund_reserved, "f"),
+                depreciation_reserved_balance=format(depreciation_reserved, "f"),
                 reserve_balance=format(reserve, "f"),
                 free_balance=format(physical - reserved, "f"),
                 archived=account.archived,
@@ -658,9 +682,14 @@ def summary_with_physical_balances(
             "f",
         ),
         allocation_mode=mode,
-        total_reserved=format(
-            sum((Decimal(f.total_balance) for f in funds), Decimal(0)) + reserve_balance(session),
+        depreciation_reserved=format(
+            sum((Decimal(a.reserved_balance) for a in coverage), Decimal(0))
+            - sum((Decimal(f.total_balance) for f in funds), Decimal(0))
+            - reserve_balance(session),
             "f",
+        ),
+        total_reserved=format(
+            sum((Decimal(a.reserved_balance) for a in coverage), Decimal(0)), "f"
         ),
         total_fund_reserved=format(sum((Decimal(f.total_balance) for f in funds), Decimal(0)), "f"),
         total_reserve=format(reserve_balance(session), "f"),
@@ -1100,13 +1129,15 @@ def _add_fund_movements(session: Session, movements: list[FundMovement]) -> None
     session.add_all(movements)
 
 
-def _lock_fund_references(session: Session, fund_ids: set[UUID]) -> dict[UUID, Fund]:
+def _lock_fund_references(
+    session: Session, fund_ids: set[UUID], *, allow_managed: bool = False
+) -> dict[UUID, Fund]:
     if not fund_ids:
         return {}
     funds = session.scalars(
         select(Fund).where(Fund.id.in_(fund_ids)).order_by(Fund.id).with_for_update()
     ).all()
-    if len(funds) != len(fund_ids):
+    if len(funds) != len(fund_ids) or (not allow_managed and any(fund.managed for fund in funds)):
         raise FundNotFoundError
     return {fund.id: fund for fund in funds}
 
@@ -1295,6 +1326,99 @@ def operation_has_fund_release(session: Session, operation_id: UUID) -> bool:
                 FundEvent.caused_by_operation_id == operation_id,
                 FundEvent.type == FundEventType.FUND_RELEASE,
             )
+        )
+        is not None
+    )
+
+
+def create_managed_fund(session: Session, name: str, target: Decimal) -> UUID:
+    fund = create_fund(
+        session, name=name, description=None, percentage=Decimal(0), target_amount=target
+    )
+    fund.managed = True
+    session.flush()
+    return fund.id
+
+
+def managed_fund_snapshot(
+    session: Session, fund_id: UUID
+) -> tuple[FundResponse, list[FundPositionResponse], list[FundEventResponse]]:
+    fund = _get_fund(session, fund_id)
+    if not fund.managed:
+        raise FundNotFoundError
+    positions = session.execute(
+        select(FundMovement.account_id, func.sum(FundMovement.amount))
+        .where(FundMovement.fund_id == fund_id)
+        .group_by(FundMovement.account_id)
+    ).all()
+    names = account_names(session, {row[0] for row in positions})
+    event_ids, _ = history_source_ids(session, fund_id=fund_id, account_id=None)
+    return (
+        _fund_response(session, fund),
+        [
+            FundPositionResponse(
+                fund_id=fund_id,
+                fund_name=fund.name,
+                account_id=account_id,
+                account_name=names[account_id],
+                balance=format(amount, "f"),
+            )
+            for account_id, amount in positions
+            if amount != 0
+        ],
+        event_responses(session, event_ids),
+    )
+
+
+def post_managed_fund(
+    session: Session,
+    *,
+    fund_id: UUID,
+    account_id: UUID,
+    amount: Decimal,
+    occurred_on: date,
+    request_id: UUID,
+    free: Decimal,
+    operation_id: UUID | None = None,
+) -> UUID:
+    if session.get(FundEvent, request_id) is not None:
+        raise FundConflictError
+    fund = _lock_fund_references(session, {fund_id}, allow_managed=True)[fund_id]
+    if not fund.managed or fund.archived_at is not None:
+        raise FundNotFoundError
+    balance = fund_balance(session, fund_id)
+    if amount > 0 and (
+        amount > free or fund.target_amount is None or balance + amount > fund.target_amount
+    ):
+        if amount > free:
+            raise FundCoverageError
+        raise FundTargetCapacityError
+    if amount < 0 and fund_balance(session, fund_id, account_id) < -amount:
+        raise FundBalanceError
+    event = FundEvent(
+        id=request_id,
+        type=FundEventType.ALLOCATION if amount > 0 else FundEventType.FUND_RELEASE,
+        occurred_on=occurred_on,
+        created_at=datetime.now(UTC),
+        caused_by_operation_id=operation_id,
+    )
+    session.add(event)
+    session.flush()
+    session.add(
+        FundMovement(fund_id=fund_id, account_id=account_id, event_id=event.id, amount=amount)
+    )
+    session.flush()
+    return event.id
+
+
+def operation_has_managed_reservation(session: Session, operation_id: UUID) -> bool:
+    return (
+        session.scalar(
+            select(FundEvent.id)
+            .join(FundMovement, FundMovement.event_id == FundEvent.id)
+            .join(Fund, Fund.id == FundMovement.fund_id)
+            .where(FundEvent.caused_by_operation_id == operation_id, Fund.managed.is_(True))
+            .limit(1)
         )
         is not None
     )

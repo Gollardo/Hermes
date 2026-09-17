@@ -1,6 +1,80 @@
 import type { ru } from './ru';
 
 export const en = {
+  'depreciation.title': 'Replacement savings',
+  'depreciation.eyebrow': 'Save for replacement purchases',
+  'depreciation.intro':
+    'Inflation-adjusted replacement cost. Savings remain in your existing accounts.',
+  'depreciation.add': 'Add purchase',
+  'depreciation.refresh': 'Refresh data',
+  'depreciation.loading': 'Loading purchases and savings…',
+  'depreciation.empty':
+    'Add a purchase, its cost, term and expected annual inflation. Saving starts the following month.',
+  'depreciation.until': 'Save by',
+  'depreciation.saved': 'Saved',
+  'depreciation.target': 'Estimated replacement cost',
+  'depreciation.plan': 'Plan',
+  'depreciation.still': 'Still to save this month',
+  'depreciation.expiredHint': 'The term has ended. Still to save:',
+  'depreciation.contribute': 'Contribute',
+  'depreciation.release': 'Release savings',
+  'depreciation.details': 'Schedule and history',
+  'depreciation.cost': 'Purchase cost',
+  'depreciation.months': 'months',
+  'depreciation.inflation': 'Expected annual inflation',
+  'depreciation.rule':
+    'Partial contributions do not change the current month’s plan. After the month ends, the outstanding amount is spread over the remaining months.',
+  'depreciation.location': 'Where savings are held',
+  'depreciation.noSavings': 'No money reserved yet.',
+  'depreciation.schedule': 'Monthly schedule',
+  'depreciation.projectionHint':
+    'Future amounts assume no further contributions this month and completion of future monthly plans. New contributions change the estimate.',
+  'depreciation.actual': 'Contributed less released',
+  'depreciation.closed': 'Month ended',
+  'depreciation.current': 'Current month',
+  'depreciation.estimate': 'Estimate',
+  'depreciation.history': 'History',
+  'depreciation.contribution': 'Contribution',
+  'depreciation.released': 'Release',
+  'depreciation.operation': 'Transfer in journal',
+  'depreciation.noHistory': 'No contributions yet.',
+  'depreciation.archiveHint':
+    'Archiving ends saving and preserves history. Only available with a zero balance.',
+  'depreciation.archive': 'Finish and archive',
+  'depreciation.close': 'Close',
+  'depreciation.name': 'Purchase name',
+  'depreciation.purchaseMonth': 'Purchase month',
+  'depreciation.term': 'Term in months (1–600)',
+  'depreciation.estimateHint':
+    'Annual inflation from 0,00% to 100,00%. Compound growth over the full term. This is an estimate, not a guaranteed price; creating a purchase does not spend money.',
+  'depreciation.initial': 'Initial monthly contribution',
+  'depreciation.saving': 'Saving…',
+  'depreciation.create': 'Create',
+  'depreciation.calculate': 'Calculate',
+  'depreciation.releaseHint':
+    'The amount becomes free on the selected account. No physical transfer or expense is created. To finish this purchase, release its balance and archive it.',
+  'depreciation.paymentHint':
+    'The amount is reserved only for this purchase and no longer counts as free money.',
+  'depreciation.account': 'Holding account',
+  'depreciation.source': 'Transfer from another account — optional',
+  'depreciation.sourceHint':
+    'Without a source, reserve existing free money on the holding account.',
+  'depreciation.amount': 'Amount',
+  'depreciation.monthOfFact': 'Recorded in the current Hermes month:',
+  'depreciation.archived': 'Archived',
+  'depreciation.funded': 'Fully funded',
+  'depreciation.expired': 'Term ended',
+  'depreciation.active': 'Saving',
+  'depreciation.invalid': 'Check required fields and value formats.',
+  'depreciation.error': 'Could not complete the savings action.',
+  'depreciation.conflict':
+    'Data changed or this request was already used. Refresh before retrying.',
+  'depreciation.futurePurchase': 'The purchase month cannot be in the future.',
+  'depreciation.notFound': 'Purchase not found.',
+  'depreciation.reserved': 'In replacement savings',
+  'depreciation.linked':
+    'This transfer is linked to replacement savings. To correct it, release the reservation and make a reverse transfer.',
+
   'imports.formatSettings': 'Format settings and column mapping',
   'imports.manualFormat': 'Manual settings',
   'imports.commaHint': 'Separate multiple values with commas.',
@@ -429,7 +503,8 @@ export const en = {
   'funds.totalBalance': 'Total balance',
   'funds.availableWhenTheBalanceReachesZero': 'Available when the balance reaches zero.',
   'funds.moneyByAccount': 'Money by account',
-  'funds.physicalBalanceInFundsInReserveFree': 'Physical balance = in funds + in reserve + free.',
+  'funds.physicalBalanceInFundsInReserveFree':
+    'Physical balance = ordinary funds + replacement savings + reserve + free.',
   'funds.physical': 'Physical',
   'funds.inReserve': 'In reserve',
   'funds.fundMovementHistory': 'Fund movement history',

@@ -295,3 +295,13 @@ The final transaction is the only visible result. Funds owns release events and
 replay checks; Operations owns physical posting and its existing lifecycle.
 Backup validates the release's negative movement and exact correspondence to
 the outgoing transfer movement, date and description.
+
+## Replacement savings
+
+The Depreciation purchase command creates a managed Funds reservation definition
+without physical movements. A contribution locks request identity and accounts,
+checks the purchase version, optionally posts through Operations, reserves through
+Funds, and records its receipt in one transaction. Failed reservation rolls back
+the physical transfer. Month reads derive recommendations from event history;
+month rollover is read-only. Backup includes purchases, receipts and the existing
+Funds events/movements in the same atomic snapshot and restore.
