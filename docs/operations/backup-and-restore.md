@@ -85,3 +85,18 @@ version and domain-level counts/invariants.
    destination credential/current session and ends other sessions; first-run
    restore creates a new destination credential/session in the restore
    transaction.
+
+## Fund release compatibility (migration 0016)
+
+Migration `0016_fund_release` adds the `fund_release` event label without
+rewriting existing financial data. Schema-1 exports include these events via the
+existing fund ledger and causal-operation field. Restore validates a single
+negative fund movement, no reserve movements on the release itself, and exact
+source/amount/date/description correspondence for an optional linked transfer.
+Use the same or newer application to restore a backup containing release events;
+older validators do not understand this event type.
+
+Downgrade to 0015 refuses while release facts exist rather than deleting them.
+If unused, downgrade keeps the enum label, consistent with 0013. For rollback
+after using the feature, restore a separately verified pre-upgrade backup to an
+isolated older instance; do not discard financial history to force downgrade.

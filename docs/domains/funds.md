@@ -141,3 +141,38 @@ is never silently released or moved.
 - edit/delete lifecycle for explicit allocation and redistribution facts;
 - immutable audit history and bulk actions;
 - currency-specific precision and exchange rates.
+
+## Explicit release to free money (unreleased)
+
+The Funds screen can release a positive exact amount from one active fund's
+position on one active account. Keeping it on that account creates one negative
+`fund_release` virtual movement and no physical operation. Selecting another
+active account atomically releases the source position and posts an ordinary
+physical transfer; the receiving money is free, not assigned to the fund.
+This records a completed fact, never initiates a bank transfer, and cannot be
+future-dated. It creates neither income nor an additional purchase expense.
+
+`POST /funds/releases` accepts `request_id`, `fund_id`, `account_id`, optional
+`destination_account_id`, positive exact `amount`, `occurred_on`, and optional
+`description`. An equal source and destination is normalized to no transfer.
+The request UUID becomes the release event ID. Repeating the same normalized
+request returns the existing result; reusing its ID for different fields
+conflicts. This replay guarantee lasts while the fact exists, including after
+backup/restore; deletion is not a permanent idempotency tombstone.
+
+Account locks precede fund locks. Coverage, active references and the source
+fund position are checked in the same transaction as both ledgers. In dynamic
+mode the existing automatic reserve refill runs afterwards: reserve money can
+refill incomplete funds without changing the newly freed money. The UI discloses
+this, because the final fund balance may decrease by less than the release.
+A refill caused by a transfer remains causally linked to that transfer.
+
+Same-account releases follow the existing immutable explicit-event lifecycle.
+A release with transfer links its event to the operation. Ordinary editing is
+rejected; change it by deleting and recreating the whole composed action.
+Deletion reverses the release, physical transfer and dependent reserve refill
+atomically, and fails if resulting coverage, non-negative positions, or the
+zero-balance invariant of an archived fund would be violated.
+
+This slice does not link a release to a purchase, prove that a reimbursement is
+unique per purchase, split it across funds, create plans, or initiate payments.

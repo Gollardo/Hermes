@@ -26,6 +26,7 @@ class FundEventType(StrEnum):
     FUND_TRANSFER = "fund_transfer"
     RESERVE_DISTRIBUTION = "reserve_distribution"
     RESERVE_RELEASE = "reserve_release"
+    FUND_RELEASE = "fund_release"
 
 
 class Fund(Base):

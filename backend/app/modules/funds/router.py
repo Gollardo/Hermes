@@ -10,6 +10,7 @@ from app.application.funds import (
     fund_summary,
     preview_allocation,
     redistribute_fund,
+    release_fund,
     release_fund_reserve,
     replace_fund_definition,
     transfer_between_funds,
@@ -25,6 +26,8 @@ from app.modules.funds.schemas import (
     FundEventResponse,
     FundHistoryResponse,
     FundLifecycleRequest,
+    FundReleaseRequest,
+    FundReleaseResponse,
     FundReserveReleaseRequest,
     FundResponse,
     FundSummaryResponse,
@@ -47,7 +50,7 @@ from app.modules.funds.service import (
     FundTargetCapacityError,
     list_funds,
 )
-from app.modules.operations.contracts import InsufficientBalanceError
+from app.modules.operations.contracts import FutureOperationDateError, InsufficientBalanceError
 
 read_router = APIRouter(prefix="/funds", tags=["funds"])
 write_router = APIRouter(prefix="/funds", tags=["funds"])
@@ -55,6 +58,12 @@ write_router = APIRouter(prefix="/funds", tags=["funds"])
 
 def _raise_domain_error(error: RuntimeError) -> None:
     mapping: list[tuple[type[RuntimeError], int, str, str]] = [
+        (
+            FutureOperationDateError,
+            409,
+            "future_operation_requires_plan",
+            "A release cannot be future-dated",
+        ),
         (
             DynamicFundTargetsRequiredError,
             409,
@@ -264,6 +273,23 @@ def transfer_allocation(
         FundBalanceError,
         FundTargetCapacityError,
         InsufficientBalanceError,
+    ) as error:
+        _raise_domain_error(error)
+        raise AssertionError from error
+
+
+@write_router.post("/releases", response_model=FundReleaseResponse, status_code=201)
+def withdraw_fund(payload: FundReleaseRequest, session: DatabaseSession) -> FundReleaseResponse:
+    try:
+        return release_fund(session, payload)
+    except (
+        AccountReferenceError,
+        FundNotFoundError,
+        FundConflictError,
+        FundBalanceError,
+        FundCoverageError,
+        InsufficientBalanceError,
+        FutureOperationDateError,
     ) as error:
         _raise_domain_error(error)
         raise AssertionError from error

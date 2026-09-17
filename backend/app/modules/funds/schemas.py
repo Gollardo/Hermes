@@ -279,6 +279,7 @@ class FundEventResponse(BaseModel):
         "fund_transfer",
         "reserve_distribution",
         "reserve_release",
+        "fund_release",
         "expense",
         "transfer",
     ]
@@ -286,6 +287,7 @@ class FundEventResponse(BaseModel):
     description: str | None
     movements: list[FundMovementResponse]
     reserve_movements: list["FundReserveMovementResponse"] = []
+    caused_by_operation_id: UUID | None = None
     created_at: datetime
 
 
@@ -324,3 +326,20 @@ class FundHistoryResponse(BaseModel):
     page: int
     page_size: int
     total: int
+
+
+class FundReleaseRequest(FundReserveReleaseRequest):
+    request_id: UUID
+    fund_id: UUID
+    destination_account_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def normalize_same_account(self) -> Self:
+        if self.destination_account_id == self.account_id:
+            self.destination_account_id = None
+        return self
+
+
+class FundReleaseResponse(BaseModel):
+    operation_id: UUID | None
+    release: FundEventResponse

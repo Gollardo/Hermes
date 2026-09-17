@@ -280,3 +280,18 @@ public Scheduling confirmation -> Imports receipt -> commit -> journal links.
 Preview has no domain writes or schedule materialization. Explicit profile save
 is separate. Source files are processed locally by the application and discarded;
 no external service or worker is introduced. Backup includes profiles/receipts.
+
+## Release a fund into free money
+
+Funds composer -> authenticated `POST /funds/releases` -> application coordinator
+-> lock account identities in UUID order -> replay check -> validate active
+accounts and fact date -> Funds negative position event -> optional Operations
+physical transfer -> link event to transfer -> dynamic reserve refill -> coverage
+validation -> commit. Failure at any stage rolls back the whole command.
+
+The source reservation is released before posting the optional transfer, so the
+intermediate coverage check in the existing physical posting contract is valid.
+The final transaction is the only visible result. Funds owns release events and
+replay checks; Operations owns physical posting and its existing lifecycle.
+Backup validates the release's negative movement and exact correspondence to
+the outgoing transfer movement, date and description.

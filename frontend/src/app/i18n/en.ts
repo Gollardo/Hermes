@@ -536,6 +536,24 @@ export const en = {
   'funds.reallocation': 'Reallocation',
   'funds.transferBetweenFunds0368': 'Transfer between funds',
   'funds.automaticContributionFromReserve': 'Automatic contribution from reserve',
+  'funds.releaseOpenTransfer': 'Open linked transfer',
+  'funds.releaseTitle': 'Release from fund',
+  'funds.releaseError': 'Could not release money from the fund. Check balances and retry.',
+  'funds.releaseExplanation':
+    'Money becomes free. An already recorded purchase is not posted again. This records a fact; make any bank transfer separately.',
+  'funds.releaseSource': 'Account holding the fund money',
+  'funds.releaseDestination': 'Where the free money goes',
+  'funds.releaseSameAccount': 'Keep on the source account',
+  'funds.releaseInvalid':
+    'Choose active accounts, a date no later than today, and an amount within the source fund position.',
+  'funds.releasePreview':
+    'Release {amount} {currency} from the fund into free money. Income and expenses remain unchanged.',
+  'funds.releaseDynamic':
+    'After release, funds may refill automatically from the shared reserve. The final fund balance may therefore decrease by less than the released amount.',
+  'funds.releaseLifecycle':
+    'A same-account release is a history fact without editing. To reverse a release with transfer, delete the transfer in the journal; to change it, delete and recreate it.',
+  'funds.releaseEditBlocked':
+    'This transfer is linked to a fund release. To change it, delete the transfer and create the release again.',
   'funds.reserveRelease': 'Reserve release',
   'funds.fundExpense': 'Fund expense',
   'funds.transferWithFund': 'Transfer with fund',

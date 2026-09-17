@@ -250,3 +250,11 @@ The implemented RU/EN presentation follows the shared
 [internationalization contract](../internationalization.md). Language changes
 update screen copy and accessible labels while preserving financial semantics,
 user-entered data, dates, selected context and exact monetary payloads.
+
+## Fund release transfer lifecycle (unreleased)
+
+The Funds composer owns release-to-free parameters. Its linked physical transfer
+is visible in the journal but cannot be changed through the ordinary editor.
+The localized conflict directs the owner to delete the whole transfer and
+recreate the release. Deletion atomically reverses its fund release and reserve
+refill, subject to current balance and archived-fund invariants.

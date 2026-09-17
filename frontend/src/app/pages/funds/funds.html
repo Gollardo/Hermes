@@ -211,6 +211,15 @@
               </div>
               <div class="directory-item-side">
                 <div class="item-actions">
+                  @if (!fund.archived && !fundIsEmpty(fund)) {
+                    <button
+                      type="button"
+                      class="secondary fund-release-action"
+                      (click)="openFundRelease(fund)"
+                    >
+                      {{ t('funds.releaseTitle') }}
+                    </button>
+                  }
                   <button type="button" class="secondary" (click)="edit(fund)">
                     {{ t('accounts.edit') }}
                   </button>
@@ -293,6 +302,13 @@
                   <strong>{{ event.occurred_on | textDate }}</strong>
                 </div>
                 <p>{{ event.description || t('funds.noDescription') }}</p>
+                @if (event.type === 'fund_release' && event.caused_by_operation_id) {
+                  <a
+                    routerLink="/operations"
+                    [queryParams]="{ focus: event.caused_by_operation_id }"
+                    >{{ t('funds.releaseOpenTransfer') }}</a
+                  >
+                }
               </div>
               <ul>
                 @for (movement of event.movements; track movement.fund_id + movement.account_id) {
@@ -372,6 +388,9 @@
                   }
                   @case ('fundTransfer') {
                     {{ t('funds.transferBetweenFunds') }}
+                  }
+                  @case ('fundRelease') {
+                    {{ t('funds.releaseTitle') }}
                   }
                   @case ('reserveRelease') {
                     {{ t('funds.releaseReserveToFreeBalance') }}
@@ -841,6 +860,76 @@
               <button type="submit" [disabled]="saving() || !canTransferBetweenFunds()">
                 {{ t('funds.transferBetweenFunds') }}
               </button>
+            </form>
+          }
+
+          @if (activeModal() === 'fundRelease') {
+            @if (error(); as message) {
+              <p class="field-error" role="alert">{{ message }}</p>
+            }
+            <p class="modal-explanation">{{ t('funds.releaseExplanation') }}</p>
+            <form [formGroup]="releaseForm" (ngSubmit)="releaseFund()">
+              <fieldset [disabled]="saving()">
+                <p>
+                  <strong>{{ fundName(releaseForm.controls.fundId.value) }}</strong>
+                </p>
+                <label for="fund-release-source">{{ t('funds.releaseSource') }}</label>
+                <app-entity-combobox
+                  inputId="fund-release-source"
+                  formControlName="accountId"
+                  [options]="releaseSourceOptions()"
+                  recentKey="accounts"
+                />
+                <label for="fund-release-destination">{{ t('funds.releaseDestination') }}</label>
+                <select id="fund-release-destination" formControlName="destinationAccountId">
+                  <option value="">{{ t('funds.releaseSameAccount') }}</option>
+                  @for (account of activeAccounts(); track account.account_id) {
+                    @if (account.account_id !== releaseForm.controls.accountId.value) {
+                      <option [value]="account.account_id">{{ account.account_name }}</option>
+                    }
+                  }
+                </select>
+                <label for="fund-release-amount">{{ t('funds.amount') }}</label>
+                <input
+                  appDecimalInput
+                  id="fund-release-amount"
+                  formControlName="amount"
+                  inputmode="decimal"
+                />
+                <label for="fund-release-date">{{ t('funds.date') }}</label>
+                <input
+                  id="fund-release-date"
+                  type="date"
+                  formControlName="occurredOn"
+                  [max]="applicationToday()"
+                />
+                <label for="fund-release-description">{{ t('accounts.description') }}</label>
+                <textarea
+                  id="fund-release-description"
+                  formControlName="description"
+                  maxlength="2000"
+                ></textarea>
+                @if (releaseForm.controls.amount.touched && !canReleaseFund() && !saving()) {
+                  <p class="field-error">{{ t('funds.releaseInvalid') }}</p>
+                }
+                @if (canReleaseFund()) {
+                  <p class="hint">
+                    {{
+                      t('funds.releasePreview', {
+                        amount: (releaseForm.controls.amount.value | money),
+                        currency: baseCurrency(),
+                      })
+                    }}
+                  </p>
+                }
+                @if (dynamicMode()) {
+                  <p class="hint">{{ t('funds.releaseDynamic') }}</p>
+                }
+                <p class="hint">{{ t('funds.releaseLifecycle') }}</p>
+                <button type="submit" [disabled]="!canReleaseFund()">
+                  {{ t('funds.releaseTitle') }}
+                </button>
+              </fieldset>
             </form>
           }
 

@@ -13,6 +13,8 @@ from app.modules.operations.service import (
     FutureOperationDateError,
     InsufficientBalanceError,
     create_operation,
+    get_operation_response,
+    reject_future_operation_date,
 )
 
 
@@ -187,6 +189,8 @@ def operation_history_references(
 
 
 __all__ = [
+    "get_operation_response",
+    "reject_future_operation_date",
     "import_candidates",
     "import_existing",
     "post_import_operation",

@@ -119,3 +119,13 @@ not be future facts. Linking a statement row to an existing fact verifies its
 version and reviewed financial fields without reposting. Import receipts remain
 after allowed edits/deletions; they never override the journal or recreate a
 deleted fact. Confirmed-plan deletion protection remains unchanged.
+
+## Transfers composed with a fund release
+
+A fund release may create an ordinary physical transfer with no operation-owned
+virtual movements. Its Funds-owned release event records the operation as its
+cause. Income/expense reports therefore retain the original purchase exactly
+once. The ordinary editor rejects this composition with
+`operation_fund_release_linked`; delete and recreate it to change its fields.
+Deleting checks all accounts affected by reserve refill and rejects restoration
+of a non-zero archived fund. Every effect and reversal shares one transaction.

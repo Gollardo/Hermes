@@ -26,6 +26,7 @@ from app.modules.funds.contracts import (
     fund_names,
     lock_operation_dependent_allocation,
     operation_fund_movements,
+    operation_has_fund_release,
     rebalance_reserve,
     remove_operation_dependent_events,
     remove_operation_reserve_distributions,
@@ -63,6 +64,10 @@ class OperationLinkedError(RuntimeError):
 
 
 class OperationAllocationLinkedError(RuntimeError):
+    pass
+
+
+class OperationFundReleaseLinkedError(RuntimeError):
     pass
 
 
@@ -260,13 +265,14 @@ def update_operation(
     old_amounts = _amounts_for_operation(session, operation.id)
     legacy_transfer_allocation = _legacy_transfer_allocation_match(operation, old_amounts)
     old_fund_amounts = operation_fund_movements(session, operation.id)
+    has_release = operation_has_fund_release(session, operation.id)
     draft = _draft(payload)
     _validate_category(session, draft, operation.category_id)
     new_amounts = _movement_amounts(draft)
     new_fund_amounts = _fund_movement_amounts(draft)
     extra_ids = (
         {item.id for item in list_account_identities(session)}
-        if old_fund_amounts or new_fund_amounts
+        if old_fund_amounts or new_fund_amounts or has_release
         else set()
     )
     _lock_and_check_balances(
@@ -275,6 +281,8 @@ def update_operation(
         new_amounts=new_amounts,
         extra_account_ids=extra_ids,
     )
+    if has_release:
+        raise OperationFundReleaseLinkedError
     if lock_operation_dependent_allocation(
         session,
         operation.id,
@@ -317,8 +325,11 @@ def delete_operation(session: Session, operation_id: UUID, *, expected_version: 
         raise OperationConflictError
     old_amounts = _amounts_for_operation(session, operation.id)
     old_fund_amounts = operation_fund_movements(session, operation.id)
+    has_release = operation_has_fund_release(session, operation.id)
     extra_ids = (
-        {item.id for item in list_account_identities(session)} if old_fund_amounts else set()
+        {item.id for item in list_account_identities(session)}
+        if old_fund_amounts or has_release
+        else set()
     )
     _lock_and_check_balances(
         session,
@@ -326,7 +337,9 @@ def delete_operation(session: Session, operation_id: UUID, *, expected_version: 
         new_amounts={},
         extra_account_ids=extra_ids,
     )
-    legacy_transfer_allocation = _legacy_transfer_allocation_match(operation, old_amounts)
+    legacy_transfer_allocation = (
+        None if has_release else _legacy_transfer_allocation_match(operation, old_amounts)
+    )
     remove_operation_dependent_events(
         session,
         operation.id,
@@ -347,7 +360,11 @@ def delete_operation(session: Session, operation_id: UUID, *, expected_version: 
             raise
         raise OperationLinkedError from error
     validate_account_coverage(
-        session, {account_id: account_balance(session, account_id) for account_id in old_amounts}
+        session,
+        {
+            account_id: account_balance(session, account_id)
+            for account_id in set(old_amounts) | extra_ids
+        },
     )
 
 

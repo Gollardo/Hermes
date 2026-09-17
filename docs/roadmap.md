@@ -245,6 +245,16 @@ release. Existing protected-deployment restrictions remain in force.
 - [ ] Resolve known critical defects and complete the release/security
   checklist.
 
+## Fund release to free money — unreleased slice
+
+- [x] Same-account release and atomic release with physical transfer.
+- [x] Explicit history, validation, reversible linked transfer, RU/EN composer,
+  replay protection and backup compatibility.
+- [ ] Owner acceptance against a restored backup before deployment.
+
+This bounded slice does not implement budgeting, debts or bank execution.
+Verification and remaining operational gates are in [project status](project-status.md).
+
 ## Parallel everyday-work backlog
 
 These improvements may be included in the nearest thematically appropriate

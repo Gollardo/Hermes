@@ -374,10 +374,15 @@ def validate_document(data: BackupData) -> None:
         and (
             event.caused_by_operation_id not in operation_ids
             or (
-                event.type == FundEventType.ALLOCATION
+                event.type in {FundEventType.ALLOCATION, FundEventType.FUND_RELEASE}
                 and operation_by_id[event.caused_by_operation_id].type != OperationType.TRANSFER
             )
-            or event.type not in {FundEventType.ALLOCATION, FundEventType.RESERVE_DISTRIBUTION}
+            or event.type
+            not in {
+                FundEventType.ALLOCATION,
+                FundEventType.RESERVE_DISTRIBUTION,
+                FundEventType.FUND_RELEASE,
+            }
         )
         for event in data.fund_events
     ):
@@ -439,6 +444,33 @@ def validate_document(data: BackupData) -> None:
                     or allocated_amount > positive_movement.amount
                 ):
                     raise BackupInvariantError("Transfer allocation cause is invalid")
+        elif event.type == FundEventType.FUND_RELEASE:
+            if (
+                len(event_movements) != 1
+                or event_movements[0].amount >= 0
+                or event_reserve_movements
+            ):
+                raise BackupInvariantError("Fund release is invalid")
+            if event.caused_by_operation_id is not None:
+                operation = operation_by_id[event.caused_by_operation_id]
+                outgoing = next(
+                    item for item in movements_by_operation[operation.id] if item.amount < 0
+                )
+                if (
+                    event.occurred_on != operation.occurred_on
+                    or event.description != operation.description
+                    or event_movements[0].account_id != outgoing.account_id
+                    or event_movements[0].amount != outgoing.amount
+                    or fund_movements_by_operation[operation.id]
+                    or sum(
+                        1
+                        for candidate in data.fund_events
+                        if candidate.caused_by_operation_id == operation.id
+                        and candidate.type in {FundEventType.FUND_RELEASE, FundEventType.ALLOCATION}
+                    )
+                    != 1
+                ):
+                    raise BackupInvariantError("Fund release transfer cause is invalid")
         elif event.type == FundEventType.REDISTRIBUTION:
             if (
                 len(event_movements) != 2

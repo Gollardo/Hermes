@@ -1,3 +1,4 @@
+import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -51,7 +52,7 @@ describe('FundsPage', () => {
     localStorage.setItem('hermes-recent-accounts', JSON.stringify(['account-1']));
     await TestBed.configureTestingModule({
       imports: [FundsPage],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
     fixture = TestBed.createComponent(FundsPage);
     http = TestBed.inject(HttpTestingController);
@@ -327,4 +328,85 @@ describe('FundsPage', () => {
     button.click();
     fixture.detectChanges();
   }
+});
+
+// Release uses the same modal and exact-decimal contract as other fund actions.
+describe('Fund release', () => {
+  let fixture: ComponentFixture<FundsPage>;
+  let http: HttpTestingController;
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [FundsPage],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FundsPage);
+    http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/v1/settings').flush({ timezone: 'UTC', base_currency: 'RUB' });
+    http.expectOne('/api/v1/funds/summary').flush({
+      ...SUMMARY,
+      positions: [{ fund_id: 'fund-1', account_id: 'account-1', balance: '25.0000' }],
+      accounts: [
+        ...SUMMARY.accounts,
+        {
+          ...SUMMARY.accounts[0],
+          account_id: 'account-2',
+          account_name: 'Salary',
+          free_balance: '100.0000',
+        },
+      ],
+    });
+    http.expectOne((r) => r.url === '/api/v1/funds/history').flush({ items: [], total: 0 });
+    fixture.detectChanges();
+    const button = [...fixture.nativeElement.querySelectorAll('button')].find((b: unknown) =>
+      (b as HTMLButtonElement).textContent?.includes('Вывести из фонда'),
+    ) as HTMLButtonElement;
+    button.click();
+    fixture.detectChanges();
+  });
+  afterEach(() => http.verify());
+
+  it('posts exact comma input once and retains the same request identity after failure', () => {
+    const page = fixture.componentInstance;
+    page['releaseForm'].patchValue({
+      accountId: 'account-1',
+      destinationAccountId: 'account-2',
+      amount: '12,3456',
+    });
+    expect(page['canReleaseFund']()).toBe(true);
+    page['releaseFund']();
+    page['releaseFund']();
+    const request = http.expectOne('/api/v1/funds/releases');
+    expect(request.request.body.amount).toBe('12.3456');
+    expect(request.request.body.destination_account_id).toBe('account-2');
+    const id = request.request.body.request_id;
+    request.flush({}, { status: 503, statusText: 'Unavailable' });
+    expect(page['releaseForm'].controls.amount.value).toBe('12,3456');
+    expect(page['activeModal']()).toBe('fundRelease');
+    page['releaseFund']();
+    const retry = http.expectOne('/api/v1/funds/releases');
+    expect(retry.request.body.request_id).toBe(id);
+    retry.flush({ operation_id: 'operation-1' });
+    http.expectOne('/api/v1/funds/summary').flush(SUMMARY);
+    http.expectOne((r) => r.url === '/api/v1/funds/history').flush({ items: [], total: 0 });
+    expect(page['activeModal']()).toBeNull();
+  });
+
+  it('supports release on the same account and blocks invalid positions and dates', () => {
+    const page = fixture.componentInstance;
+    page['releaseForm'].patchValue({ accountId: 'account-1', amount: '25.0001' });
+    expect(page['canReleaseFund']()).toBe(false);
+    page['releaseForm'].patchValue({ amount: '25', occurredOn: '2999-01-01' });
+    expect(page['canReleaseFund']()).toBe(false);
+    page['releaseForm'].patchValue({
+      occurredOn: page['applicationToday'](),
+      accountId: 'account-2',
+    });
+    expect(page['canReleaseFund']()).toBe(false);
+    page['releaseForm'].patchValue({ accountId: 'account-1' });
+    page['releaseFund']();
+    const request = http.expectOne('/api/v1/funds/releases');
+    expect(request.request.body.destination_account_id).toBeNull();
+    request.flush({}, { status: 409, statusText: 'Conflict' });
+  });
 });

@@ -410,3 +410,19 @@ dt {
     justify-content: flex-start;
   }
 }
+
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.funds-page .item-actions:has(.fund-release-action) {
+  flex-wrap: wrap;
+}
+.fund-release-action {
+  white-space: nowrap;
+}

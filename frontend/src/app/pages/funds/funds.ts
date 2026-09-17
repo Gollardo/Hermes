@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
@@ -95,6 +96,7 @@ interface FundMovement {
 }
 
 interface FundEvent {
+  caused_by_operation_id?: string | null;
   id: string;
   type:
     | 'allocation'
@@ -102,6 +104,7 @@ interface FundEvent {
     | 'fund_transfer'
     | 'reserve_distribution'
     | 'reserve_release'
+    | 'fund_release'
     | 'expense'
     | 'transfer';
   occurred_on: string;
@@ -130,7 +133,7 @@ interface AllocationTotals {
 
 @Component({
   selector: 'app-funds-page',
-  imports: [ReactiveFormsModule, MoneyPipe, DateTextPipe, EntityCombobox, DecimalInput],
+  imports: [RouterLink, ReactiveFormsModule, MoneyPipe, DateTextPipe, EntityCombobox, DecimalInput],
   templateUrl: './funds.html',
   styleUrls: ['../directory.css', './funds.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -141,6 +144,8 @@ export class FundsPage implements OnInit {
   private readonly builder = inject(NonNullableFormBuilder);
   private previewRequestId = 0;
   private historyRequestId = 0;
+  private releaseRequestId = crypto.randomUUID();
+  protected readonly applicationToday = signal('');
 
   protected readonly summary = signal<Summary | null>(null);
   protected readonly displayedFundPercentages = computed(() =>
@@ -173,6 +178,7 @@ export class FundsPage implements OnInit {
     | 'redistribution'
     | 'fundTransfer'
     | 'reserveRelease'
+    | 'fundRelease'
     | null
   >(null);
 
@@ -233,12 +239,29 @@ export class FundsPage implements OnInit {
     description: ['', Validators.maxLength(2000)],
   });
 
+  protected readonly releaseForm = this.builder.group({
+    fundId: ['', Validators.required],
+    accountId: ['', Validators.required],
+    destinationAccountId: [''],
+    amount: ['', [Validators.required, Validators.pattern(/^\d{1,16}(?:[.,]\d{1,4})?$/)]],
+    occurredOn: ['', Validators.required],
+    description: ['', Validators.maxLength(2000)],
+  });
+
   protected get allocationControls(): FormArray {
     return this.allocationForm.controls.allocations;
   }
 
   ngOnInit(): void {
     this.loadDate();
+    this.releaseForm.controls.accountId.valueChanges.subscribe((accountId) => {
+      if (this.releaseForm.controls.destinationAccountId.value === accountId) {
+        this.releaseForm.controls.destinationAccountId.setValue('');
+      }
+    });
+    this.releaseForm.valueChanges.subscribe(() => {
+      this.releaseRequestId = crypto.randomUUID();
+    });
     this.allocationForm.controls.accountId.valueChanges.subscribe(() => this.clearPreview());
     this.allocationForm.controls.amount.valueChanges.subscribe(() => this.clearPreview());
     this.load();
@@ -535,7 +558,82 @@ export class FundsPage implements OnInit {
     );
   }
 
+  protected openFundRelease(fund: Fund): void {
+    this.error.set(null);
+    this.releaseForm.reset({
+      fundId: fund.id,
+      accountId: '',
+      destinationAccountId: '',
+      amount: '',
+      occurredOn: this.applicationToday(),
+      description: '',
+    });
+    this.activeModal.set('fundRelease');
+  }
+
+  protected releaseSourceOptions(): EntityOption[] {
+    const fundId = this.releaseForm.controls.fundId.value;
+    return this.activeAccounts()
+      .filter(
+        (account) => (moneyUnits(this.positionBalance(fundId, account.account_id)) ?? 0n) > 0n,
+      )
+      .map((account) => ({
+        id: account.account_id,
+        label: account.account_name,
+        detail: `${formatMoney(this.positionBalance(fundId, account.account_id))} ${this.baseCurrency()}`,
+      }));
+  }
+
+  protected canReleaseFund(): boolean {
+    const value = this.releaseForm.getRawValue();
+    const amount = moneyUnits(value.amount);
+    return (
+      !this.saving() &&
+      this.releaseForm.valid &&
+      amount !== null &&
+      amount > 0n &&
+      Boolean(this.applicationToday()) &&
+      value.occurredOn <= this.applicationToday() &&
+      this.activeFunds().some((fund) => fund.id === value.fundId) &&
+      this.releaseSourceOptions().some((account) => account.id === value.accountId) &&
+      (!value.destinationAccountId ||
+        this.activeAccounts().some(
+          (account) => account.account_id === value.destinationAccountId,
+        )) &&
+      amount <= (moneyUnits(this.positionBalance(value.fundId, value.accountId)) ?? 0n)
+    );
+  }
+
+  protected releaseFund(): void {
+    if (!this.canReleaseFund()) {
+      this.releaseForm.markAllAsTouched();
+      return;
+    }
+    const value = this.releaseForm.getRawValue();
+    this.error.set(null);
+    this.saving.set(true);
+    this.http
+      .post(`${environment.apiBaseUrl}/funds/releases`, {
+        request_id: this.releaseRequestId,
+        fund_id: value.fundId,
+        account_id: value.accountId,
+        destination_account_id: value.destinationAccountId || null,
+        amount: decimalPayload(value.amount),
+        occurred_on: value.occurredOn,
+        description: value.description || null,
+      })
+      .subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.activeModal.set(null);
+          this.load();
+        },
+        error: (error: unknown) => this.failed(error, () => t('funds.releaseError')),
+      });
+  }
+
   protected closeModal(): void {
+    if (this.saving()) return;
     if (this.activeModal() === 'fund') this.cancelEdit();
     else this.activeModal.set(null);
   }
@@ -917,6 +1015,7 @@ export class FundsPage implements OnInit {
       fund_transfer: t('funds.transferBetweenFunds0368'),
       reserve_distribution: t('funds.automaticContributionFromReserve'),
       reserve_release: t('funds.reserveRelease'),
+      fund_release: t('funds.releaseTitle'),
       expense: t('funds.fundExpense'),
       transfer: t('funds.transferWithFund'),
     }[event.type];
@@ -982,6 +1081,7 @@ export class FundsPage implements OnInit {
           }).formatToParts(new Date());
           const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
           const today = `${value['year']}-${value['month']}-${value['day']}`;
+          this.applicationToday.set(today);
           this.allocationForm.patchValue({ occurredOn: today });
           this.specificTransferForm.patchValue({ occurredOn: today });
           this.redistributionForm.patchValue({ occurredOn: today });

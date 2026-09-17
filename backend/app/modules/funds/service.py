@@ -24,6 +24,7 @@ from app.modules.funds.schemas import (
     FundEventResponse,
     FundMovementResponse,
     FundPositionResponse,
+    FundReleaseRequest,
     FundReserveMovementResponse,
     FundReserveReleaseRequest,
     FundResponse,
@@ -879,9 +880,22 @@ def remove_operation_dependent_events(
         matched = _legacy_transfer_allocation_events(session, legacy_transfer_allocation)
         if len(matched) == 1:
             events.append(matched[0])
+    fund_ids = set(
+        session.scalars(
+            select(FundMovement.fund_id).where(
+                FundMovement.event_id.in_([event.id for event in events])
+            )
+        ).all()
+    )
+    funds = _lock_fund_references(session, fund_ids)
     for event in events:
         session.delete(event)
     session.flush()
+    if any(
+        fund.archived_at is not None and fund_balance(session, fund.id) != 0
+        for fund in funds.values()
+    ):
+        raise FundArchivedMutationError
 
 
 def _matches_legacy_transfer_allocation(
@@ -1173,6 +1187,7 @@ def event_response(session: Session, event: FundEvent) -> FundEventResponse:
     return FundEventResponse(
         id=event.id,
         type=event.type,
+        caused_by_operation_id=event.caused_by_operation_id,
         occurred_on=event.occurred_on,
         description=event.description,
         movements=[
@@ -1226,3 +1241,60 @@ def history_source_ids(
 def event_responses(session: Session, event_ids: set[UUID]) -> list[FundEventResponse]:
     events = session.scalars(select(FundEvent).where(FundEvent.id.in_(event_ids))).all()
     return [event_response(session, event) for event in events]
+
+
+def existing_fund_release(session: Session, request_id: UUID) -> FundEventResponse | None:
+    event = session.get(FundEvent, request_id)
+    if event is None:
+        return None
+    if event.type != FundEventType.FUND_RELEASE:
+        raise FundConflictError
+    return event_response(session, event)
+
+
+def create_fund_release(session: Session, payload: FundReleaseRequest) -> UUID:
+    """Release a position; the caller owns account locks and the transaction."""
+    _lock_definitions(session)
+    fund = _lock_fund_references(session, {payload.fund_id})[payload.fund_id]
+    if fund.archived_at is not None:
+        raise FundNotFoundError
+    if fund_balance(session, fund.id, payload.account_id) < payload.amount:
+        raise FundBalanceError
+    event = FundEvent(
+        id=payload.request_id,
+        type=FundEventType.FUND_RELEASE,
+        occurred_on=payload.occurred_on,
+        description=payload.description,
+        created_at=datetime.now(UTC),
+    )
+    session.add(event)
+    session.flush()
+    session.add(
+        FundMovement(
+            fund_id=fund.id,
+            account_id=payload.account_id,
+            event_id=event.id,
+            amount=-payload.amount,
+        )
+    )
+    session.flush()
+    return event.id
+
+
+def link_fund_release(session: Session, event_id: UUID, operation_id: UUID) -> None:
+    event = session.get(FundEvent, event_id)
+    assert event is not None and event.type == FundEventType.FUND_RELEASE
+    event.caused_by_operation_id = operation_id
+    session.flush()
+
+
+def operation_has_fund_release(session: Session, operation_id: UUID) -> bool:
+    return (
+        session.scalar(
+            select(FundEvent.id).where(
+                FundEvent.caused_by_operation_id == operation_id,
+                FundEvent.type == FundEventType.FUND_RELEASE,
+            )
+        )
+        is not None
+    )

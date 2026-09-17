@@ -174,3 +174,36 @@ processing, browser-memory drafts, manual overlap reconciliation and no pending
 bank reservation model. The production build warns about the initial bundle (527.64 kB against a
 500 kB warning budget) and inherited stylesheet budgets. Imports reuses the
 account/directory styles. No runtime infrastructure or dependency was added.
+
+## Unreleased fund release slice
+
+The owner authorized the complete release-to-free vertical slice on 2026-09-17.
+Funds can release a position on the same account or atomically transfer it into
+another account's free money without duplicating a purchase expense. Migration
+`0016_fund_release` adds the event type. Same-account facts are immutable; linked
+transfers support atomic deletion and reject ordinary editing. Dynamic reserve
+refill, unchanged-request replay and backup/restore are supported.
+
+Scope excludes purchase matching, purchase-level reimbursement limits, planning,
+multi-fund splits and bank execution. No release publication or deployment is
+implied. Verification: the complete backend suite passed 228 tests with PostgreSQL 17
+integration enabled. After the final reversal safeguard and one additional
+regression case, the affected Funds, Operations and release integration suites
+passed all 43 tests. All 180 frontend tests passed. Ruff, formatting, frontend
+lint, RU/EN catalogs, mypy, TypeScript, documentation links and `git diff --check`
+passed. The migration was checked with Alembic metadata comparison, a populated
+0015 upgrade/downgrade cycle, and refusal to downgrade after release facts exist.
+Backup/restore and request replay after restore passed for both release forms.
+
+The production frontend build passed with budget warnings (531.89 kB initial
+bundle versus a 500 kB warning budget, plus component stylesheet warnings).
+Browser acceptance on synthetic data confirmed comma input with four-place
+precision, a cross-account release into free money, history linkage and a 390 px
+layout without horizontal document overflow. The final desktop modal was also
+visually inspected. Production Docker build could not resolve the Dockerfile
+frontend image from Docker Hub before a network deadline; image verification
+therefore remains open. No dependency or external infrastructure was added.
+
+Next action: repeat the container build when registry access is available, then
+review both release forms against an isolated restored owner backup before any
+production migration. Retain a pre-upgrade backup for rollback.

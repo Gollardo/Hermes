@@ -12,10 +12,13 @@ from app.modules.funds.contracts import (
     AllocationCreateRequest,
     AllocationItem,
     AllocationPreviewResponse,
+    FundConflictError,
     FundCreateRequest,
     FundEventResponse,
     FundHistoryResponse,
     FundMovementResponse,
+    FundReleaseRequest,
+    FundReleaseResponse,
     FundReserveReleaseRequest,
     FundResponse,
     FundSummaryResponse,
@@ -26,23 +29,31 @@ from app.modules.funds.contracts import (
     archive_fund,
     create_allocation_with_free_balance,
     create_fund_definition,
+    create_fund_release,
     create_fund_transfer,
     create_redistribution_with_physical_balances,
     event_response,
     event_responses,
+    existing_fund_release,
     fund_names,
     fund_response,
     history_source_ids,
+    link_fund_release,
     operation_fund_movements,
     rebalance_reserve,
     release_reserve,
     reserved_balance,
     summary_with_physical_balances,
     update_fund,
+    validate_account_coverage,
 )
 from app.modules.operations.contracts import (
+    PhysicalTransferDraft,
     account_balance,
+    get_operation_response,
     operation_history_references,
+    post_physical_transfer,
+    reject_future_operation_date,
 )
 
 
@@ -209,3 +220,56 @@ def fund_history(
         page_size=page_size,
         total=total,
     )
+
+
+def release_fund(session: Session, payload: FundReleaseRequest) -> FundReleaseResponse:
+    """Release once, optionally transfer, then refill from reserve atomically."""
+    _lock_all_accounts(session)
+    existing = existing_fund_release(session, payload.request_id)
+    if existing is not None:
+        destination = None
+        if existing.caused_by_operation_id is not None:
+            destination = get_operation_response(
+                session, existing.caused_by_operation_id
+            ).destination_account_id
+        if (
+            existing.occurred_on != payload.occurred_on
+            or existing.description != payload.description
+            or destination != payload.destination_account_id
+            or len(existing.movements) != 1
+            or existing.movements[0].fund_id != payload.fund_id
+            or existing.movements[0].account_id != payload.account_id
+            or Decimal(existing.movements[0].amount) != -payload.amount
+        ):
+            raise FundConflictError
+        return FundReleaseResponse(operation_id=existing.caused_by_operation_id, release=existing)
+    account_ids = {payload.account_id}
+    if payload.destination_account_id is not None:
+        account_ids.add(payload.destination_account_id)
+    lock_account_references(session, account_ids)
+    reject_future_operation_date(session, payload.occurred_on)
+    event_id = create_fund_release(session, payload)
+    operation_id = None
+    if payload.destination_account_id is not None:
+        operation_id = post_physical_transfer(
+            session,
+            PhysicalTransferDraft(
+                occurred_on=payload.occurred_on,
+                amount=payload.amount,
+                description=payload.description,
+                source_account_id=payload.account_id,
+                destination_account_id=payload.destination_account_id,
+            ),
+        )
+        link_fund_release(session, event_id, operation_id)
+    rebalance_reserve(session, occurred_on=payload.occurred_on, caused_by_operation_id=operation_id)
+    validate_account_coverage(
+        session,
+        {
+            account.id: account_balance(session, account.id)
+            for account in list_account_identities(session)
+        },
+    )
+    release = existing_fund_release(session, event_id)
+    assert release is not None
+    return FundReleaseResponse(operation_id=operation_id, release=release)

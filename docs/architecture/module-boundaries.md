@@ -143,3 +143,11 @@ Categories owns RU/EN first-run templates, invoked by the existing atomic setup
 application use case through its public contract. Neither Settings persistence
 nor financial-domain ownership changes. See the
 [internationalization contract](../ui-ux/internationalization.md).
+
+## Fund release coordination (unreleased)
+
+`app.application.funds.release_fund` coordinates release and optional transfer
+through public Accounts, Funds and Operations contracts. Funds owns negative
+release events, replay comparison inputs and causal linkage; Operations retains
+physical posting and deletion ownership. No external service or runtime
+dependency is added.

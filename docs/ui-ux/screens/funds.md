@@ -218,3 +218,19 @@ The implemented RU/EN presentation follows the shared
 [internationalization contract](../internationalization.md). Language changes
 update screen copy and accessible labels while preserving financial semantics,
 user-entered data, dates, selected context and exact monetary payloads.
+
+## Implemented release composer (unreleased)
+
+An active non-empty fund exposes “Release from fund” using the existing modal
+pattern. Choose the source position, keep money on that account or select a
+destination, then enter amount, fact date and optional description. Only active
+accounts and a source position sufficient for the exact amount are accepted.
+The form previews the release amount and its income/expense neutrality, explains
+that bank transfers are recorded rather than initiated, and discloses dynamic
+reserve refill and the explicit-event/linked-transfer lifecycle before posting.
+
+Saving blocks duplicate submissions and closing the modal. Errors preserve the
+form and request identity so an unchanged retry can recover a committed response.
+Changing fields creates a new request identity. Success reloads coverage and
+history. A linked release history item opens the transfer in the journal.
+RU/EN copy and decimal-comma/dot input retain the shared UI contract.
