@@ -378,6 +378,55 @@ describe('OperationsPage', () => {
       .forEach((candidate) => candidate.flush({ items: [], page: 1, page_size: 367, total: 0 }));
   });
 
+  it('confirms an overdue one-off plan with an editable past date and preserves failures', () => {
+    const plan = {
+      id: 'overdue',
+      source_kind: 'one_off',
+      scheduled_on: '2026-09-24',
+      due_on: '2026-09-24',
+      status: 'pending',
+      type: 'expense',
+      amount: '12.5000',
+      description: 'Coffee',
+      account_id: 'account-1',
+      account_name: 'Main',
+      destination_account_id: null,
+      destination_account_name: null,
+      category_id: 'category-1',
+      category_name: 'Food',
+      allocate_to_funds: false,
+      version: 1,
+    };
+    flushInitial({ plans: [plan], applicationToday: '2026-09-25' });
+    (
+      fixture.nativeElement.querySelector('.planned-row-actions button') as HTMLButtonElement
+    ).click();
+    http.expectOne('/api/v1/scheduling/occurrences/overdue').flush(plan);
+    fixture.detectChanges();
+    const date = fixture.nativeElement.querySelector('#operation-date') as HTMLInputElement;
+    expect(date.readOnly).toBe(false);
+    expect(date.value).toBe('2026-09-24');
+    setValue('#operation-date', '2026-09-23');
+    fixture.nativeElement.querySelector('.entry-panel form').dispatchEvent(new Event('submit'));
+    const request = http.expectOne('/api/v1/scheduling/occurrences/overdue/confirm');
+    expect(request.request.body.occurred_on).toBe('2026-09-23');
+    request.flush(
+      { detail: { code: 'scheduling_conflict' } },
+      { status: 409, statusText: 'Conflict' },
+    );
+    fixture.detectChanges();
+    expect(date.value).toBe('2026-09-23');
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).not.toBeNull();
+    setValue('#operation-date', '2026-09-26');
+    expect(
+      (
+        fixture.nativeElement.querySelector(
+          '.entry-panel button[type="submit"]',
+        ) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+  });
+
   it('applies a one-off plan due today and does not duplicate it among other plans', () => {
     const plan = {
       id: 'plan-today',
@@ -655,7 +704,7 @@ describe('OperationsPage', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Принять плановую операцию');
-    expect(fixture.nativeElement.textContent).toContain('Плановая дата — 10 сентября 2026');
+    expect(fixture.nativeElement.textContent).toContain('Плановая дата: 10 сентября 2026');
     expect((fixture.nativeElement.querySelector('#operation-date') as HTMLInputElement).value).toBe(
       '2026-08-31',
     );
@@ -667,6 +716,7 @@ describe('OperationsPage', () => {
     const request = http.expectOne('/api/v1/scheduling/occurrences/occurrence-1/confirm');
     expect(request.request.body).toEqual({
       version: 3,
+      occurred_on: '2026-08-31',
       operation: {
         type: 'transfer',
         amount: '25.50',

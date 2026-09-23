@@ -14,7 +14,7 @@ import { EMPTY, Observable, expand, forkJoin, reduce } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { apiErrorMessage } from '../../core/api-error';
-import { DateTextPipe, formatTextDate } from '../../shared/date-text.pipe';
+import { DateTextPipe } from '../../shared/date-text.pipe';
 import { currencySymbol, formatMoney, MoneyPipe } from '../../shared/money.pipe';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
 import {
@@ -160,6 +160,7 @@ export class SchedulingPage implements OnInit {
   protected readonly editingId = signal<string | null>(null);
   protected readonly ruleFormOpen = signal(false);
   protected readonly busyOccurrenceId = signal<string | null>(null);
+  protected readonly confirmationDates = signal<Record<string, string>>({});
   protected readonly postponeDates = signal<Record<string, string>>({});
   protected readonly editingConfirmationId = signal<string | null>(null);
   protected readonly selectedCalendarDay = signal<CalendarDay | null>(null);
@@ -593,11 +594,20 @@ export class SchedulingPage implements OnInit {
   protected confirm(occurrence: ExpectedOccurrence): void {
     const amount = this.confirmationAmount(occurrence);
     const normalized = moneyExpressionPayload(amount);
-    if (normalized === null || !positiveDecimal(normalized)) return;
+    if (
+      normalized === null ||
+      !positiveDecimal(normalized) ||
+      !this.validConfirmationDate(occurrence)
+    )
+      return;
     this.runOccurrenceAction(
       occurrence,
       'confirm',
-      { version: occurrence.version, amount: normalized },
+      {
+        version: occurrence.version,
+        amount: normalized,
+        occurred_on: this.confirmationDate(occurrence),
+      },
       () => t('scheduling.couldNotConfirmThePlannedOperation'),
     );
   }
@@ -634,33 +644,20 @@ export class SchedulingPage implements OnInit {
     return t('scheduling.theCurrentDateAndFollowingUntouchedEvents', { p0: signedDays(days) });
   }
 
-  protected earlyApplicationWarning(occurrence: ExpectedOccurrence): string | null {
-    if (occurrence.source_kind !== 'one_off' || occurrence.due_on <= this.today()) return null;
-    return t('scheduling.plannedDateP0YouAreApplyingThis', {
-      p0: formatTextDate(occurrence.due_on),
-    });
+  protected confirmationDate(occurrence: ExpectedOccurrence): string {
+    return (
+      this.confirmationDates()[occurrence.id] ??
+      (occurrence.due_on < this.today() ? occurrence.due_on : this.today())
+    );
   }
 
-  protected oneOffConfirmationConsequence(occurrence: ExpectedOccurrence): string | null {
-    if (occurrence.source_kind !== 'one_off') return null;
-    const amount = `${formatMoney(occurrence.amount)} ${this.baseCurrency()}`;
-    if (occurrence.type === 'expense') {
-      return t('scheduling.todayP1WillBeDebitedFromAccount', {
-        p0: occurrence.account_name,
-        p1: amount,
-      });
-    }
-    if (occurrence.type === 'income') {
-      return t('scheduling.todayP1WillBeCreditedToAccount', {
-        p0: occurrence.account_name,
-        p1: amount,
-      });
-    }
-    return t('scheduling.todayP0WillBeTransferredFromAccount', {
-      p0: amount,
-      p1: occurrence.account_name,
-      p2: occurrence.destination_account_name ?? '—',
-    });
+  protected setConfirmationDate(occurrenceId: string, value: string): void {
+    this.confirmationDates.update((dates) => ({ ...dates, [occurrenceId]: value }));
+  }
+
+  protected validConfirmationDate(occurrence: ExpectedOccurrence): boolean {
+    const value = this.confirmationDate(occurrence);
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) && value <= this.today();
   }
 
   protected postpone(occurrence: ExpectedOccurrence): void {

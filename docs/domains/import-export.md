@@ -124,7 +124,10 @@ XLSX normalize exact numeric text without binary floats; preview creates no
 financial records, receipts or calendar instances. Profiles are explicitly saved.
 
 Confirmation creates a fact or links an existing fact and optionally closes one
-plan through public module contracts. A batch is all-or-nothing and retries are
+plan through public module contracts. Explicit same-date groups combine
+compatible income/expense rows into one fact and close that plan once; each
+source row retains a receipt. Existing-fact links and transfers cannot be grouped.
+Group membership and all reviewed decisions participate in retry validation. A batch is all-or-nothing and retries are
 idempotent. Probable duplicates remain user decisions; imported rows from the
 same exact source cannot be posted twice. A deleted original fact is not
 silently recreated by reimport.

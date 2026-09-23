@@ -52,3 +52,18 @@ selector. Unrecognized rows remain visible with a textual error. Source data
 follows financial context and retains its original values. An empty selection
 explicitly states that it causes no account changes. Posting rules, all-row
 review, matching, receipts and financial calculations are unchanged.
+
+## Explicit plan-row grouping
+
+Selecting one plan on several rows exposes an unchecked merge control in the
+review summary. The user must explicitly accept the group before posting.
+The summary shows source row numbers, the exact formatted total, selected date
+and the description inherited from the first source row. It explains that the
+group posts at its first member's position. Each row still exposes its account,
+category, fund and original source details. Incompatible groups explain the
+required matching date, type, account, category and fund; existing facts and
+transfers cannot be merged. Group errors preserve every row and selection.
+Successful members link to the same journal operation and cannot resubmit.
+A refreshed preview resets merge consent. No automatic grouping or partial
+settlement is introduced. Checkbox labels wrap with a fixed native control size
+at narrow widths, reusing the established form pattern.

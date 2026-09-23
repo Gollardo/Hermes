@@ -60,7 +60,33 @@ These bounded engineering choices are not promises of broader financial models:
 
 The user must reconcile the starting balance before importing old history over
 an account already initialized with a current balance. Bank reservations,
-automatic reconciliation, partial/many-to-one plan settlements, foreign
+automatic reconciliation, partial or multi-date plan settlements, foreign
 exchange, PDF/OCR, bank APIs, autonomous classification, external infrastructure
-and background workers are outside this slice. Ordinary Calendar confirmation
-keeps its established date policy; the imported-fact pathway is explicit.
+and background workers are outside this slice. Calendar confirmation has its own explicit date contract; imported dates
+continue to come from the reviewed row decisions.
+
+## Explicit same-date plan groups (2026-09-23)
+
+The owner requested combining several statement purchases against one plan.
+The bounded extension accepts explicit `merge_plan_rows` alongside the existing
+per-row decisions. Every member must name the same actionable occurrence and
+version, statement account, operation type, fact date, account, category and
+fund. Only income/expense groups are supported. Transfers, existing facts,
+partial settlements and later additions to a closed plan remain excluded.
+
+Every member is validated against its exact source amount, direction and base
+currency. The server sums source amounts with Decimal and revalidates the total
+against the Operations numeric envelope. The first source row supplies the
+reviewed description. The group posts once at its first selected member's
+position in the reviewed batch; remaining members create no additional
+financial effects. The review explicitly shows this aggregation and total.
+Other decisions retain their relative order. The whole batch stays atomic.
+
+A canonical hash includes all sorted member decisions; each source row receives
+its own receipt with that hash and the same operation id. A full unchanged retry
+reuses the operation. Changed membership, singleton/subset retries, changed
+fields and partially imported groups conflict. Existing single-row hashes are
+unchanged. The existing receipt schema already permits several rows per fact;
+no migration or backup schema change is needed. Backup/restore preserves group
+receipt identities and hashes. Raw files are still not retained: receipts prove
+source-row identity, while viewing original source text requires the file again.

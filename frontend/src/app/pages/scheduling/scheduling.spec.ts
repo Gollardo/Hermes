@@ -310,6 +310,30 @@ describe('SchedulingPage recurrence editor', () => {
     expect(getComputedStyle(choice).minWidth).toBe('0px');
   });
 
+  it('keeps a chosen past date after rejection and blocks a future fact', () => {
+    flushInitial([{ ...OCCURRENCE, source_kind: 'one_off', rule_id: null }]);
+    const input = fixture.nativeElement.querySelector(
+      '#confirm-date-occurrence-1',
+    ) as HTMLInputElement;
+    expect(input.value).toBe('2026-08-10');
+    setValue('#confirm-date-occurrence-1', '2099-01-01');
+    const button = [...fixture.nativeElement.querySelectorAll('button')].find(
+      (b: HTMLButtonElement) => b.textContent.trim() === 'Подтвердить',
+    ) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    http.expectNone('/api/v1/scheduling/occurrences/occurrence-1/confirm');
+    setValue('#confirm-date-occurrence-1', '2026-08-09');
+    button.click();
+    const request = http.expectOne('/api/v1/scheduling/occurrences/occurrence-1/confirm');
+    expect(request.request.body.occurred_on).toBe('2026-08-09');
+    request.flush(
+      { detail: { code: 'insufficient_balance' } },
+      { status: 409, statusText: 'Conflict' },
+    );
+    fixture.detectChanges();
+    expect(input.value).toBe('2026-08-09');
+  });
+
   it('quick confirmation posts the occurrence version and refreshes both views', () => {
     flushInitial([OCCURRENCE]);
     const confirm = [...fixture.nativeElement.querySelectorAll('button')].find(
@@ -317,7 +341,11 @@ describe('SchedulingPage recurrence editor', () => {
     ) as HTMLButtonElement;
     confirm.click();
     const request = http.expectOne('/api/v1/scheduling/occurrences/occurrence-1/confirm');
-    expect(request.request.body).toEqual({ version: 1, amount: '12.5000' });
+    expect(request.request.body).toEqual({
+      version: 1,
+      amount: '12.5000',
+      occurred_on: '2026-08-10',
+    });
     request.flush({ ...OCCURRENCE, status: 'confirmed', actual_operation_id: 'operation-1' });
     flushOccurrenceRequests([]);
   });
@@ -339,7 +367,11 @@ describe('SchedulingPage recurrence editor', () => {
     expect(amountInput.value).toBe('12 345,75');
     clickButton('Подтвердить');
     const request = http.expectOne('/api/v1/scheduling/occurrences/occurrence-1/confirm');
-    expect(request.request.body).toEqual({ version: 1, amount: '12345.75' });
+    expect(request.request.body).toEqual({
+      version: 1,
+      amount: '12345.75',
+      occurred_on: '2026-08-10',
+    });
     request.flush({ ...OCCURRENCE, amount: '12345.7500', status: 'confirmed' });
     flushOccurrenceRequests([]);
   });

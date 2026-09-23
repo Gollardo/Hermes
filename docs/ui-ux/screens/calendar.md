@@ -35,8 +35,10 @@ summaries wrap and cells can grow vertically without clipping significant digits
 
 - `pending` and `postponed` expose quick actions.
 - A one-off plan is visibly labelled “One-off”, never presented as a recurrence
-  rule, and offers Apply today, edit, move and cancel. Apply today warns that
-  an early plan posts today rather than its planned date.
+  rule, and offers confirmation with a visible editable fact date, edit, move
+  and cancel. Confirmation defaults to the earlier of the due date and server
+  application today; future fact dates are blocked. Failed confirmation
+  preserves the selected date.
 - `confirmed` remains visible and links to the exact posted operation; route
   navigation resets scroll so the linked-fact context is visible immediately.
 - `cancelled` remains visible but visually secondary.
@@ -52,7 +54,7 @@ summaries wrap and cells can grow vertically without clipping significant digits
 - Opening an actionable recurring occurrence starts a reviewed confirmation in
   the established operation composer instead of editing its rule. The composer
   allows the selected occurrence's operation fields to change, states both the
-  plan date and application-today fact date, and keeps rule editing separate.
+  plan date and editable actual fact date, and keeps rule editing separate.
 - A daily amount is a restrained bordered control, not an occurrence card.
   Negative daily amounts use the existing soft risk surface with a textual
   minus sign; a day with overdue occurrences also states their count in text

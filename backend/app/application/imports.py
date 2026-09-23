@@ -15,7 +15,9 @@ from app.modules.funds.contracts import TransferAllocationCreateRequest
 from app.modules.imports.contracts import (
     CommitRequest,
     ImportDecisionError,
+    ImportGroupingError,
     PreviewRequest,
+    decision_groups,
     find_receipt,
     normalize,
     read_file,
@@ -104,45 +106,76 @@ def commit(session: Session, request: CommitRequest) -> dict[str, Any]:
     # One owner, bounded rare batch: serialize imports and establish schedule-before-ledger order.
     session.execute(text("SELECT pg_advisory_xact_lock(48392015)"))
     settings = get_application_settings(session)
-    if len({d.row for d in request.decisions}) != len(request.decisions):
-        raise ValueError("A source row can be selected only once")
+    groups = decision_groups(request)
     # Lock all chosen occurrences before any account/fund mutation.
     from app.modules.scheduling.contracts import lock_import_occurrences
 
     lock_import_occurrences(
         session, {d.occurrence_id for d in request.decisions if d.occurrence_id}
     )
-    results = []
-    for decision in request.decisions:
+    results: list[dict[str, Any]] = []
+    for group in groups:
+        decision = group[0]
         try:
-            if decision.row <= request.mapping.header_row or decision.row > len(rows):
-                raise ValueError("Invalid source row")
-            key = source_key(digest, sheet, decision.row)
-            fingerprint = hashlib.sha256(
-                json.dumps(decision.model_dump(mode="json"), sort_keys=True).encode()
-            ).hexdigest()
-            receipt = find_receipt(session, key)
-            if receipt:
-                if receipt.decision_hash != fingerprint:
-                    raise ValueError("This row was already imported with a different decision")
-                results.append(
-                    dict(row=decision.row, operation_id=str(receipt.operation_id), reused=True)
+            # Preserve historical single-row hashes; group hashes bind every member and field.
+            reviewed = (
+                decision.model_dump(mode="json")
+                if len(group) == 1
+                else {"merge_plan_rows": [item.model_dump(mode="json") for item in group]}
+            )
+            fingerprint = hashlib.sha256(json.dumps(reviewed, sort_keys=True).encode()).hexdigest()
+            keys = [source_key(digest, sheet, item.row) for item in group]
+            receipts = [find_receipt(session, key) for key in keys]
+            if any(receipts):
+                if any(r is None or r.decision_hash != fingerprint for r in receipts):
+                    raise ValueError("These rows were already imported with a different decision")
+                operation_ids = {r.operation_id for r in receipts if r is not None}
+                if len(operation_ids) != 1:
+                    raise ValueError("Imported group changed")
+                operation_id = operation_ids.pop()
+                results.extend(
+                    dict(row=item.row, operation_id=str(operation_id), reused=True)
+                    for item in group
                 )
                 continue
-            kind, amount, _, currency = normalize(rows[decision.row - 1], request.mapping)
+            total = Decimal(0)
+            for item in group:
+                try:
+                    if item.row <= request.mapping.header_row or item.row > len(rows):
+                        raise ValueError("Invalid source row")
+                    kind, amount, _, currency = normalize(rows[item.row - 1], request.mapping)
+                    payload = item.operation
+                    validate_import_date(session, payload.occurred_on)
+                    bank_side = (
+                        payload.destination_account_id
+                        if payload.type.value == "transfer" and kind == "income"
+                        else payload.account_id
+                    )
+                    if item.statement_account_id != bank_side:
+                        raise ValueError("Statement account does not match the movement direction")
+                    if currency and currency != settings.base_currency:
+                        raise ValueError("Statement currency differs from base currency")
+                    if Decimal(amount) != payload.amount or payload.type.value not in {
+                        kind,
+                        "transfer",
+                    }:
+                        raise ValueError(
+                            "Operation must preserve the statement amount and direction"
+                        )
+                    total += Decimal(amount)
+                except (ValueError, RuntimeError) as error:
+                    raise ImportDecisionError(item.row, error) from error
             payload = decision.operation
-            validate_import_date(session, payload.occurred_on)
-            bank_side = (
-                payload.destination_account_id
-                if payload.type.value == "transfer" and kind == "income"
-                else payload.account_id
-            )
-            if decision.statement_account_id != bank_side:
-                raise ValueError("Statement account does not match the movement direction")
-            if currency and currency != settings.base_currency:
-                raise ValueError("Statement currency differs from base currency")
-            if Decimal(amount) != payload.amount or payload.type.value not in {kind, "transfer"}:
-                raise ValueError("Operation must preserve the statement amount and direction")
+            if len(group) > 1:
+                try:
+                    # Revalidate the aggregate against the same NUMERIC envelope as any operation.
+                    payload = type(payload).model_validate(
+                        {**payload.model_dump(), "amount": total}
+                    )
+                except ValueError as error:
+                    raise ImportGroupingError(
+                        "Merged amount exceeds the operation limit"
+                    ) from error
             if (
                 payload.type.value == "transfer"
                 and decision.allocate_to_funds
@@ -207,8 +240,9 @@ def commit(session: Session, request: CommitRequest) -> dict[str, Any]:
                     payload,
                     decision.allocate_to_funds,
                 )
-            record_receipt(session, key, fingerprint, operation_id)
-            results.append(dict(row=decision.row, operation_id=str(operation_id), reused=False))
+            for item, key in zip(group, keys, strict=True):
+                record_receipt(session, key, fingerprint, operation_id)
+                results.append(dict(row=item.row, operation_id=str(operation_id), reused=False))
         except (ValueError, RuntimeError) as error:
             raise ImportDecisionError(decision.row, error) from error
     session.flush()

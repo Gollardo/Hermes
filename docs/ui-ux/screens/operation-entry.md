@@ -93,10 +93,13 @@ event enters Calendar and forecast while the balance remains unchanged until
 application. It reuses the same exact-money fields for plan editing. A balance
 adjustment cannot be scheduled.
 
-Opening an actionable recurring occurrence uses the same composer in a
+Opening an actionable recurring occurrence or choosing a one-off plan payment
+date uses the same composer in a
 confirmation mode. Its operation fields are prefilled from the occurrence and
-remain editable, while the plan date is shown separately and the fact date is
-the current Hermes application day. Submission confirms and posts in one
+remain editable. The plan date is shown separately; the fact date is editable
+and defaults to the earlier of the due date and server application today.
+Future fact dates are blocked. A late settings response does not overwrite an
+explicitly entered date. Submission confirms and posts in one
 transaction; it does not edit the recurring rule or its sibling occurrences.
 
 ## Important information

@@ -225,6 +225,7 @@ class OccurrenceConfirmationOperationRequest(BaseModel):
 
 
 class OccurrenceConfirmRequest(OccurrenceVersionRequest):
+    occurred_on: date | None = None
     amount: Money | None = None
     operation: OccurrenceConfirmationOperationRequest | None = None
 

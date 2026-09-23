@@ -314,6 +314,28 @@
     <section class="panel review-summary">
       <h2>{{ t('imports.selected', { count: selected().length }) }}</h2>
       <p class="hint">{{ t('imports.review') }}</p>
+      @for (group of planGroups(); track group.id) {
+        <div class="merge-plan-group">
+          <label>
+            <input
+              type="checkbox"
+              [(ngModel)]="mergePlans[group.id]"
+              [disabled]="busy() || !group.compatible"
+            />
+            {{ t('imports.mergePlanRows', { rows: groupRowNumbers(group.rows) }) }}
+          </label>
+          <p>
+            {{ group.total | money }} {{ currencySymbol(baseCurrency()) }} ·
+            {{ group.rows[0].date | textDate }}
+          </p>
+          <p class="hint">
+            {{ t('imports.mergedDescription', { description: group.rows[0].description || '—' }) }}
+          </p>
+          @if (!group.compatible) {
+            <p class="field-error">{{ t('imports.groupError') }}</p>
+          }
+        </div>
+      }
       @if (selected().length) {
         <h3>{{ t('imports.effect') }}</h3>
       } @else {

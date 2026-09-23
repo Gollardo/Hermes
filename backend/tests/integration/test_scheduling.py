@@ -1369,3 +1369,68 @@ def test_flexible_weekly_rule_round_trips_and_materializes_selected_days(
                 weekdays=None,
             )
         )
+
+
+@pytest.mark.parametrize("source_kind", ["one_off", "recurring"])
+def test_confirmation_accepts_historical_date_and_preserves_schedule(
+    postgres_database_settings: Settings,
+    source_kind: str,
+) -> None:
+    app = create_app(postgres_database_settings)
+    with TestClient(app) as client:
+        client.post("/api/v1/setup", json=SETUP_PAYLOAD)
+        headers = _headers(client)
+        account = _account(client, headers, "Main", "100")
+        category = _category(client, headers, "Coffee", "expense")
+        today = _horizon_today(client, headers)
+        scheduled = today + timedelta(days=-1 if source_kind == "one_off" else 1)
+        if source_kind == "one_off":
+            plan = client.post(
+                "/api/v1/scheduling/one-off-plans",
+                headers=headers,
+                json={
+                    "type": "expense",
+                    "scheduled_on": scheduled.isoformat(),
+                    "amount": "20",
+                    "account_id": account,
+                    "category_id": category,
+                },
+            ).json()
+        else:
+            rule = client.post(
+                "/api/v1/scheduling/rules",
+                headers=headers,
+                json=_rule_payload(
+                    operation_type="expense",
+                    start_on=scheduled,
+                    end_on=scheduled + timedelta(days=1),
+                    amount="20",
+                    account_id=account,
+                    category_id=category,
+                ),
+            ).json()
+            plan = _occurrences(client, rule["id"])[0]
+            siblings = _occurrences(client, rule["id"])[1:]
+        url = f"/api/v1/scheduling/occurrences/{plan['id']}/confirm"
+        body = {"version": plan["version"], "occurred_on": (today + timedelta(days=1)).isoformat()}
+        rejected = client.post(url, headers=headers, json=body)
+        assert rejected.status_code == 422
+        assert rejected.json()["detail"]["code"] == "future_operation_requires_plan"
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "100.0000"
+        body["occurred_on"] = (today - timedelta(days=1)).isoformat()
+        accepted = client.post(url, headers=headers, json=body)
+        assert accepted.status_code == 200, accepted.text
+        confirmed = accepted.json()
+        assert confirmed["scheduled_on"] == plan["scheduled_on"]
+        assert confirmed["due_on"] == plan["due_on"]
+        operation = client.get(f"/api/v1/operations/{confirmed['actual_operation_id']}").json()
+        assert operation["occurred_on"] == body["occurred_on"]
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "80.0000"
+        repeated = client.post(url, headers=headers, json=body)
+        assert repeated.status_code == 200
+        assert repeated.json()["actual_operation_id"] == confirmed["actual_operation_id"]
+        body["occurred_on"] = today.isoformat()
+        assert client.post(url, headers=headers, json=body).status_code == 409
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "80.0000"
+        if source_kind == "recurring":
+            assert _occurrences(client, rule["id"])[1:] == siblings

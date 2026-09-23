@@ -14,7 +14,11 @@ from app.modules.categories.contracts import (
     category_name,
     validate_category_reference,
 )
-from app.modules.operations.contracts import OperationType
+from app.modules.operations.contracts import (
+    FutureOperationDateError,
+    OperationType,
+    operation_history_references,
+)
 from app.modules.scheduling.contracts import (
     OccurrenceConfirmationDraft,
     OccurrenceConfirmationOverride,
@@ -679,10 +683,17 @@ def confirm_occurrence(
     amount: Decimal | None = None,
     override: OccurrenceConfirmationOverride | None = None,
     poster: OccurrencePoster,
+    occurred_on: date | None = None,
     today: date | None = None,
 ) -> ExpectedOccurrenceResponse:
     occurrence = _get_occurrence(session, occurrence_id, lock=True)
     if occurrence.status == OccurrenceStatus.CONFIRMED:
+        if occurred_on is not None and occurrence.actual_operation_id is not None:
+            fact = operation_history_references(session, {occurrence.actual_operation_id})[
+                occurrence.actual_operation_id
+            ]
+            if fact.occurred_on != occurred_on:
+                raise SchedulingConflictError
         return _occurrence_response(session, occurrence, today=today or _today(session))
     if occurrence.version != expected_version:
         raise SchedulingConflictError
@@ -709,9 +720,12 @@ def confirm_occurrence(
         override.allocate_to_funds if override is not None else occurrence.allocate_to_funds
     )
     resolved_today = today or _today(session)
+    if occurred_on is not None and occurred_on > resolved_today:
+        raise FutureOperationDateError
     draft = OccurrenceConfirmationDraft(
         type=effective_type,
-        occurred_on=(
+        occurred_on=occurred_on
+        or (
             resolved_today
             if occurrence.source_kind == OccurrenceSourceKind.ONE_OFF
             or occurrence.due_on > resolved_today

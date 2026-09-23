@@ -45,6 +45,7 @@ export function apiErrorMessage(error: unknown, fallback: string | (() => string
   ) {
     const localized: Record<string, string> = {
       operation_fund_release_linked: t('funds.releaseEditBlocked'),
+      import_group: t('imports.groupError'),
       import_invalid: t('imports.error'),
       import_currency: t('imports.currencyError'),
       import_conflict: t('imports.conflictError'),

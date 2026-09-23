@@ -13,7 +13,11 @@ from app.modules.funds.contracts import (
     FundBalanceError,
     FundCoverageError,
 )
-from app.modules.operations.contracts import InsufficientBalanceError, OperationType
+from app.modules.operations.contracts import (
+    FutureOperationDateError,
+    InsufficientBalanceError,
+    OperationType,
+)
 from app.modules.scheduling.models import OccurrenceSourceKind, OccurrenceStatus
 from app.modules.scheduling.schemas import (
     ExpectedOccurrenceResponse,
@@ -52,6 +56,8 @@ write_router = APIRouter(prefix="/scheduling", tags=["scheduling"])
 
 
 def _raise_domain_error(error: RuntimeError) -> None:
+    if isinstance(error, FutureOperationDateError):
+        raise HTTPException(422, detail={"code": "future_operation_requires_plan"})
     if isinstance(error, RecurringRuleNotFoundError):
         raise HTTPException(
             404, detail={"code": "recurring_rule_not_found", "message": "Rule not found"}
@@ -228,9 +234,11 @@ def confirm(
             occurrence_id,
             expected_version=payload.version,
             amount=payload.amount,
+            occurred_on=payload.occurred_on,
             operation=payload.operation,
         )
     except (
+        FutureOperationDateError,
         AccountReferenceError,
         CategoryReferenceError,
         ExpectedOccurrenceNotFoundError,

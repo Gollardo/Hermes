@@ -160,6 +160,9 @@ every bank file automatically without configuration.
   ledger access.
 
 - [x] User-selected fact dates, all-status review and links to planned payments.
+- [x] Explicit compatible same-date income/expense row groups against one plan.
+  Partial settlement, multi-date grouping and additions to closed plans remain
+  outside this slice.
 
 Additional formats, ready-made bank profiles, and reconciliation improvements
 may ship as `4.x` minor versions without changing import ownership.

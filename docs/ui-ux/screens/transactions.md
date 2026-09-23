@@ -21,7 +21,9 @@ than first-release requirements.
 Pending one-off plans due on server-provided application today appear in a
 separate, explicit attention section before actual operations. The section
 states that the plans have not changed the balance, supports editing, and
-requires a concise consequence confirmation before applying one plan. Applying
+requires a concise consequence confirmation for the Apply today shortcut.
+A separate Choose payment date action opens the existing confirmation composer.
+Other one-off plans also expose confirmation with a selected date. Applying
 the plan removes it from that section and refreshes the actual journal. Other
 one-off plans remain in a distinct secondary section, so an expected event is
 never presented as an actual journal row.

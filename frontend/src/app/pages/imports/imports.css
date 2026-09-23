@@ -211,6 +211,24 @@ dd {
   margin: 1rem 0;
 }
 
+.merge-plan-group {
+  border-block-start: 1px solid var(--line);
+  padding-block: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.merge-plan-group label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.merge-plan-group input[type='checkbox'] {
+  width: auto;
+  flex: 0 0 auto;
+  margin-top: 0.25rem;
+}
+
 @media (max-width: 68rem) {
   .page-header {
     flex-direction: column;

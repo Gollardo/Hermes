@@ -12,6 +12,22 @@ assigned.
 
 ## [Unreleased]
 
+### Added
+
+- Select an actual non-future payment date when confirming a one-off or recurring
+  plan. Overdue plans default to their due date in Calendar and the composer;
+  the journal retains an explicit Apply today shortcut.
+- Explicitly merge compatible same-date statement income/expense rows against
+  one plan into one exact operation. Every source row retains its receipt;
+  changed groups conflict and unchanged retries cannot post twice.
+
+### Compatibility
+
+- Confirmation requests without a date keep the prior defaults. No new database
+  migration or backup schema change is required for these two extensions.
+- Transfers, existing-fact merging, multi-date groups, partial settlement and
+  additions to closed plans remain outside this slice.
+
 ## [1.1.0] - 2026-09-09
 
 ### Added

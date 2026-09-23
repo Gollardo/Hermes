@@ -12,9 +12,11 @@ explicitly opt into shifting its untouched later occurrences by the same delta.
 Confirmation may replace the selected occurrence's operation snapshot after a
 reviewed edit. Type, accounts, category, amount, description and the existing
 transfer-allocation choice then apply only to that occurrence; its rule and
-siblings remain unchanged. A future occurrence confirmed early posts the fact
-on application today, while today's and overdue recurring occurrences retain
-their due date as the fact date.
+siblings remain unchanged. Confirmation accepts an explicit non-future fact date. The UI defaults to the
+due date for today/overdue occurrences and application today for future ones.
+The plan dates remain unchanged. Older requests without a fact date retain
+the previous policy: early recurring facts post today and overdue recurring
+facts retain their due date.
 
 ## One-off plans
 
@@ -25,10 +27,15 @@ editing, cancellation and date changes create no physical or fund movements.
 The forecast includes pending one-off plans and excludes confirmed or cancelled
 ones.
 
-Applying a one-off plan always posts the fact on application today in the
-configured Hermes timezone, even when the plan is early or overdue. Posting and
-linking `actual_operation_id` share one transaction; a retry returns the linked
-operation. Confirmed and cancelled plans cannot be edited. Balance adjustments
+Applying a one-off plan accepts the selected actual payment date, including
+a historical date. Dates after application today in the configured Hermes
+timezone are rejected before posting. Calendar and the confirmation composer
+default to the earlier of due date and application today. The journal also
+retains the explicit Apply today shortcut. Older API requests that omit
+`occurred_on` retain their application-today behavior. Posting and linking
+`actual_operation_id` share one transaction; a retry returns the linked
+operation. An explicit retry date different from the linked fact conflicts
+without posting or editing it. Confirmed and cancelled plans cannot be edited. Balance adjustments
 are deliberately excluded because they describe an already-known fact.
 
 ## Terms and boundary
@@ -161,11 +168,12 @@ The complete decision and persistence consequences are recorded in
 
 ## Explicit import confirmation
 
-Statement import can close one pending/postponed occurrence on the user-selected
+Statement import can close one pending/postponed occurrence, using one source
+row or an explicitly merged compatible group, on the user-selected
 fact date, including a historical date. Bank dates are not applied. The original
 schedule dates and recurrence identity remain unchanged; accepted operation
 fields update only that occurrence. An existing compatible fact can be linked
 without creating physical/virtual movements again. An operation already linked
 to another occurrence is rejected. Stale versions and cancelled/confirmed
-occurrences cannot be claimed by another import decision. Ordinary Calendar
-confirmation keeps its existing date policy. See [ADR 0005](../decisions/0005-statement-import.md).
+occurrences cannot be claimed by another import decision. Calendar confirmation also supports an explicit non-future fact date; only
+older requests without a date retain the previous defaults. See [ADR 0005](../decisions/0005-statement-import.md).

@@ -57,6 +57,7 @@ def confirm_occurrence(
     amount: Decimal | None,
     override: OccurrenceConfirmationOverride | None,
     poster: OccurrencePoster,
+    occurred_on: date | None = None,
 ) -> "ExpectedOccurrenceResponse":
     """Confirm through Scheduling while the supplied poster owns financial orchestration."""
     from app.modules.scheduling.service import confirm_occurrence as _confirm_occurrence
@@ -68,6 +69,7 @@ def confirm_occurrence(
         amount=amount,
         override=override,
         poster=poster,
+        occurred_on=occurred_on,
     )
 
 

@@ -1133,4 +1133,13 @@ export const en = {
   'errors.futureOperation': 'Create a planned operation for a future date.',
   'errors.defaultAccount': 'The default account is unavailable. Choose an active account.',
   'errors.period': 'Check the selected period boundaries.',
+  'operations.plannedDateChooseFactDate':
+    'Planned date: {p0}. Choose the actual payment date; the plan date stays unchanged.',
+  'operations.chooseConfirmationDate': 'Choose payment date',
+  'operations.validFactDate': 'Choose a payment date no later than today.',
+  'imports.mergePlanRows': 'Merge rows {rows} into one operation for the selected plan',
+  'imports.mergedDescription':
+    'Result description: {description}. The operation posts at the first group row; each source row stays linked to it.',
+  'imports.groupError':
+    'Explicitly merge rows for one plan with the same date, type, account, category and fund. Transfers and existing facts cannot be merged. Also check the total amount limit.',
 } satisfies Record<keyof typeof ru, string>;

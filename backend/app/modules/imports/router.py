@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from app.application.imports import commit, preview
 from app.core.database import DatabaseSession
-from app.modules.imports.errors import ImportDecisionError
+from app.modules.imports.errors import ImportDecisionError, ImportGroupingError
 from app.modules.imports.models import ImportProfile
 from app.modules.imports.parser import read_file
 from app.modules.imports.schemas import (
@@ -39,7 +39,9 @@ def failure(error: Exception) -> HTTPException:
     }
     message = str(error)
     code = domain_codes.get(type(error).__name__, "import_invalid")
-    if "currency" in message:
+    if isinstance(error, ImportGroupingError):
+        code = "import_group"
+    elif "currency" in message:
         code = "import_currency"
     elif "changed" in message or "already" in message:
         code = "import_conflict"

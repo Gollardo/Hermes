@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { t, localizedSignal, TranslationKey } from '../../i18n/i18n';
 import { DecimalInput, decimalPayload } from '../../shared/decimal-input';
 import { MoneyPipe, currencySymbol } from '../../shared/money.pipe';
+import { DateTextPipe } from '../../shared/date-text.pipe';
 import { apiErrorMessage } from '../../core/api-error';
 
 type Kind = 'income' | 'expense' | 'transfer';
@@ -76,7 +77,7 @@ interface Preview {
 }
 @Component({
   selector: 'app-imports-page',
-  imports: [FormsModule, RouterLink, MoneyPipe, DecimalInput],
+  imports: [FormsModule, RouterLink, MoneyPipe, DecimalInput, DateTextPipe],
   templateUrl: './imports.html',
   styleUrl: './imports.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -97,6 +98,7 @@ export class ImportsPage {
   readonly sheets = signal<string[]>([]);
   readonly profiles = signal<{ name: string; mapping: Mapping }[]>([]);
   readonly results = signal<{ row: number; operation_id: string }[]>([]);
+  mergePlans: Record<string, boolean> = {};
   facts: Candidate[] = [];
   plans: Candidate[] = [];
   file: { filename: string; content: string } | null = null;
@@ -151,6 +153,7 @@ export class ImportsPage {
     this.error.set(() => apiErrorMessage(error, t('imports.error')));
   }
   invalidate(): void {
+    this.mergePlans = {};
     this.rows.set([]);
     this.results.set([]);
   }
@@ -237,6 +240,7 @@ export class ImportsPage {
       })
       .subscribe({
         next: (v) => {
+          this.mergePlans = {};
           this.facts = v.facts;
           this.plans = v.plans;
           this.rows.set(
@@ -349,6 +353,45 @@ export class ImportsPage {
       ),
     ];
   }
+  planGroups(): { id: string; rows: Row[]; total: string; compatible: boolean }[] {
+    const groups = new Map<string, Row[]>();
+    for (const row of this.selected()) {
+      if (row.action === 'plan' && row.plan) {
+        groups.set(row.plan, [...(groups.get(row.plan) ?? []), row]);
+      }
+    }
+    return [...groups]
+      .filter(([, rows]) => rows.length > 1)
+      .map(([id, rows]) => {
+        const first = rows[0];
+        const compatible = rows.every(
+          (r) =>
+            !r.error &&
+            !r.existing &&
+            !r.allocate &&
+            r.type !== 'transfer' &&
+            r.type === first.type &&
+            r.date === first.date &&
+            r.account === first.account &&
+            r.category === first.category &&
+            r.fund === first.fund &&
+            (r.currency || this.baseCurrency()) === (first.currency || this.baseCurrency()),
+        );
+        const units = rows.reduce((sum, r) => {
+          const [whole, fraction = ''] = (r.amount || '0').split('.');
+          return sum + BigInt(whole) * 10000n + BigInt(fraction.padEnd(4, '0'));
+        }, 0n);
+        return {
+          id,
+          rows,
+          compatible,
+          total: `${units / 10000n}.${String(units % 10000n).padStart(4, '0')}`,
+        };
+      });
+  }
+  groupRowNumbers(rows: Row[]): string {
+    return rows.map((row) => row.row).join(', ');
+  }
   reason(candidate: Candidate): string {
     return (candidate.reasons ?? [])
       .map((r) =>
@@ -377,6 +420,11 @@ export class ImportsPage {
       )
     ) {
       this.error.set(() => t('imports.missing'));
+      return;
+    }
+    const groups = this.planGroups();
+    if (groups.some((g) => !g.compatible || !this.mergePlans[g.id])) {
+      this.error.set(() => t('imports.groupError'));
       return;
     }
     this.busy.set(true);
@@ -408,6 +456,7 @@ export class ImportsPage {
         ...this.file,
         mapping: this.mapping,
         decisions,
+        merge_plan_rows: groups.map((g) => g.rows.map((r) => r.row)),
       })
       .subscribe({
         next: (v) => {

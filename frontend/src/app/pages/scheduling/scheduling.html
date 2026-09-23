@@ -235,26 +235,33 @@
                             </button>
                           </div>
                         }
-                        @if (earlyApplicationWarning(occurrence); as warning) {
-                          <p class="hint">{{ warning }}</p>
-                        }
-                        @if (oneOffConfirmationConsequence(occurrence); as consequence) {
-                          <p class="hint">{{ consequence }}</p>
+                        <label [for]="'confirm-date-' + occurrence.id">{{
+                          t('operations.postingDate')
+                        }}</label>
+                        <input
+                          type="date"
+                          [id]="'confirm-date-' + occurrence.id"
+                          [value]="confirmationDate(occurrence)"
+                          [max]="today()"
+                          (input)="setConfirmationDate(occurrence.id, $any($event.target).value)"
+                          [attr.aria-invalid]="!validConfirmationDate(occurrence)"
+                        />
+                        @if (!validConfirmationDate(occurrence)) {
+                          <p class="field-error">{{ t('operations.validFactDate') }}</p>
                         }
                         <button
                           type="button"
                           (click)="confirm(occurrence)"
                           [disabled]="
                             busyOccurrenceId() === occurrence.id ||
-                            !validConfirmationAmount(occurrence)
+                            !validConfirmationAmount(occurrence) ||
+                            !validConfirmationDate(occurrence)
                           "
                         >
                           {{
-                            occurrence.source_kind === 'one_off'
-                              ? t('operations.applyToday')
-                              : occurrence.allocate_to_funds
-                                ? t('funds.transferAndAllocate')
-                                : t('scheduling.confirm')
+                            occurrence.allocate_to_funds
+                              ? t('funds.transferAndAllocate')
+                              : t('scheduling.confirm')
                           }}
                         </button>
                         @if (!validConfirmationAmount(occurrence)) {

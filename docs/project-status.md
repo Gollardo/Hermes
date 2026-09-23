@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-09-11. This is the current release snapshot, not a task log.
+Last reviewed: 2026-09-23. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -145,6 +145,24 @@ ranges, account overdraft policy and one-fund-per-operation support.
 
 ## Next action
 
+A local restored-backup audit on 2026-09-23 confirmed a free-money forecast
+defect: projected dynamic allocations subtract fund movements but omit the
+excess assigned to the fund reserve. After targets fill, projected free money
+is therefore overstated by the accumulated future reserve. Total-money
+forecasting is unaffected by this omission. The defect remains unfixed;
+the next corrective action is to include projected reserve movements and add
+regression coverage for partial and exhausted fund capacity.
+
+Restore preserved the supplied financial and scheduling data (timestamp offsets
+were normalized for comparison). All five horizons in both balance modes
+retained the expected actionable event identities; no one-month expense cutoff
+was found. The existing 15 forecast unit tests passed, but do not detect this
+projection-composition defect. Verification used isolated local PostgreSQL 15
+and the native API; it does not constitute production or container acceptance.
+Historical unplanned spending is not automatically extrapolated into the
+deterministic forecast. Private backup data and diagnostic artifacts remain
+outside the repository.
+
 For deployment, validate a protected backup before upgrading to `v1.1.0`, then
 verify health and primary financial screens using the [release runbook](operations/release.md).
 For product development, agree the bounded `2.0.0` scenario design before coding.
@@ -207,3 +225,38 @@ therefore remains open. No dependency or external infrastructure was added.
 Next action: repeat the container build when registry access is available, then
 review both release forms against an isolated restored owner backup before any
 production migration. Retain a pre-upgrade backup for rollback.
+
+## Unreleased confirmation dates and plan-row groups
+
+The 2026-09-23 owner request extends confirmation with a reviewed non-future
+fact date. Calendar and the existing composer default overdue payments to their
+due date; the journal retains Apply today and adds date selection. API requests
+without a date preserve their prior defaults. Explicit retries with a changed
+date conflict instead of altering an already confirmed fact.
+
+Statement review can explicitly merge compatible income/expense rows of one
+plan into one exact operation on one selected date. Every source row retains
+its receipt; group membership and reviewed fields are bound into its retry
+hash. Posting, funds, plan closure and all receipts remain one transaction.
+No migration, dependency or backup schema change is required. Transfers,
+existing-fact merging, different dates, partial settlement and appending to
+closed plans remain outside this slice. The unrelated forecast reserve defect
+above remains outside this change.
+
+Verification: full `make test` passed (153 default backend tests, 110
+PostgreSQL-gated skips there, 111 PostgreSQL integration tests on an isolated
+PostgreSQL 15 cluster, and 184 frontend tests). `make lint`, `make typecheck`,
+documentation checks and the production frontend build passed. Existing bundle
+and stylesheet budget warnings remain; the initial bundle is 533.72 kB.
+A final focused journal rerun passed all 24 tests after preserving the
+server-date semantics of the Apply today shortcut. Docker daemon was unavailable,
+so PostgreSQL 17/container acceptance remains open.
+Browser acceptance on synthetic data verified a past-dated one-off payment,
+explicit merge consent, three purchases becoming one 1,050.00 RUB operation,
+all three source links resolving to it, and the 390 px review without horizontal
+overflow. This does not certify PostgreSQL 17/container deployment or exhaustive
+browser/accessibility coverage. No production data or service was changed.
+
+Next action: review this bounded flow against an isolated restored backup and
+run production-like PostgreSQL 17/container acceptance before a release or
+server deployment. Existing unrelated status notes above are preserved.

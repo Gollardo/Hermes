@@ -160,7 +160,7 @@ export class OperationsPage implements OnInit {
   protected readonly total = signal(0);
   protected readonly totalAmount = signal('0.0000');
   protected readonly baseCurrency = signal('RUB');
-  private readonly applicationToday = signal('');
+  protected readonly applicationToday = signal('');
   private readonly settingsReady = signal(false);
   private readonly defaultAccountId = signal<string | null>(null);
   protected readonly page = signal(1);
@@ -402,6 +402,10 @@ export class OperationsPage implements OnInit {
       });
   }
 
+  protected confirmPlan(plan: OneOffPlan): void {
+    this.loadOccurrenceForConfirmation(plan.id);
+  }
+
   protected editPlan(plan: OneOffPlan): void {
     this.loadOneOffPlan(plan.id);
   }
@@ -455,6 +459,7 @@ export class OperationsPage implements OnInit {
     return (
       this.settingsReady() &&
       this.form.valid &&
+      !(this.isOccurrenceConfirmationMode() && this.isFutureDate(value.occurredOn)) &&
       postingAmount !== null &&
       (value.type !== 'balance_adjustment' ||
         (expectedBalance !== null && expectedBalance >= 0n)) &&
@@ -561,7 +566,7 @@ export class OperationsPage implements OnInit {
     const request: Observable<Operation | OneOffPlan | ExpectedOccurrence> = occurrence
       ? this.http.post<ExpectedOccurrence>(
           `${environment.apiBaseUrl}/scheduling/occurrences/${occurrence.id}/confirm`,
-          { version: occurrence.version, operation: body },
+          { version: occurrence.version, occurred_on: value.occurredOn, operation: body },
         )
       : this.isPlanMode()
         ? plan
@@ -784,8 +789,13 @@ export class OperationsPage implements OnInit {
         this.defaultAccountId.set(settings.default_account_id);
         this.settingsReady.set(true);
         this.applyDefaultAccount();
-        if (this.confirmingOccurrence()) {
-          this.form.controls.occurredOn.setValue(settings.application_today);
+        const occurrence = this.confirmingOccurrence();
+        if (occurrence && this.form.controls.occurredOn.pristine) {
+          this.form.controls.occurredOn.setValue(
+            occurrence.due_on < settings.application_today
+              ? occurrence.due_on
+              : settings.application_today,
+          );
         } else if (
           !this.editingId() &&
           !this.editingPlan() &&
@@ -860,7 +870,10 @@ export class OperationsPage implements OnInit {
           this.confirmingOccurrence.set(occurrence);
           this.form.setValue({
             type: occurrence.type,
-            occurredOn: this.applicationToday() || this.today(),
+            occurredOn:
+              occurrence.due_on < (this.applicationToday() || this.today())
+                ? occurrence.due_on
+                : this.applicationToday() || this.today(),
             categoryId: occurrence.category_id ?? '',
             amount: occurrence.amount,
             accountId: occurrence.account_id,

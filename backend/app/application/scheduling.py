@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
@@ -23,6 +24,7 @@ def confirm_expected_occurrence(
     *,
     expected_version: int,
     amount: Decimal | None,
+    occurred_on: date | None = None,
     operation: OccurrenceConfirmationOperationRequest | None = None,
 ) -> ExpectedOccurrenceResponse:
     """Confirm one occurrence and all its financial effects in the caller transaction."""
@@ -60,6 +62,7 @@ def confirm_expected_occurrence(
         occurrence_id,
         expected_version=expected_version,
         amount=amount,
+        occurred_on=occurred_on,
         override=(
             OccurrenceConfirmationOverride(**operation.model_dump())
             if operation is not None

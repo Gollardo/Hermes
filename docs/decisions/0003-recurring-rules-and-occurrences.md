@@ -114,3 +114,15 @@ this release.
   rewriting manual decisions.
 - More expressive recurrences, missing-day policies and timezone migration need
   a future decision rather than hidden defaults.
+
+## Explicit confirmation date extension (2026-09-23)
+
+The owner requested historical confirmation for one-off plans. The public
+confirmation command now accepts optional `occurred_on` for both occurrence
+sources. An explicit date cannot be later than application today; scheduling
+history and sibling occurrences remain unchanged. Calendar and the composer
+submit the reviewed date, defaulting to `min(due_on, application_today)`.
+Omission preserves the previous source-specific defaults for older clients.
+A retry with a different explicit date conflicts with the linked fact; the same
+date returns that fact without posting twice. The existing transaction, lock
+order, optimistic version and fund-allocation composition are unchanged.

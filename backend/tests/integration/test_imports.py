@@ -440,3 +440,201 @@ def test_import_recurring_snapshot_preserves_rule_and_siblings(
                 assert current["due_on"] == before["due_on"]
             else:
                 assert current == before
+
+
+def _grouped_plan_request(
+    client: TestClient,
+    headers: dict[str, str],
+    account: str,
+    category: str,
+    amounts: tuple[str, ...] = ("10.1234", "20.5678", "3.0001"),
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    plan = client.post(
+        "/api/v1/scheduling/one-off-plans",
+        headers=headers,
+        json=dict(
+            type="expense",
+            scheduled_on=(date.today() + timedelta(days=1)).isoformat(),
+            amount="10",
+            account_id=account,
+            category_id=category,
+            description="Coffee plan",
+        ),
+    ).json()
+    entries = [decision(account, category, row, amount) for row, amount in enumerate(amounts, 2)]
+    for entry in entries:
+        entry.update(action="plan", occurrence_id=plan["id"], occurrence_version=plan["version"])
+    body = {
+        **source("amount;description\n" + "".join(f"-{a};Coffee\n" for a in amounts)),
+        "decisions": entries,
+        "merge_plan_rows": [[entry["row"] for entry in entries]],
+    }
+    return plan, body
+
+
+def test_grouped_plan_import_exact_retry_conflict_and_backup(
+    postgres_database_settings: Settings,
+) -> None:
+    from copy import deepcopy
+
+    app = create_app(postgres_database_settings)
+    with TestClient(app) as client:
+        client.post("/api/v1/setup", json=SETUP_PAYLOAD)
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "100")
+        category = _category(client, headers, "Coffee", "expense")
+        plan, body = _grouped_plan_request(client, headers, account, category)
+        response = client.post("/api/v1/imports/commit", headers=headers, json=body)
+        assert response.status_code == 200, response.text
+        results = response.json()["results"]
+        assert len(results) == 3
+        ids = {item["operation_id"] for item in results}
+        assert len(ids) == 1
+        operation_id = ids.pop()
+        operation = client.get("/api/v1/operations/" + operation_id).json()
+        assert operation["amount"] == "33.6913"
+        assert operation["occurred_on"] == "2026-01-01"
+        assert len(operation["movements"]) == 1
+        actual_plan = client.get("/api/v1/scheduling/occurrences/" + plan["id"]).json()
+        assert actual_plan["amount"] == "33.6913"
+        assert actual_plan["scheduled_on"] == plan["scheduled_on"]
+        assert actual_plan["actual_operation_id"] == operation_id
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "66.3087"
+        # Group membership order does not alter its identity.
+        retry = deepcopy(body)
+        retry["merge_plan_rows"][0].reverse()
+        again = client.post("/api/v1/imports/commit", headers=headers, json=retry)
+        assert again.status_code == 200, again.text
+        assert all(item["reused"] for item in again.json()["results"])
+        for mode in ("subset", "single", "description"):
+            changed = deepcopy(body)
+            if mode == "subset":
+                changed["decisions"] = changed["decisions"][:2]
+                changed["merge_plan_rows"] = [[2, 3]]
+            elif mode == "single":
+                changed["decisions"] = changed["decisions"][:1]
+                changed["merge_plan_rows"] = []
+            else:
+                changed["decisions"][1]["operation"]["description"] = "Changed"
+            rejected = client.post("/api/v1/imports/commit", headers=headers, json=changed)
+            assert rejected.status_code == 422
+            assert rejected.json()["detail"]["code"] == "import_conflict"
+        factory = create_session_factory(create_database_engine(postgres_database_settings))
+        with factory.begin() as session:
+            backup = create_backup(session)
+            assert len(backup.data.import_receipts) == 3
+            assert len({r.operation_id for r in backup.data.import_receipts}) == 1
+            restore_backup(session, backup)
+        replay = client.post("/api/v1/imports/commit", headers=headers, json=body)
+        assert replay.status_code == 200, replay.text
+        assert all(item["reused"] for item in replay.json()["results"])
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "66.3087"
+        preview_body = {k: v for k, v in body.items() if k not in {"decisions", "merge_plan_rows"}}
+        preview_body.update(account_id=account, occurred_on="2026-01-01")
+        preview = client.post("/api/v1/imports/preview", headers=headers, json=preview_body).json()
+        assert {row["imported_id"] for row in preview["rows"]} == {operation_id}
+
+
+@pytest.mark.parametrize("failure", ["amount", "balance", "stale", "date", "ungrouped", "overflow"])
+def test_grouped_plan_failure_rolls_back_every_effect(
+    postgres_database_settings: Settings,
+    failure: str,
+) -> None:
+    app = create_app(postgres_database_settings)
+    with TestClient(app) as client:
+        client.post("/api/v1/setup", json=SETUP_PAYLOAD)
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "100")
+        category = _category(client, headers, "Coffee", "expense")
+        amounts = ("10", "200") if failure == "balance" else ("10", "20")
+        if failure == "overflow":
+            amounts = ("9999999999999999.9999", "1")
+        plan, body = _grouped_plan_request(client, headers, account, category, amounts)
+        if failure == "amount":
+            body["decisions"][1]["operation"]["amount"] = "19"
+        elif failure == "stale":
+            for entry in body["decisions"]:
+                entry["occurrence_version"] += 1
+        elif failure == "date":
+            body["decisions"][1]["operation"]["occurred_on"] = "2026-01-02"
+        elif failure == "ungrouped":
+            body["merge_plan_rows"] = []
+        response = client.post("/api/v1/imports/commit", headers=headers, json=body)
+        assert response.status_code in {409, 422}, response.text
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "100.0000"
+        unchanged = client.get("/api/v1/scheduling/occurrences/" + plan["id"]).json()
+        assert unchanged["status"] == "pending"
+        assert unchanged["version"] == plan["version"]
+        factory = create_session_factory(create_database_engine(postgres_database_settings))
+        with factory.begin() as session:
+            assert session.scalar(select(func.count()).select_from(ImportReceipt)) == 0
+            assert session.scalar(select(func.count()).select_from(FinancialOperation)) == 1
+
+
+def test_concurrent_group_import_creates_one_operation(
+    postgres_database_settings: Settings,
+) -> None:
+    app = create_app(postgres_database_settings)
+    with TestClient(app) as client:
+        client.post("/api/v1/setup", json=SETUP_PAYLOAD)
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "100")
+        category = _category(client, headers, "Coffee", "expense")
+        _, body = _grouped_plan_request(client, headers, account, category)
+        cookies = dict(client.cookies)
+
+        def submit() -> dict[str, Any]:
+            with TestClient(app) as other:
+                other.cookies.update(cookies)
+                response = other.post("/api/v1/imports/commit", headers=headers, json=body)
+                assert response.status_code == 200, response.text
+                return dict(response.json())
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(lambda _: submit(), range(2)))
+        assert results[0]["results"][0]["operation_id"] == results[1]["results"][0]["operation_id"]
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "66.3087"
+
+
+def test_grouped_fund_expense_preserves_coverage_and_full_batch_atomicity(
+    postgres_database_settings: Settings,
+) -> None:
+    with TestClient(create_app(postgres_database_settings)) as client:
+        client.post("/api/v1/setup", json=SETUP_PAYLOAD)
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "100")
+        category = _category(client, headers, "Coffee", "expense")
+        fund = client.post(
+            "/api/v1/funds",
+            headers=headers,
+            json=dict(
+                name="Food",
+                allocation_percentage="50",
+                initial_account_id=account,
+                initial_amount="95",
+                initial_occurred_on="2026-01-01",
+            ),
+        ).json()
+        plan, body = _grouped_plan_request(client, headers, account, category, ("10", "20"))
+        failed = client.post("/api/v1/imports/commit", headers=headers, json=body)
+        assert failed.status_code == 409
+        assert failed.json()["detail"]["code"] == "insufficient_free_balance"
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "100.0000"
+        for entry in body["decisions"]:
+            entry["operation"]["fund_id"] = fund["id"]
+        # Fail AFTER the merged operation and its receipts were flushed.
+        body.update(source("amount;description\n-10;Coffee\n-20;Coffee\n-1000;Impossible\n"))
+        body["decisions"].append(decision(account, category, 4, "1000"))
+        assert client.post("/api/v1/imports/commit", headers=headers, json=body).status_code == 409
+        assert client.get("/api/v1/funds").json()[0]["total_balance"] == "95.0000"
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "100.0000"
+        assert (
+            client.get("/api/v1/scheduling/occurrences/" + plan["id"]).json()["status"] == "pending"
+        )
+        body["decisions"].pop()
+        posted = client.post("/api/v1/imports/commit", headers=headers, json=body)
+        assert posted.status_code == 200, posted.text
+        assert client.get("/api/v1/funds").json()[0]["total_balance"] == "65.0000"
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "70.0000"
+        op = client.get("/api/v1/operations/" + posted.json()["results"][0]["operation_id"]).json()
+        assert len(op["fund_movements"]) == 1

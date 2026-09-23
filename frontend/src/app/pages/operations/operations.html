@@ -259,13 +259,13 @@
                   id="operation-date"
                   type="date"
                   formControlName="occurredOn"
-                  [readOnly]="isOccurrenceConfirmationMode()"
+                  [max]="isOccurrenceConfirmationMode() ? applicationToday() : null"
                 />
               </div>
               @if (isOccurrenceConfirmationMode()) {
                 <p class="impact-preview form-field-wide">
                   {{
-                    t('operations.plannedDateP0PostingUsesTheCurrent', {
+                    t('operations.plannedDateChooseFactDate', {
                       p0: (confirmingOccurrence()!.due_on | textDate),
                     })
                   }}
@@ -334,7 +334,7 @@
                   saving()
                     ? t('accounts.saving')
                     : isOccurrenceConfirmationMode()
-                      ? t('operations.confirmToday')
+                      ? t('scheduling.confirm')
                       : editingPlan()
                         ? t('operations.savePlan')
                         : editingId()
@@ -493,6 +493,9 @@
                   <button type="button" class="secondary" (click)="editPlan(plan)">
                     {{ t('categories.edit') }}
                   </button>
+                  <button type="button" class="secondary" (click)="confirmPlan(plan)">
+                    {{ t('operations.chooseConfirmationDate') }}
+                  </button>
                   <button
                     type="button"
                     (click)="applyPlanToday(plan)"
@@ -537,6 +540,11 @@
                     {{ t('operations.editOneOffPlannedOperation') }}
                   </span>
                 </button>
+                <div class="planned-row-actions">
+                  <button type="button" (click)="confirmPlan(plan)">
+                    {{ t('scheduling.confirm') }}
+                  </button>
+                </div>
               </article>
             }
           </section>

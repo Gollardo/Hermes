@@ -121,6 +121,65 @@ describe('Statement import', () => {
     page.invalidate();
     expect(page.rows()).toHaveLength(0);
   });
+  it('requires explicit merging and submits every exact source amount with one group', () => {
+    const page = preview();
+    const first = { ...page.rows()[0], action: 'plan', plan: 'plan', category: 'category' };
+    page.plans = [
+      {
+        id: 'plan',
+        version: 2,
+        type: 'expense',
+        direction: 'expense',
+        amount: '10',
+        date: first.date,
+        description: 'Coffee',
+        category_id: 'category',
+      },
+    ];
+    page.rows.set([first, { ...first, row: 3, amount: '20.5678' }]);
+    fixture.detectChanges();
+    expect(page.planGroups()[0].total).toBe('30.6912');
+    expect(fixture.nativeElement.textContent).toContain('30,69');
+    page.submit();
+    http.expectNone('/api/v1/imports/commit');
+    page.mergePlans['plan'] = true;
+    page.submit();
+    const req = http.expectOne('/api/v1/imports/commit');
+    expect(req.request.body.merge_plan_rows).toEqual([[2, 3]]);
+    expect(
+      req.request.body.decisions.map((d: { operation: { amount: string } }) => d.operation.amount),
+    ).toEqual(['10.1234', '20.5678']);
+    req.flush({
+      results: [
+        { row: 2, operation_id: 'merged' },
+        { row: 3, operation_id: 'merged' },
+      ],
+    });
+    expect(page.selected()).toHaveLength(0);
+    expect(page.rows().every((r) => r.imported_id === 'merged')).toBe(true);
+  });
+
+  it('rejects incompatible group dates and preserves its review after server failure', () => {
+    const page = preview();
+    const first = { ...page.rows()[0], action: 'plan', plan: 'plan', category: 'category' };
+    page.rows.set([first, { ...first, row: 3, date: '2026-01-03' }]);
+    page.mergePlans['plan'] = true;
+    page.submit();
+    http.expectNone('/api/v1/imports/commit');
+    expect(page.planGroups()[0].compatible).toBe(false);
+    page.rows()[1].date = first.date;
+    page.submit();
+    http
+      .expectOne('/api/v1/imports/commit')
+      .flush(
+        { detail: { code: 'import_conflict', row: 3 } },
+        { status: 422, statusText: 'Conflict' },
+      );
+    expect(page.selected()).toHaveLength(2);
+    expect(page.mergePlans['plan']).toBe(true);
+    expect(page.results()).toHaveLength(0);
+  });
+
   it('keeps mapping values when format-specific controls are hidden and settings are collapsed', async () => {
     const page = fixture.componentInstance;
     page.file = { filename: 'statement.XLSX', content: 'YQ==' };

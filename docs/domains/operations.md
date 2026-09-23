@@ -85,9 +85,8 @@ configured application timezone.
 
 The public create and replace API rejects a date later than application today
 with `future_operation_requires_plan`. The operations posting contract remains
-available to approved cross-module use cases; Scheduling uses it only while
-applying a one-off plan on application today or retaining the established
-recurring-confirmation behavior.
+available to approved cross-module use cases; Scheduling validates the selected fact date before posting; older commands
+without a date retain their established confirmation defaults.
 
 Journal totals are calculated over the complete filtered selection, not the
 visible page. Without an account filter they represent the net change across all
@@ -129,3 +128,11 @@ once. The ordinary editor rejects this composition with
 `operation_fund_release_linked`; delete and recreate it to change its fields.
 Deleting checks all accounts affected by reserve refill and rejects restoration
 of a non-zero archived fund. Every effect and reversal shares one transaction.
+
+## Same-date imported plan groups
+
+An explicitly merged group creates one income or expense with an exact sum,
+one calendar fact date and the existing one-account/category/fund shape. It is
+one financial operation, not a collection of independently editable facts.
+Every source row retains its Imports receipt pointing to that operation.
+Grouping does not permit overdraft, future facts or partial fund consumption.

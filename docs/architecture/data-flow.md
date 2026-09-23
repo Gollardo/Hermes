@@ -207,8 +207,9 @@ transaction. Funds protects the percentage snapshot from concurrent definition
 changes until that transaction finishes.
 One-off plans share the occurrence persistence and forecast read contract but
 have no rule and are never materialized. Applying one locks the plan, posts the
-actual operation with `occurred_on` equal to application today and records the
-link in that same transaction; it is therefore idempotent and cannot leave a
+actual operation with the reviewed non-future `occurred_on` and records the
+link in that same transaction (older requests without a date use application
+today); it is therefore idempotent and cannot leave a
 partial ledger write.
 
 ## Forecast calculation
@@ -273,9 +274,15 @@ not part of financial truth.
 ## Statement import
 
 Upload -> bounded CSV/XLSX reader -> column mapping -> exact normalized rows ->
-public fact/plan candidate reads -> explicit row decisions -> one application
+public fact/plan candidate reads -> explicit row decisions and optional
+same-date income/expense groups -> one application
 transaction -> public Operations/Funds posting or existing-fact verification ->
 public Scheduling confirmation -> Imports receipt -> commit -> journal links.
+
+A reviewed group validates every source row, posts its exact sum once, closes
+the selected occurrence once and records one receipt per member. Its shared
+decision hash binds the complete membership. Existing tables and module
+ownership remain unchanged.
 
 Preview has no domain writes or schedule materialization. Explicit profile save
 is separate. Source files are processed locally by the application and discarded;
