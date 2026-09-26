@@ -35,9 +35,12 @@ by coverage-dependent writes.
 Free mode starts from today's free balance and applies planned physical effects
 without guessing which future expense may consume a reserve. For a pending or
 postponed transfer explicitly marked for percentage allocation, it also
-subtracts the exact future allocation from free money: the source loses the
-full physical transfer, while the destination receives only its unallocated
-part as free money. The same transfer remains neutral across all accounts in
+subtracts the exact future allocation to funds and reserve from free money:
+the source loses the full physical transfer, while the destination receives
+only its unreserved
+part as free money. Dynamic excess is reserved even when all targets are full
+or no active funds exist; only manual allocation remainders stay free.
+The same transfer remains neutral across all accounts in
 total mode. A separate fund projection applies those allocations using the
 configured manual or dynamic mode. In dynamic mode it recalculates percentages
 before every planned replenishment from projected balances, in `(due_on,
@@ -84,8 +87,8 @@ same snapshot, scope, horizon, currency and ordering rules.
 - A single-account transfer is outgoing on its source and incoming on its
   destination. An internal transfer has zero effect on the all-accounts total
   balance. In free mode, an explicitly distributed transfer subtracts the
-  allocated amount from the destination and combined free balance, while the
-  source still shows the full physical outflow. The transfer remains in the
+  amount assigned to funds and reserve from destination and combined free
+  balances, while the source still shows the full physical outflow. The transfer remains in the
   explanation for that date.
 - Two weeks ends at `today + 14 days`; month, quarter, half-year and year preserve the
   day of month where possible and clamp to the target month's last day.
@@ -94,9 +97,10 @@ same snapshot, scope, horizon, currency and ordering rules.
   money. A selected archived account can still be inspected.
 - Money is calculated with `Decimal`; API money fields are exact decimal strings.
 - The fund projection exposes the allocation mode, each event's percentages and
-  amounts, each fund's starting/ending percentage, and blocked transfers when no
-  incomplete active fund exists. It permits target overshoot without
-  redistributing within the same event.
+  amounts, each fund's starting/ending percentage, and reserve amounts.
+  Dynamic allocation caps each fund at its target, redistributes within the
+  event, and sends the final excess to reserve. Such transfers are executable
+  even without incomplete funds; blocked allocations apply to manual mode.
 - The current account model has one locked base currency and no per-account
   currency, so all-account aggregation is compatible by construction.
 - The calculation is read-only and persists no projection or snapshot. Beta.2

@@ -40,7 +40,7 @@ def event(
     account_id: UUID = SOURCE,
     destination_account_id: UUID | None = None,
     status: OccurrenceStatus = OccurrenceStatus.PENDING,
-    allocated_to_funds: str = "0",
+    reserved_amount: str = "0",
 ) -> ForecastInputEvent:
     return ForecastInputEvent(
         occurrence_id=UUID(f"30000000-0000-0000-0000-{suffix:012d}"),
@@ -52,7 +52,7 @@ def event(
         account_id=account_id,
         destination_account_id=destination_account_id,
         amount=Decimal(amount),
-        allocated_to_funds=Decimal(allocated_to_funds),
+        reserved_amount=Decimal(reserved_amount),
     )
 
 
@@ -458,7 +458,7 @@ def test_allocating_transfer_reduces_only_free_money_forecast() -> None:
         type=OperationType.TRANSFER,
         amount="100.0000",
         destination_account_id=TARGET,
-        allocated_to_funds="60.0000",
+        reserved_amount="60.0000",
     )
 
     def calculate(account_id: UUID | None, mode: ForecastBalanceMode) -> ForecastResponse:
@@ -611,3 +611,103 @@ def test_starting_deficit_keeps_the_current_balance_as_first_negative() -> None:
     assert result.first_negative_on == TODAY
     assert result.first_negative_balance == "-7.5000"
     assert result.points[0].closing_balance == "12.5000"
+
+
+@pytest.mark.parametrize("account_id", [None, SOURCE, TARGET])
+@pytest.mark.parametrize("mode", list(ForecastBalanceMode))
+@pytest.mark.parametrize("capacity", [None, "0", "20", "40.0001"])
+def test_dynamic_reservation_is_included_in_free_projection(
+    monkeypatch: pytest.MonkeyPatch,
+    account_id: UUID | None,
+    mode: ForecastBalanceMode,
+    capacity: str | None,
+) -> None:
+    """Cover partial/full capacity and no funds through the composed read model."""
+    now = datetime.now(UTC)
+    funds = (
+        []
+        if capacity is None
+        else [
+            FundResponse(
+                id=RULE,
+                name="Goal",
+                description=None,
+                allocation_percentage="100",
+                manual_allocation_percentage="0",
+                allocation_mode=FundAllocationMode.DYNAMIC,
+                target_amount=str(Decimal("100") + Decimal(capacity)),
+                total_balance="100",
+                remaining_amount=capacity,
+                distribution_status="active",
+                progress_percentage=None,
+                archived=False,
+                version=1,
+                created_at=now,
+                updated_at=now,
+            )
+        ]
+    )
+    occurrences = [
+        PlannedOccurrence(
+            id=UUID(f"30000000-0000-0000-0000-{index:012d}"),
+            rule_id=RULE,
+            due_on=TODAY,
+            type=OperationType.TRANSFER,
+            amount=Decimal(amount),
+            description=None,
+            account_id=SOURCE,
+            destination_account_id=TARGET,
+            allocate_to_funds=True,
+            status=OccurrenceStatus.PENDING,
+        )
+        for index, amount in [(1, "30.0001"), (2, "10")]
+    ]
+    monkeypatch.setattr(
+        "app.modules.forecasting.service.forecast_schedule_snapshot",
+        lambda *a, **k: ForecastScheduleSnapshot(occurrences, 0),
+    )
+    monkeypatch.setattr(
+        "app.modules.forecasting.service.list_account_identities",
+        lambda *a, **k: [
+            AccountIdentity(SOURCE, "Main", False),
+            AccountIdentity(TARGET, "Savings", False),
+        ],
+    )
+    monkeypatch.setattr(
+        "app.modules.forecasting.service.account_names",
+        lambda *a, **k: {SOURCE: "Main", TARGET: "Savings"},
+    )
+    monkeypatch.setattr(
+        "app.modules.forecasting.service.account_balances",
+        lambda *a, **k: {SOURCE: Decimal("200"), TARGET: Decimal("120")},
+    )
+    # Existing reservations include both fund positions and a 20-unit reserve.
+    reserved = Decimal("20") + (Decimal("100") if funds else Decimal(0))
+    monkeypatch.setattr(
+        "app.modules.forecasting.service.reserved_balances",
+        lambda *a, **k: {SOURCE: Decimal(0), TARGET: reserved},
+    )
+    monkeypatch.setattr("app.modules.forecasting.service.locked_active_funds", lambda *a: funds)
+    monkeypatch.setattr(
+        "app.modules.forecasting.service.fund_allocation_mode",
+        lambda *a: FundAllocationMode.DYNAMIC,
+    )
+    result = build_forecast(
+        cast(Session, object()),
+        today=TODAY,
+        horizon=ForecastHorizon.MONTH,
+        account_id=account_id,
+        balance_mode=mode,
+    )
+    starting = {None: Decimal("320"), SOURCE: Decimal("200"), TARGET: Decimal("120")}[account_id]
+    if mode == ForecastBalanceMode.FREE and account_id != SOURCE:
+        starting -= reserved
+    change = Decimal("-40.0001") if account_id == SOURCE else Decimal(0)
+    if account_id == TARGET and mode == ForecastBalanceMode.TOTAL:
+        change = Decimal("40.0001")
+    if account_id is None and mode == ForecastBalanceMode.FREE:
+        change = Decimal("-40.0001")
+    assert Decimal(result.starting_balance) == starting
+    assert Decimal(result.ending_balance) == starting + change
+    assert Decimal(result.expected_expense) == 0
+    assert sum((Decimal(e.effect) for p in result.points for e in p.events), Decimal(0)) == change

@@ -5,6 +5,7 @@ from threading import Event
 from typing import cast
 from uuid import UUID
 
+import pytest
 from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 from sqlalchemy.orm import Session
@@ -339,3 +340,102 @@ def test_concurrent_confirmation_cannot_be_counted_as_actual_and_planned(
         )
         after = client.get("/api/v1/forecast?horizon=two_weeks").json()
         assert after["starting_balance"] == after["ending_balance"] == "130.0000"
+
+
+@pytest.mark.parametrize("target_amount", [None, "20", "40.0001"])
+def test_dynamic_forecast_matches_confirmed_reserve_and_remains_read_only(
+    postgres_database_settings: Settings,
+    target_amount: str | None,
+) -> None:
+    with TestClient(create_app(postgres_database_settings)) as client:
+        assert client.post("/api/v1/setup", json=SETUP).status_code == 201
+        headers = csrf(client)
+        source = client.post(
+            "/api/v1/accounts",
+            headers=headers,
+            json={"type": "debit", "name": "Main", "initial_balance": "200"},
+        ).json()["id"]
+        target = client.post(
+            "/api/v1/accounts",
+            headers=headers,
+            json={"type": "savings", "name": "Savings", "initial_balance": "0"},
+        ).json()["id"]
+        if target_amount is not None:
+            assert (
+                client.post(
+                    "/api/v1/funds",
+                    headers=headers,
+                    json={
+                        "name": "Goal",
+                        "allocation_percentage": "100",
+                        "target_amount": target_amount,
+                    },
+                ).status_code
+                == 201
+            )
+        assert (
+            client.put(
+                "/api/v1/settings/fund-allocation-mode", headers=headers, json={"mode": "dynamic"}
+            ).status_code
+            == 200
+        )
+        today = client.post("/api/v1/scheduling/materialize", headers=headers).json()[
+            "horizon_from"
+        ]
+        for amount in ["30.0001", "10"]:
+            assert (
+                client.post(
+                    "/api/v1/scheduling/rules",
+                    headers=headers,
+                    json={
+                        "frequency": "daily",
+                        "start_on": today,
+                        "end_on": today,
+                        "type": "transfer",
+                        "amount": amount,
+                        "account_id": source,
+                        "destination_account_id": target,
+                        "allocate_to_funds": True,
+                    },
+                ).status_code
+                == 201
+            )
+        before = client.get("/api/v1/backup/export").json()["data"]
+        forecasts = {}
+        for mode in ["free", "total"]:
+            for account, expected in [
+                (None, "159.9999" if mode == "free" else "200"),
+                (source, "159.9999"),
+                (target, "0" if mode == "free" else "40.0001"),
+            ]:
+                params = {"horizon": "month", "balance_mode": mode}
+                if account is not None:
+                    params["account_id"] = account
+                response = client.get("/api/v1/forecast", params=params)
+                assert response.status_code == 200
+                forecast = response.json()
+                assert Decimal(forecast["ending_balance"]) == Decimal(expected)
+                assert Decimal(forecast["expected_expense"]) == 0
+                forecasts[(mode, account)] = forecast
+        funds = client.get("/api/v1/forecast/funds?horizon=month").json()
+        expected_reserve = Decimal("40.0001") - Decimal(target_amount or "0")
+        assert Decimal(funds["ending_reserve"]) == expected_reserve
+        assert client.get("/api/v1/backup/export").json()["data"] == before
+        occurrences = client.get("/api/v1/scheduling/occurrences?page_size=20").json()["items"]
+        for occurrence in sorted(occurrences, key=lambda o: (o["due_on"], o["id"])):
+            response = client.post(
+                f"/api/v1/scheduling/occurrences/{occurrence['id']}/confirm",
+                headers=headers,
+                json={"version": occurrence["version"]},
+            )
+            assert response.status_code == 200
+        for (mode, account), forecast in forecasts.items():
+            params = {"horizon": "month", "balance_mode": mode}
+            if account is not None:
+                params["account_id"] = account
+            actual = client.get("/api/v1/forecast", params=params).json()
+            assert Decimal(actual["starting_balance"]) == Decimal(forecast["ending_balance"])
+            assert all(not point["events"] for point in actual["points"])
+        funds = client.get("/api/v1/forecast/funds?horizon=month").json()
+        assert Decimal(funds["starting_reserve"]) == expected_reserve
+        assert Decimal(funds["ending_reserve"]) == expected_reserve

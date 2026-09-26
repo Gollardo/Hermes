@@ -275,16 +275,18 @@ export const en = {
   'forecast.availableToSpendNow': 'Available to spend now',
   'forecast.coverTheForecastShortfallFirst': 'Cover the forecast shortfall first.',
   'forecast.maximumWithoutTheForecastDroppingBelow0':
-    'Maximum without the forecast dropping below 0,00 {p0}.',
+    'Maximum under known plans without the forecast dropping below 0,00 {p0}.',
   'forecast.minimumBalance': 'Minimum balance',
   'forecast.balanceAtPeriodEnd': 'Balance at period end',
   'forecast.netFlow': 'Net flow',
   'forecast.keyForecastFigures': 'Key forecast figures',
   'forecast.now': 'Now',
   'forecast.chartContext': 'Chart context',
+  'forecast.planBoundary':
+    'The forecast includes only known plans. Additional spending is not inferred from history; the available-to-spend amount applies within these limits.',
   'forecast.howFundsAreIncluded': 'How funds are included',
   'forecast.theStartingBalanceExcludesExistingReservesA':
-    'The starting balance excludes existing reserves. A planned transfer with allocation reduces the free balance by the amount assigned to funds; the unallocated amount remains free.',
+    'The starting balance excludes money in funds and reserves. A transfer with allocation reduces free money by the entire reserved amount. In manual mode the unallocated portion stays free; in dynamic mode excess after targets fill enters the reserve and does not become free.',
   'forecast.thereAreNoKnownPlannedEventsThe':
     'There are no known planned events. The line represents unchanged known data, not a guarantee of your future balance.',
   'forecast.shortfall': 'Shortfall',

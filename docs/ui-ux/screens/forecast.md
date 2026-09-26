@@ -170,7 +170,8 @@ unavailable source and offers retry; actual balance may appear separately.
   balances using each goal's relative unfilled share.
 - In free mode, future expenses do not choose a reserve automatically. A
   transfer explicitly configured for percentage allocation reduces the free
-  forecast by the exact allocated amount. The same internal transfer remains
+  forecast by the exact amount assigned to funds and reserve. Dynamic excess
+  remains reserved after targets fill; manual allocation remainders stay free. The same internal transfer remains
   neutral in total mode.
 - The default selection is all accounts and one calendar month.
 - Forecast uses exact daily closing balance with no intraday model.
@@ -230,3 +231,11 @@ The implemented RU/EN presentation follows the shared
 [internationalization contract](../internationalization.md). Language changes
 update screen copy and accessible labels while preserving financial semantics,
 user-entered data, dates, selected context and exact monetary payloads.
+
+## Forecast reserve correction
+
+The visible model notice states that only known plans are included: historical
+unplanned spending is not extrapolated. The available-to-spend explanation is
+explicitly conditional on those plans in both RU and EN. The free-money
+disclosure distinguishes manual free remainders from dynamic excess held in
+reserve. Existing charts, event links and error/retry behavior are retained.

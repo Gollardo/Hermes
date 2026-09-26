@@ -57,7 +57,7 @@ class ForecastInputEvent:
     account_id: UUID
     destination_account_id: UUID | None
     amount: Decimal
-    allocated_to_funds: Decimal = Decimal(0)
+    reserved_amount: Decimal = Decimal(0)
     source_kind: OccurrenceSourceKind = OccurrenceSourceKind.RECURRING
 
 
@@ -333,7 +333,7 @@ def build_forecast(
         raise AccountReferenceError
     names = account_names(session, account_ids)
     balances = account_balances(session, account_ids)
-    allocated_by_occurrence: dict[UUID, Decimal] = {}
+    reserved_by_occurrence: dict[UUID, Decimal] = {}
     if balance_mode == ForecastBalanceMode.FREE:
         reserved_by_account = reserved_balances(session, account_ids)
         balances = {
@@ -347,8 +347,8 @@ def build_forecast(
             allocation_schedule.occurrences,
             mode,
         )
-        allocated_by_occurrence = {
-            event.occurrence_id: sum(event.amounts.values(), Decimal(0))
+        reserved_by_occurrence = {
+            event.occurrence_id: sum(event.amounts.values(), Decimal(0)) + event.reserve_amount
             for event in projection.events
         }
     return calculate_forecast(
@@ -357,7 +357,7 @@ def build_forecast(
         balances=balances,
         account_name_by_id=names,
         events=[
-            _input_event(item, allocated_by_occurrence.get(item.id, Decimal(0)))
+            _input_event(item, reserved_by_occurrence.get(item.id, Decimal(0)))
             for item in schedule.occurrences
         ],
         account_id=account_id,
@@ -489,18 +489,18 @@ def _scope_effect(
     if event.type == OperationType.EXPENSE:
         return -event.amount if account_id in {None, event.account_id} else Decimal(0)
     if account_id is None:
-        return -event.allocated_to_funds if balance_mode == ForecastBalanceMode.FREE else Decimal(0)
+        return -event.reserved_amount if balance_mode == ForecastBalanceMode.FREE else Decimal(0)
     if account_id == event.account_id:
         return -event.amount
     if account_id == event.destination_account_id:
         return event.amount - (
-            event.allocated_to_funds if balance_mode == ForecastBalanceMode.FREE else Decimal(0)
+            event.reserved_amount if balance_mode == ForecastBalanceMode.FREE else Decimal(0)
         )
     return Decimal(0)
 
 
 def _input_event(
-    item: PlannedOccurrence, allocated_to_funds: Decimal = Decimal(0)
+    item: PlannedOccurrence, reserved_amount: Decimal = Decimal(0)
 ) -> ForecastInputEvent:
     return ForecastInputEvent(
         occurrence_id=item.id,
@@ -513,7 +513,7 @@ def _input_event(
         account_id=item.account_id,
         destination_account_id=item.destination_account_id,
         amount=item.amount,
-        allocated_to_funds=allocated_to_funds,
+        reserved_amount=reserved_amount,
     )
 
 

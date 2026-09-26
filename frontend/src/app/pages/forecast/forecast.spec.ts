@@ -189,6 +189,32 @@ describe('ForecastPage', () => {
     expect(calendarLink.getAttribute('href')).toContain('focus=occurrence-1');
   });
 
+  it.each(['ru', 'en'] as const)('explains the plan boundary and reserve in %s', (selected) => {
+    flushInitial({
+      ...POPULATED_FUND_FORECAST,
+      allocation_mode: 'dynamic',
+      ending_reserve: '20.0000',
+    });
+    http.expectOne('/api/v1/forecast?horizon=month&balance_mode=free').flush(FORECAST);
+    language.set(selected);
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain(
+      selected === 'ru'
+        ? 'Дополнительные расходы по истории не добавляются'
+        : 'Additional spending is not inferred from history',
+    );
+    expect(text).toContain(
+      selected === 'ru'
+        ? 'в динамическом избыток после заполнения целей уходит в резерв'
+        : 'in dynamic mode excess after targets fill enters the reserve',
+    );
+    expect(text).toContain(selected === 'ru' ? 'В ручном режиме' : 'In manual mode');
+    expect(text).toContain(
+      selected === 'ru' ? 'Резерв к концу: 20,00 ₽' : 'Closing reserve: 20,00 ₽',
+    );
+  });
+
   it('renders the enlarged fund allocation diagram and exact values without a line chart', () => {
     flushInitial(POPULATED_FUND_FORECAST);
     http.expectOne('/api/v1/forecast?horizon=month&balance_mode=free').flush(FORECAST);
@@ -204,13 +230,14 @@ describe('ForecastPage', () => {
     expect(fixture.nativeElement.textContent).toContain('20,00 ₽');
   });
 
-  it('shows blocked dynamic replenishments even when no fund series exists', () => {
+  it('shows the dynamic reserve even when no fund series exists', () => {
     flushInitial({
       ...FUND_FORECAST,
       allocation_mode: 'dynamic',
       planned_transfer_total: '100.0000',
       unallocated_total: '100.0000',
-      blocked_allocation_count: 1,
+      ending_reserve: '100.0000',
+      blocked_allocation_count: 0,
     });
     http.expectOne('/api/v1/forecast?horizon=month&balance_mode=free').flush(FORECAST);
     fixture.detectChanges();
@@ -218,9 +245,7 @@ describe('ForecastPage', () => {
     expect(fixture.nativeElement.textContent).toContain(
       'Создайте неархивный фонд с целью, чтобы увидеть перспективу распределения.',
     );
-    expect(fixture.nativeElement.textContent).toContain(
-      'Плановых переводов без доступных незаполненных фондов: 1',
-    );
+    expect(fixture.nativeElement.textContent).toContain('Резерв к концу: 100,00 ₽');
   });
 
   it('keeps the cash forecast visible and exposes a retry when fund projection fails', () => {

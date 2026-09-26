@@ -270,16 +270,19 @@ export const ru = {
   'forecast.goToEvents': 'Перейти к событиям',
   'forecast.availableToSpendNow': 'Можно потратить сейчас',
   'forecast.coverTheForecastShortfallFirst': 'Сначала закройте прогнозируемый дефицит.',
-  'forecast.maximumWithoutTheForecastDroppingBelow0': 'Максимум без ухода прогноза ниже 0,00 {p0}.',
+  'forecast.maximumWithoutTheForecastDroppingBelow0':
+    'Максимум по заданным планам без ухода прогноза ниже 0,00 {p0}.',
   'forecast.minimumBalance': 'Минимальный остаток',
   'forecast.balanceAtPeriodEnd': 'Прогноз на конец периода',
   'forecast.netFlow': 'Чистый поток',
   'forecast.keyForecastFigures': 'Ключевые показатели прогноза',
   'forecast.now': 'Сейчас',
   'forecast.chartContext': 'Контекст графика',
+  'forecast.planBoundary':
+    'Прогноз учитывает только заданные планы. Дополнительные расходы по истории не добавляются; сумма «Можно потратить сейчас» рассчитана в этих границах.',
   'forecast.howFundsAreIncluded': 'Как учитываются фонды',
   'forecast.theStartingBalanceExcludesExistingReservesA':
-    'Старт исключает текущие резервы. Запланированный перевод с распределением уменьшает свободный остаток на сумму, которая будет назначена фондам; нераспределённая часть остаётся свободной.',
+    'Начальный остаток исключает деньги в фондах и резерве. Перевод с распределением уменьшает свободные деньги на всю зарезервированную сумму. В ручном режиме нераспределённая часть остаётся свободной; в динамическом избыток после заполнения целей уходит в резерв и не становится свободным.',
   'forecast.thereAreNoKnownPlannedEventsThe':
     'Нет известных ожидаемых событий. Линия показывает неизменность известных данных, а не гарантию будущего остатка.',
   'forecast.shortfall': 'Разрыв',

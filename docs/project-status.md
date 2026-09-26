@@ -145,23 +145,33 @@ ranges, account overdraft policy and one-fund-per-operation support.
 
 ## Next action
 
-A local restored-backup audit on 2026-09-23 confirmed a free-money forecast
-defect: projected dynamic allocations subtract fund movements but omit the
-excess assigned to the fund reserve. After targets fill, projected free money
-is therefore overstated by the accumulated future reserve. Total-money
-forecasting is unaffected by this omission. The defect remains unfixed;
-the next corrective action is to include projected reserve movements and add
-regression coverage for partial and exhausted fund capacity.
+The 2026-09-23 free-money forecast correction now includes projected dynamic
+reserve movements as well as fund allocations. This preserves total-money
+transfer neutrality and excludes reserved excess from destination and combined
+free money, including after all goals fill or when no active funds exist.
+RU/EN forecast copy distinguishes manual remainders from dynamic reserves and
+explicitly limits the available-to-spend figure to known plans. Historical
+unplanned spending is not extrapolated. No migration or public API shape change
+is required.
 
-Restore preserved the supplied financial and scheduling data (timestamp offsets
-were normalized for comparison). All five horizons in both balance modes
-retained the expected actionable event identities; no one-month expense cutoff
-was found. The existing 15 forecast unit tests passed, but do not detect this
-projection-composition defect. Verification used isolated local PostgreSQL 15
-and the native API; it does not constitute production or container acceptance.
-Historical unplanned spending is not automatically extrapolated into the
-deterministic forecast. Private backup data and diagnostic artifacts remain
-outside the repository.
+Verification: `make test` passed 177 default backend tests (113 PostgreSQL-gated
+skips), all 114 dedicated PostgreSQL integration tests and 186 frontend tests.
+The focused forecast suites passed 39 unit tests, six integration tests and
+26 frontend tests. New regressions reproduce the missing reserve before the
+fix and cover partial/full capacity, no active funds, exact decimals, existing
+reservations, account scopes, total-mode neutrality, read-only queries and
+forecast-to-confirmation equality. Lint, formatting, RU/EN catalog checks,
+mypy, TypeScript, documentation checks and the production frontend build passed.
+
+All 30 scope/mode/horizon combinations were reconciled against the previously
+restored private backup in isolated local PostgreSQL 15. Browser acceptance
+verified the corrected annual free balance and expanded explanation; the
+390 px viewport had no horizontal document overflow. RU/EN copy is covered by
+component tests. Private data and diagnostic artifacts remain outside Git.
+This is local acceptance, not production deployment or PostgreSQL 17/container
+certification. Existing build-budget warnings remain (534.53 kB initial bundle
+against 500 kB, plus component stylesheets). No dependency was added.
+
 
 For deployment, validate a protected backup before upgrading to `v1.1.0`, then
 verify health and primary financial screens using the [release runbook](operations/release.md).

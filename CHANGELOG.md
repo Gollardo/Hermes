@@ -12,6 +12,14 @@ assigned.
 
 ## [Unreleased]
 
+### Fixed
+
+- Include future dynamic fund reserves in free-money forecasts after goals fill,
+  including allocations with no active funds. Total-money projections retain
+  internal-transfer neutrality; no migration or API shape change is needed.
+- Clarify RU/EN forecast explanations: manual remainders stay free, dynamic
+  excess stays reserved, and available-to-spend figures cover known plans only.
+
 ### Added
 
 - Select an actual non-future payment date when confirming a one-off or recurring
