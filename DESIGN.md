@@ -1,5 +1,15 @@
 # DESIGN.md
 
+## Current visual refresh authorization
+
+On 2026-09-26 the owner authorized a whole-application visual redesign with no
+functional changes and preservation of Hermes' design language. The implemented
+[personal financial atlas direction](docs/ui-ux/atlas-refresh.md) supersedes the
+older screen geometry where explicitly described. Navigation destinations, modal
+workflows, domain semantics and financial formatting remain unchanged. Exact
+implementation values are reviewable defaults, not a separately approved final
+design system. Final visual acceptance remains with the owner.
+
 ## Purpose
 
 This is the primary UI/UX contract for coding agents working on Hermes.
@@ -14,9 +24,9 @@ palette.
 
 The project owner approved the implemented `0.4.0` interface on 2026-08-18 as
 the first-public-release baseline. The current `0.4.6` changes extend its
-established patterns. Preserve the established
-navigation, modal composers, visual hierarchy and responsive behavior unless a
-later owner decision changes them. This approval does not promote incidental
+established patterns. Preserve the established navigation destinations, modal composers and financial
+semantics. The 2026-09-26 authorization above permits new visual hierarchy and
+responsive geometry within the existing functional scope. This approval does not promote incidental
 CSS values into a permanent design system or approve unimplemented screens.
 
 ## Authority and Scope

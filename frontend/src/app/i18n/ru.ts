@@ -556,7 +556,7 @@ export const ru = {
   'funds.couldNotLoadFunds': 'Не удалось загрузить фонды.',
   'funds.couldNotLoadFundHistory': 'Не удалось загрузить историю фондов.',
   'home.overview': 'Обзор',
-  'home.yourMoneyNowAndInTheNear': 'Ваши деньги сейчас и в ближайшем будущем',
+  'home.yourMoneyNowAndInTheNear': 'Ваши деньги',
   'home.aBriefSummaryOfFactsPlansAnd':
     'Краткая сводка фактов, планов и сигналов, которые требуют действия.',
   'home.gatheringYourFinancialSummary': 'Собираем финансовую сводку…',

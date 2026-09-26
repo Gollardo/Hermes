@@ -6,12 +6,15 @@
 .forecast-header {
   align-items: end;
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
   justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .forecast-header h1 {
-  font-size: clamp(2rem, 3.2vw, 2.6rem);
+  font-size: clamp(1.8rem, 2.8vw, 2.6rem);
   font-weight: 590;
   letter-spacing: -0.045em;
   line-height: 1.02;
@@ -31,7 +34,7 @@
   align-items: end;
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(11rem, 0.65fr) minmax(27rem, 1.6fr) minmax(20rem, 1.1fr);
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.5fr);
   padding: 0.65rem 0.8rem;
 }
 
@@ -72,7 +75,7 @@
   border-radius: 0.65rem;
   min-height: 2.2rem;
   padding: 0.4rem 0.55rem;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .balance-switcher button {
@@ -143,10 +146,11 @@
 }
 
 .kpi-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 1rem;
-  box-shadow: var(--shadow-card);
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
   color: var(--ink);
   display: grid;
   gap: 0.25rem;
@@ -347,7 +351,7 @@ a.risk-item:hover {
 
 @media (max-width: 64rem) {
   .forecast-controls {
-    grid-template-columns: minmax(12rem, 0.75fr) minmax(24rem, 1.45fr);
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.45fr);
   }
 
   .balance-mode-control {
@@ -403,11 +407,10 @@ a.risk-item:hover {
   }
 
   .kpi-row {
-    display: flex;
-    margin-inline: -1rem;
-    overflow-x: auto;
-    padding: 0 1rem 0.35rem;
-    scroll-snap-type: x proximity;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+    padding: 0;
   }
 
   .kpi-card {
@@ -418,5 +421,67 @@ a.risk-item:hover {
   .overdue-note {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+.balance-mode-control {
+  grid-column: 1 / -1;
+}
+.forecast-controls {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+.kpi-row {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 0.65rem;
+  gap: 0;
+}
+.kpi-card {
+  min-width: 0;
+}
+.safe-spend-card {
+  border-radius: 0.65rem;
+  border: 0;
+  background: var(--surface-accent);
+  box-shadow: none;
+}
+.kpi-card strong {
+  overflow-wrap: anywhere;
+}
+.forecast-header > div {
+  min-width: 0;
+}
+.forecast-header p:not(.eyebrow) {
+  font-size: 0.88rem;
+}
+@media (max-width: 76rem) {
+  .kpi-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+}
+@media (max-width: 38rem) {
+  .kpi-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .kpi-card {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .safe-spend-card {
+    border: 0;
+  }
+}
+
+@media (min-width: 85rem) {
+  .forecast-controls {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.5fr) minmax(0, 1.2fr);
+  }
+  .balance-mode-control {
+    grid-column: auto;
   }
 }

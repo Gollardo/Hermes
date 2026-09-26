@@ -1,24 +1,5 @@
 @import '../directory.css';
 
-.page-header {
-  display: block;
-}
-
-.page-header-copy {
-  max-width: none;
-}
-
-.accounts-title-row {
-  align-items: center;
-  display: flex;
-  gap: 1.5rem;
-  justify-content: space-between;
-}
-
-.accounts-title-row button {
-  flex: 0 0 auto;
-}
-
 .accounts-rule {
   color: var(--muted);
   display: inline-block;
@@ -135,12 +116,6 @@
 }
 
 @media (max-width: 38rem) {
-  .accounts-title-row {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
   .balance-block {
     text-align: left;
   }
@@ -153,5 +128,29 @@
     border-top: 1px solid var(--line);
     justify-content: flex-start;
     padding-top: 0.75rem;
+  }
+}
+
+.accounts-list .directory-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem 1.25rem;
+  padding-block: 1.35rem;
+}
+.accounts-list .item-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
+}
+.item-symbol {
+  background: var(--surface-accent);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+.balance {
+  font-weight: 550;
+  font-size: clamp(1.25rem, 2.5vw, 2rem);
+}
+@media (max-width: 38rem) {
+  .accounts-list .directory-item {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -252,3 +252,21 @@ dd {
     margin: 0.25rem 0 0;
   }
 }
+
+fieldset {
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+fieldset legend {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  padding-inline: 0.4rem;
+}
+.review-summary {
+  border-left: 3px solid var(--accent);
+}
+.imported-row {
+  border-radius: 0;
+  border-inline: 0;
+}

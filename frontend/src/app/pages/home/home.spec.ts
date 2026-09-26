@@ -75,12 +75,14 @@ describe('HomePage', () => {
   it('renders labelled, linked charts and orders funds by reserved amount', () => {
     flushOverview();
 
-    const cards = fixture.nativeElement.querySelectorAll('.donut-card') as NodeListOf<HTMLElement>;
+    const cards = fixture.nativeElement.querySelectorAll(
+      '.breakdown-card',
+    ) as NodeListOf<HTMLElement>;
     expect(cards).toHaveLength(3);
     expect(cards[2].textContent).toContain('Текущее состояние');
     expect(cards[2].querySelector('li')?.textContent).toContain('Large');
-    expect(cards[0].querySelectorAll('.chart-swatch')).toHaveLength(2);
-    expect(cards[1].querySelector('.donut')).not.toBeNull();
+    expect(cards[0].querySelectorAll('.breakdown-track')).toHaveLength(2);
+    expect(cards[1].querySelector('.breakdown-track i')).not.toBeNull();
     const expenseLink = cards[0].querySelector('li a') as HTMLAnchorElement;
     expect(expenseLink.getAttribute('href')).toContain('/operations');
     expect(expenseLink.getAttribute('href')).toContain('category_id=food');

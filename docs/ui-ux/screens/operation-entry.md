@@ -1,5 +1,13 @@
 # Operation entry
 
+## Visual refresh — 2026-09-26
+
+Composers inherit the shared neutral surfaces, restrained corners, stronger
+focus outline and short reduced-motion-aware entrance. The existing modal,
+field order, required inputs, sticky action area and save/error behavior remain.
+See [atlas refresh](../atlas-refresh.md). This records implementation under the
+owner-authorized redesign, not separate final visual acceptance.
+
 ## Status
 
 The owner confirmed the primary UX focus on 2026-08-02. After owner review on

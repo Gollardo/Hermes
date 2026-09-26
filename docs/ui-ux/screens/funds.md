@@ -1,5 +1,14 @@
 # Funds
 
+## Visual refresh — 2026-09-26
+
+The current visual refresh places the summary and fund list before reserve,
+allocation-policy and funding-action panels. Goal progress uses thin tracks;
+amounts, account coverage, reserve and allocation percentages stay distinct.
+All allocation, transfer, release and archive workflows remain available.
+See [atlas refresh](../atlas-refresh.md). This records implementation under the
+owner-authorized redesign, not separate final visual acceptance.
+
 ## Status
 
 The owner approved the implemented `0.4.0` composition on 2026-08-18 as the

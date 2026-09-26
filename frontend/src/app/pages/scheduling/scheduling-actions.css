@@ -324,3 +324,38 @@
     grid-template-columns: 1fr;
   }
 }
+
+.upcoming-item {
+  gap: 1rem;
+}
+.occurrence-copy h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.occurrence-kicker {
+  flex-wrap: wrap;
+}
+.confirmation-action:not(.editing) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+.confirmation-action:not(.editing) label {
+  grid-column: 1 / -1;
+}
+.confirmation-action:not(.editing) .field-error {
+  grid-column: 1 / -1;
+}
+.confirmation-action:not(.editing) > button {
+  grid-column: 2;
+  grid-row: 2;
+}
+@media (max-width: 44rem) {
+  .confirmation-action:not(.editing) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .confirmation-action:not(.editing) > button {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}

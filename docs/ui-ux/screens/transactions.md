@@ -1,5 +1,14 @@
 # Transactions
 
+## Visual refresh — 2026-09-26
+
+The journal uses a compact header, quiet day bands and distinct row-label,
+metadata and amount weights. Narrow rows put amounts below the description.
+Expanded effects, planned sections, filters, full-selection totals, pagination
+and modal entry remain unchanged.
+See [atlas refresh](../atlas-refresh.md). This records implementation under the
+owner-authorized redesign, not separate final visual acceptance.
+
 ## Status
 
 In `0.1.0-alpha.4`, the journal gained virtual fund movements, server filters by

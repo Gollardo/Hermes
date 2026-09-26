@@ -1,5 +1,19 @@
 # Dashboard
 
+## Current visual composition — 2026-09-26
+
+Under the owner's whole-application redesign authorization, the overview now
+uses a short title and a combined current/future region. Free money is the main
+number; physical and reserved totals support it within one surface. The monthly
+forecast beside it separates minimum, date and period-end value. Attention,
+category/fund comparisons and recent operations follow in DOM order.
+
+Horizontal bars replace the previous donuts. Bar length compares each amount to
+the largest displayed item in that block; it is not a percentage label. Existing
+amounts, top-five/Other aggregation, period labels, links and partial errors are
+preserved. See [atlas refresh](../atlas-refresh.md). Historical approvals below
+do not imply owner acceptance of every new CSS value.
+
 ## Status
 
 The owner confirmed the primary product focus on 2026-08-02. After owner review
@@ -77,7 +91,7 @@ Hide this block when no action is needed; do not replace it with a decorative
 - current-calendar-month expenses and income across the five largest root
   categories; smaller categories combine as “Other”;
 - fund shares of total saved money;
-- each share's color marker repeats beside its text label and exact amount, so
+- every comparison bar has a text label, exact amount and source link;
   color is not the sole carrier of meaning;
 - account-balance trends;
 - free-money and debt/liability trends when source data exists;

@@ -112,7 +112,7 @@
 
 .directory-item.archived .item-copy,
 .subcategory.archived > span {
-  opacity: 0.58;
+  color: var(--muted);
 }
 
 .item-actions {

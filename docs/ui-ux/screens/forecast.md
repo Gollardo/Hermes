@@ -1,5 +1,14 @@
 # Forecast
 
+## Visual refresh — 2026-09-26
+
+Controls use flexible columns that wrap with available width. The four existing
+figures share one surface and stack on narrow screens without horizontal KPI
+scrolling. The chart, point selection, known-plans boundary, risk explanation
+and fund projection retain their existing calculation and interaction contracts.
+See [atlas refresh](../atlas-refresh.md). This records implementation under the
+owner-authorized redesign, not separate final visual acceptance.
+
 ## Status
 
 The owner approved the implemented `0.4.0` composition on 2026-08-18 as the

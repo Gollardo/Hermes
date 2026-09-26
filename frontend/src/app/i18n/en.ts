@@ -562,7 +562,7 @@ export const en = {
   'funds.couldNotLoadFunds': 'Could not load funds.',
   'funds.couldNotLoadFundHistory': 'Could not load fund history.',
   'home.overview': 'Overview',
-  'home.yourMoneyNowAndInTheNear': 'Your money now and in the near future',
+  'home.yourMoneyNowAndInTheNear': 'Your money',
   'home.aBriefSummaryOfFactsPlansAnd':
     'A brief summary of facts, plans and items requiring action.',
   'home.gatheringYourFinancialSummary': 'Gathering your financial summary…',

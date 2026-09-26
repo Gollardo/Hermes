@@ -1,7 +1,6 @@
 <section class="overview-page">
   <header class="page-header">
     <div class="page-header-copy">
-      <p class="eyebrow">{{ t('home.overview') }}</p>
       <h1>{{ t('home.yourMoneyNowAndInTheNear') }}</h1>
       <p>{{ t('home.aBriefSummaryOfFactsPlansAnd') }}</p>
     </div>
@@ -14,24 +13,60 @@
   @if (loading()) {
     <section class="panel empty-state">{{ t('home.gatheringYourFinancialSummary') }}</section>
   } @else if (summary(); as data) {
-    <section class="overview-balances" [attr.aria-label]="t('home.currentMoneyOverview')">
-      <article class="primary-balance">
-        <span> {{ t('home.freeNow') }} </span>
-        <strong>{{ data.total_free | money }} {{ baseCurrency() }}</strong>
-        <small> {{ t('home.availableAfterFundReserves') }} </small>
-        <a routerLink="/funds"> {{ t('home.checkFundAllocation') }} </a>
-      </article>
-      <article>
-        <span> {{ t('home.physicalBalance') }} </span
-        ><strong>{{ physicalTotal() | money }} {{ baseCurrency() }}</strong
-        ><a routerLink="/accounts"> {{ t('home.allAccounts') }} </a>
-      </article>
-      <article>
-        <span> {{ t('home.ofWhichReserved') }} </span
-        ><strong>{{ data.total_reserved | money }} {{ baseCurrency() }}</strong
-        ><a routerLink="/funds"> {{ t('home.allFunds') }} </a>
-      </article>
-    </section>
+    <div class="financial-stage">
+      <section class="overview-balances" [attr.aria-label]="t('home.currentMoneyOverview')">
+        <article class="primary-balance">
+          <span> {{ t('home.freeNow') }} </span>
+          <strong>{{ data.total_free | money }} {{ baseCurrency() }}</strong>
+          <small> {{ t('home.availableAfterFundReserves') }} </small>
+          <a routerLink="/funds"> {{ t('home.checkFundAllocation') }} </a>
+        </article>
+        <article>
+          <span> {{ t('home.physicalBalance') }} </span
+          ><strong>{{ physicalTotal() | money }} {{ baseCurrency() }}</strong
+          ><a routerLink="/accounts"> {{ t('home.allAccounts') }} </a>
+        </article>
+        <article>
+          <span> {{ t('home.ofWhichReserved') }} </span
+          ><strong>{{ data.total_reserved | money }} {{ baseCurrency() }}</strong
+          ><a routerLink="/funds"> {{ t('home.allFunds') }} </a>
+        </article>
+      </section>
+
+      @if (forecast(); as value) {
+        <section class="panel forecast-preview" [class.risk]="value.first_negative_on">
+          <div>
+            <p class="section-label">{{ t('home.nextMonth') }}</p>
+            @if (value.first_negative_on) {
+              <h2>
+                {{ t('home.possibleShortfallOnP0', { p0: (value.first_negative_on | textDate) }) }}
+              </h2>
+            } @else {
+              <h2 class="forecast-minimum-title">{{ t('forecast.minimumBalance') }}</h2>
+              <strong class="forecast-minimum"
+                >{{ value.minimum_balance | money }} {{ baseCurrency() }}</strong
+              >
+              <p class="forecast-minimum-date">{{ value.minimum_on | textDate }}</p>
+            }
+            <p class="forecast-ending">
+              {{ t('home.freeByP0', { p0: (value.through_on | textDate) }) }}
+              <strong>{{ value.ending_balance | money }} {{ baseCurrency() }}</strong>
+            </p>
+            <p>
+              {{
+                t('home.theForecastStartsFromTheCurrentFree', {
+                  p0: (value.starting_balance | money),
+                  p1: baseCurrency(),
+                })
+              }}
+            </p>
+          </div>
+          <a class="button-link secondary" routerLink="/forecast">
+            {{ t('home.exploreForecast') }}
+          </a>
+        </section>
+      }
+    </div>
 
     <div class="priority-grid">
       <section class="panel attention-panel" aria-labelledby="attention-title">
@@ -61,44 +96,6 @@
           <a class="section-link" routerLink="/calendar"> {{ t('home.resolveInCalendar') }} </a>
         }
       </section>
-
-      @if (forecast(); as value) {
-        <section class="panel forecast-preview" [class.risk]="value.first_negative_on">
-          <div>
-            <p class="section-label">{{ t('home.nextMonth') }}</p>
-            @if (value.first_negative_on) {
-              <h2>
-                {{ t('home.possibleShortfallOnP0', { p0: (value.first_negative_on | textDate) }) }}
-              </h2>
-            } @else {
-              <h2>
-                {{
-                  t('home.minimumP0P1P2', {
-                    p0: (value.minimum_balance | money),
-                    p1: baseCurrency(),
-                    p2: (value.minimum_on | textDate),
-                  })
-                }}
-              </h2>
-            }
-            <p class="forecast-ending">
-              {{ t('home.freeByP0', { p0: (value.through_on | textDate) }) }}
-              <strong>{{ value.ending_balance | money }} {{ baseCurrency() }}</strong>
-            </p>
-            <p>
-              {{
-                t('home.theForecastStartsFromTheCurrentFree', {
-                  p0: (value.starting_balance | money),
-                  p1: baseCurrency(),
-                })
-              }}
-            </p>
-          </div>
-          <a class="button-link secondary" routerLink="/forecast">
-            {{ t('home.exploreForecast') }}
-          </a>
-        </section>
-      }
     </div>
 
     @if (analyticsError(); as message) {
@@ -106,26 +103,18 @@
     }
     <section class="analytics-grid" [attr.aria-label]="t('home.incomeExpenseAndFundBreakdown')">
       @for (chart of analyticsCharts(); track chart.operationType ?? 'funds') {
-        <article class="panel donut-card" [class.income-chart]="chart.operationType === 'income'">
+        <article
+          class="panel breakdown-card"
+          [class.income-chart]="chart.operationType === 'income'"
+        >
           <div>
             <p class="section-label">{{ chart.context }}</p>
             <h2>{{ chart.title }}</h2>
           </div>
           @if (chartItems(chart.items).length) {
-            <div
-              class="donut"
-              [style.background]="donutStyle(chart.items)"
-              role="img"
-              [attr.aria-label]="chart.title"
-            ></div>
             <ul>
               @for (item of chartItems(chart.items); track item.category_id) {
                 <li>
-                  <i
-                    class="chart-swatch"
-                    aria-hidden="true"
-                    [style.background]="chartColor($index)"
-                  ></i>
                   @if (chart.operationType) {
                     <a
                       routerLink="/operations"
@@ -141,6 +130,9 @@
                     <a routerLink="/funds">{{ item.category_name }}</a>
                   }
                   <strong>{{ item.amount | money }} {{ baseCurrency() }}</strong>
+                  <span class="breakdown-track" aria-hidden="true"
+                    ><i [style.width.%]="barWidth(item, chart.items)"></i
+                  ></span>
                 </li>
               }
             </ul>

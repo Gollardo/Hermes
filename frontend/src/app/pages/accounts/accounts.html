@@ -2,15 +2,15 @@
   <header class="page-header">
     <div class="page-header-copy">
       <p class="eyebrow">{{ t('accounts.financialStructure') }}</p>
-      <div class="accounts-title-row">
-        <h1>{{ t('accounts.accounts') }}</h1>
-        <button type="button" (click)="openCreate()">{{ t('accounts.addAccount') }}</button>
-      </div>
+      <h1>{{ t('accounts.accounts') }}</h1>
       <p>{{ t('accounts.whereYourMoneyIsHeldBalancesAre') }}</p>
       <span class="accounts-rule">
         <strong> {{ t('accounts.note') }} </strong>
         {{ t('accounts.balancesCannotBeEditedDirectly') }}
       </span>
+    </div>
+    <div class="page-actions">
+      <button type="button" (click)="openCreate()">{{ t('accounts.addAccount') }}</button>
     </div>
   </header>
 

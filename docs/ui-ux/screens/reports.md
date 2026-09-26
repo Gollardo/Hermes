@@ -1,5 +1,13 @@
 # Reports screen
 
+## Visual refresh — 2026-09-26
+
+Period controls wrap within the workspace; the scoped total is more prominent
+and category bars are thinner. Exact values, category disclosure, source links
+and report scope remain unchanged.
+See [atlas refresh](../atlas-refresh.md). This records implementation under the
+owner-authorized redesign, not separate final visual acceptance.
+
 The report developed on the intermediate `0.2.0` line and is recorded under
 `0.3.0` in the current changelog. It exposes a top-level Reports destination.
 Its first report answers how income or expense is distributed over a selected

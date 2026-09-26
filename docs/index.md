@@ -51,7 +51,8 @@ question by itself.
 
 - [Vision](ui-ux/vision.md)
 - [Design principles](ui-ux/design-principles.md)
-- [Preliminary visual direction](ui-ux/visual-direction.md)
+- [Visual direction](ui-ux/visual-direction.md)
+- [Personal financial atlas refresh](ui-ux/atlas-refresh.md)
 - [Information architecture](ui-ux/information-architecture.md)
 - Screen directions:
   [dashboard](ui-ux/screens/dashboard.md),

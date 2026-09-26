@@ -50,88 +50,6 @@
       </div>
     </section>
 
-    @if (reserveVisible()) {
-      <section class="panel coverage" aria-labelledby="reserve-title">
-        <div class="panel-heading">
-          <div>
-            <h2 id="reserve-title">{{ t('funds.fundReserve') }}</h2>
-            <p>
-              @if (dynamicMode()) {
-                {{ t('funds.thisMoneyIsAlreadySetAsideFor') }}
-              } @else {
-                {{ t('funds.theReserveRemainsFromDynamicModeAnd') }}
-              }
-            </p>
-          </div>
-          <strong>{{ data.total_reserve | money }} {{ baseCurrency() }}</strong>
-        </div>
-        <div class="coverage-grid">
-          @for (account of data.accounts; track account.account_id) {
-            @if (reserveHasBalance(account)) {
-              <article>
-                <strong
-                  >{{ account.account_name
-                  }}{{ account.archived ? t('funds.archived') : '' }}</strong
-                >
-                <p>{{ account.reserve_balance | money }} {{ baseCurrency() }}</p>
-                <button type="button" class="secondary" (click)="openReserveRelease(account)">
-                  {{ t('funds.releaseToFreeBalance') }}
-                </button>
-              </article>
-            }
-          }
-        </div>
-      </section>
-    }
-
-    <section class="panel allocation-mode-note" [attr.aria-label]="t('funds.fundAllocationMode')">
-      <div>
-        <p class="section-label">{{ t('funds.allocationOfNewAmounts') }}</p>
-        <strong>{{
-          dynamicMode() ? t('funds.dynamicByTarget') : t('funds.manualPercentages')
-        }}</strong>
-      </div>
-      <p>
-        @if (dynamicMode()) {
-          {{ t('funds.percentagesFollowEachTargetSUnfilledShare') }}
-        } @else {
-          {{ t('funds.percentagesAreSetInEachFundThe') }}
-        }
-      </p>
-    </section>
-
-    <section class="fund-primary-actions panel" aria-labelledby="fund-actions-title">
-      <div>
-        <p class="section-label">{{ t('funds.addMoneyToFunds') }}</p>
-        <h2 id="fund-actions-title">{{ t('funds.chooseTheSourceOfMoney') }}</h2>
-        <p>
-          {{ t('funds.allocateFreeMoneyByPercentageOrTransfer') }}
-        </p>
-      </div>
-      <div class="fund-primary-action-controls">
-        <button type="button" (click)="openAllocation()">
-          {{ t('funds.allocateFromAccount') }}
-        </button>
-        <button type="button" class="secondary" (click)="openSpecificTransfer()">
-          {{ t('funds.transferIntoFund') }}
-        </button>
-        <button type="button" class="secondary" (click)="openTransferAllocation()">
-          {{ t('funds.transferAndAllocate') }}
-        </button>
-        <details class="fund-more-actions">
-          <summary>{{ t('funds.otherOperations') }}</summary>
-          <div>
-            <button type="button" class="secondary" (click)="openRedistribution()">
-              {{ t('funds.moveAllocationBetweenAccounts') }}
-            </button>
-            <button type="button" class="secondary" (click)="openFundTransfer()">
-              {{ t('funds.transferBetweenFunds') }}
-            </button>
-          </div>
-        </details>
-      </div>
-    </section>
-
     <section class="panel directory-list-panel">
       <div class="panel-heading">
         <div>
@@ -245,6 +163,88 @@
           }
         </div>
       }
+    </section>
+
+    @if (reserveVisible()) {
+      <section class="panel coverage" aria-labelledby="reserve-title">
+        <div class="panel-heading">
+          <div>
+            <h2 id="reserve-title">{{ t('funds.fundReserve') }}</h2>
+            <p>
+              @if (dynamicMode()) {
+                {{ t('funds.thisMoneyIsAlreadySetAsideFor') }}
+              } @else {
+                {{ t('funds.theReserveRemainsFromDynamicModeAnd') }}
+              }
+            </p>
+          </div>
+          <strong>{{ data.total_reserve | money }} {{ baseCurrency() }}</strong>
+        </div>
+        <div class="coverage-grid">
+          @for (account of data.accounts; track account.account_id) {
+            @if (reserveHasBalance(account)) {
+              <article>
+                <strong
+                  >{{ account.account_name
+                  }}{{ account.archived ? t('funds.archived') : '' }}</strong
+                >
+                <p>{{ account.reserve_balance | money }} {{ baseCurrency() }}</p>
+                <button type="button" class="secondary" (click)="openReserveRelease(account)">
+                  {{ t('funds.releaseToFreeBalance') }}
+                </button>
+              </article>
+            }
+          }
+        </div>
+      </section>
+    }
+
+    <section class="panel allocation-mode-note" [attr.aria-label]="t('funds.fundAllocationMode')">
+      <div>
+        <p class="section-label">{{ t('funds.allocationOfNewAmounts') }}</p>
+        <strong>{{
+          dynamicMode() ? t('funds.dynamicByTarget') : t('funds.manualPercentages')
+        }}</strong>
+      </div>
+      <p>
+        @if (dynamicMode()) {
+          {{ t('funds.percentagesFollowEachTargetSUnfilledShare') }}
+        } @else {
+          {{ t('funds.percentagesAreSetInEachFundThe') }}
+        }
+      </p>
+    </section>
+
+    <section class="fund-primary-actions panel" aria-labelledby="fund-actions-title">
+      <div>
+        <p class="section-label">{{ t('funds.addMoneyToFunds') }}</p>
+        <h2 id="fund-actions-title">{{ t('funds.chooseTheSourceOfMoney') }}</h2>
+        <p>
+          {{ t('funds.allocateFreeMoneyByPercentageOrTransfer') }}
+        </p>
+      </div>
+      <div class="fund-primary-action-controls">
+        <button type="button" (click)="openAllocation()">
+          {{ t('funds.allocateFromAccount') }}
+        </button>
+        <button type="button" class="secondary" (click)="openSpecificTransfer()">
+          {{ t('funds.transferIntoFund') }}
+        </button>
+        <button type="button" class="secondary" (click)="openTransferAllocation()">
+          {{ t('funds.transferAndAllocate') }}
+        </button>
+        <details class="fund-more-actions">
+          <summary>{{ t('funds.otherOperations') }}</summary>
+          <div>
+            <button type="button" class="secondary" (click)="openRedistribution()">
+              {{ t('funds.moveAllocationBetweenAccounts') }}
+            </button>
+            <button type="button" class="secondary" (click)="openFundTransfer()">
+              {{ t('funds.transferBetweenFunds') }}
+            </button>
+          </div>
+        </details>
+      </div>
     </section>
 
     <section class="coverage panel">

@@ -1,5 +1,14 @@
 # Information architecture
 
+## 2026-09-26 visual refresh
+
+The [atlas refresh](atlas-refresh.md) changes presentation and reading order
+within existing routes. Navigation destinations and labels are retained. The
+overview groups current and future money before attention and analytics; Funds
+places its entity list ahead of policy explanations. Both use matching DOM and
+visual order. No future section described below becomes implemented by this
+refresh.
+
 ## Status and constraints
 
 The currently implemented `0.4.0` structure was approved by the owner on

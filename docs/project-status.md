@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-09-23. This is the current release snapshot, not a task log.
+Last reviewed: 2026-09-26. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -37,6 +37,28 @@ Language selection does not change currency, financial precision, stored names,
 application dates or submitted domain values. The shared [UI contract](../DESIGN.md)
 retains exact two-place financial presentation and comma/dot numeric input.
 README images use synthetic English/USD data, never the owner's backup.
+
+## Unreleased UI refresh
+
+The owner authorized the whole-application redesign on 2026-09-26. The
+[personal financial atlas](ui-ux/atlas-refresh.md) now defines the implemented
+shell, financial hierarchy, typography, surfaces, bars, responsive layouts and
+shared controls. Existing light neutral/green identity, financial calculations,
+API contracts and operation workflows are preserved. This implementation is
+available locally; owner visual acceptance and deployment are still pending.
+
+Verification: 177 default backend tests passed (113 PostgreSQL-gated tests
+skipped), 114 integration tests passed on isolated PostgreSQL 15, and 186
+frontend tests passed. Lint, formatting, catalog checks, mypy, TypeScript and
+production build passed. Build warnings remain for the initial bundle and some
+component style budgets; budgets were not raised. PostgreSQL 17 acceptance was
+not repeated for this presentation-only change.
+
+Browser checks covered the nine main destinations and statement import at
+390px, plus desktop layouts and the operation composer without saving. No
+horizontal page overflow remained in the checked narrow layouts. First setup,
+login, restore and every empty/error state were not individually captured;
+shared styles apply there and existing automated scenarios remain in place.
 
 ## Release verification
 

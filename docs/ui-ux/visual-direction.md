@@ -1,6 +1,16 @@
-# Preliminary visual direction
+# Visual direction
 
-## Status
+## Current implementation: personal financial atlas
+
+The owner authorized the whole-application visual refresh on 2026-09-26 while
+preserving functionality and the light neutral/green language. Its current
+composition, surfaces, typography, motion and screen adaptations are documented
+in [atlas-refresh.md](atlas-refresh.md). This section supersedes the historical
+geometry below, while the original visual-axis approval remains authoritative.
+The system font stack is local; no external font or image request is introduced.
+Exact values remain implementation defaults pending owner visual acceptance.
+
+## Historical approval
 
 The owner confirmed the overall visual axis on 2026-08-02. This document guides
 future moodboards, wireframes, and prototypes, but intentionally does not define
@@ -8,9 +18,9 @@ CSS values, specific typefaces, a complete palette, or a component library. A
 detailed design system remains future work. The owner approved the implemented
 `0.4.0` interface on 2026-08-18 as the first-public-release baseline.
 
-## Implemented shared patterns in the current frontend
+## Historical shared patterns
 
-The direction first applied in `0.1.0-alpha.2` now covers the current `0.5.0`
+The direction first applied in `0.1.0-alpha.2` covered the `0.5.0`
 interface. Its approved release foundation remains the `0.4.0` owner decision,
 not a final design system:
 

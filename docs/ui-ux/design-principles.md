@@ -1,5 +1,14 @@
 # UX principles
 
+## Current visual implementation
+
+The owner-authorized [atlas refresh](atlas-refresh.md) applies these principles
+through one dominant answer, compact explanatory headers, fewer independent
+surfaces and flexible control widths. Domain precision, fact/plan separation,
+explicit consequences and recoverable input remain unchanged. The authorization
+covers redesign work; it does not certify final visuals or all accessibility
+states.
+
 ## Status
 
 The current general presentation rules are owner-confirmed. Specific layouts,

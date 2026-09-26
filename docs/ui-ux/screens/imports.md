@@ -1,5 +1,13 @@
 # Statement import
 
+## Visual refresh — 2026-09-26
+
+Setup field groups and the review summary adopt the shared surface hierarchy.
+File mapping, duplicate/plan review, merge consent, exact inputs, retry identity
+and posting boundaries are unchanged.
+See [atlas refresh](../atlas-refresh.md). This records implementation under the
+owner-authorized redesign, not separate final visual acceptance.
+
 ## Status
 
 Implemented as a separate `/imports` review flow entered from the operation

@@ -289,3 +289,24 @@
     display: flex;
   }
 }
+
+.calendar-toolbar h2 {
+  font-size: 1.6rem;
+  font-weight: 550;
+  letter-spacing: -0.035em;
+}
+.calendar-weekdays span {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.calendar-day.today {
+  background: var(--surface-accent);
+}
+.calendar-filters {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 38rem) {
+  .calendar-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

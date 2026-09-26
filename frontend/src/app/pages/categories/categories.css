@@ -4,7 +4,7 @@
 }
 
 .directory-page .page-header h1 {
-  font-size: clamp(2.15rem, 4vw, 3rem);
+  font-size: clamp(1.8rem, 2.8vw, 2.6rem);
   margin-bottom: 0.45rem;
 }
 
@@ -45,7 +45,7 @@
 
 .category-item.archived .item-copy,
 .subcategory.archived > span {
-  opacity: 0.58;
+  color: var(--muted);
 }
 
 .category-groups {
@@ -268,5 +268,11 @@ form button + button {
 @media (max-width: 64rem) {
   .category-groups {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 44rem) {
+  .directory-page .page-header {
+    align-items: stretch;
   }
 }

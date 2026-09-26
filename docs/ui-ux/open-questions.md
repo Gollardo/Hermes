@@ -1,5 +1,13 @@
 # Open UI/UX questions
 
+## 2026-09-26 authorization and remaining acceptance
+
+The owner authorized redesigning all application screens while preserving
+functionality and the existing visual language, including corresponding design
+documentation updates. The [atlas refresh](atlas-refresh.md) records the resulting
+implementation. Final visual acceptance and a permanent token specification
+remain separate; the authorization does not approve new product capabilities.
+
 ## Use and authority
 
 The implemented interface was accepted as the public-release baseline on

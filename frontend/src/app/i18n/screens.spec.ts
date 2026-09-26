@@ -20,7 +20,7 @@ const pages: [Type<unknown>, string][] = [
   [CategoriesPage, 'Categories'],
   [FundsPage, 'Funds'],
   [ForecastPage, 'Balance forecast'],
-  [HomePage, 'Your money now'],
+  [HomePage, 'Your money'],
   [OperationsPage, 'Operation journal'],
   [ReportsPage, 'Income and expenses'],
   [SchedulingPage, 'Calendar'],

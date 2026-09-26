@@ -1,5 +1,14 @@
 # Calendar and recurring operations direction
 
+## Visual refresh — 2026-09-26
+
+The calendar retains attention before the month grid. Occurrence date and
+confirmation controls are aligned more compactly without changing confirmation
+dates or lifecycle. The month title, day surfaces and controls use the shared
+visual language; deliberate internal calendar scrolling is retained.
+See [atlas refresh](../atlas-refresh.md). This records implementation under the
+owner-authorized redesign, not separate final visual acceptance.
+
 ## Status
 
 Owner-confirmed beta.1 scope implemented using the existing preliminary visual

@@ -238,22 +238,13 @@ export class HomePage implements OnInit {
     ];
   }
 
-  protected donutStyle(items: CategoryAmount[]): string {
-    const values = this.chartItems(items).map((item) => moneyUnits(item.amount) ?? 0n);
-    const total = values.reduce((sum, value) => sum + value, 0n);
-    if (!total) return 'conic-gradient(var(--line) 0 100%)';
-    let offset = 0;
-    return `conic-gradient(${values
-      .map((value, index) => {
-        const start = offset;
-        offset += Number((value * 10_000n) / total) / 100;
-        return `${this.chartColor(index)} ${start}% ${offset}%`;
-      })
-      .join(',')})`;
-  }
-
-  protected chartColor(index: number): string {
-    return ['#2f7d5b', '#77a98d', '#a8cdb8', '#d6b66d', '#c98b73', '#8e9aa0'][index];
+  protected barWidth(item: CategoryAmount, items: CategoryAmount[]): string {
+    const values = this.chartItems(items).map((value) => moneyUnits(value.amount) ?? 0n);
+    const max = values.reduce((largest, value) => (value > largest ? value : largest), 0n);
+    const amount = moneyUnits(item.amount) ?? 0n;
+    if (max <= 0n || amount <= 0n) return '0';
+    const hundredths = (amount * 10_000n) / max;
+    return `${hundredths / 100n}.${String(hundredths % 100n).padStart(2, '0')}`;
   }
 
   protected fundsChart(): CategoryAmount[] {
