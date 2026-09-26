@@ -1,5 +1,11 @@
 # Open UI/UX questions
 
+The owner authorized all follow-up UI review corrections on 2026-09-26, including
+compact expandable mobile top navigation. That implementation starts collapsed
+and closes after route selection; a replacement with bottom navigation remains
+an independent future question. See [atlas refresh](atlas-refresh.md).
+
+
 ## 2026-09-26 authorization and remaining acceptance
 
 The owner authorized redesigning all application screens while preserving

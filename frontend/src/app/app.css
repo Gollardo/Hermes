@@ -386,3 +386,35 @@ footer {
     animation: none;
   }
 }
+
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  color: var(--accent-strong);
+  transform: translateY(-160%);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+@media (max-width: 58rem) {
+  .sidebar-hidden .app-sidebar {
+    display: block;
+  }
+  .sidebar-hidden .primary-nav,
+  .sidebar-hidden .sidebar-footer {
+    display: none;
+  }
+  .sidebar-hidden .brand {
+    margin-bottom: 0;
+  }
+  .sidebar-hidden .workspace-header {
+    position: absolute;
+    padding: 0;
+    right: 1.05rem;
+    top: 1.05rem;
+  }
+}

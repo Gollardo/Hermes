@@ -1,5 +1,12 @@
 # Information architecture
 
+## Follow-up review corrections
+
+Narrow navigation now starts collapsed as a compact brand/menu row. All destinations remain available on expansion; selecting a route closes the mobile menu and focuses main content. Desktop collapse preference is independent. A keyboard skip link precedes navigation.
+
+This implemented correction supersedes older geometry descriptions below.
+
+
 ## 2026-09-26 visual refresh
 
 The [atlas refresh](atlas-refresh.md) changes presentation and reading order

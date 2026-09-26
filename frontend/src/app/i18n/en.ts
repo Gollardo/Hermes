@@ -1,6 +1,9 @@
 import type { ru } from './ru';
 
 export const en = {
+  'app.skipContent': 'Skip to content',
+  'home.scaleNote': 'Bars are relative to the largest amount',
+  'home.forecastScope': 'Known plans · free money',
   'imports.formatSettings': 'Format settings and column mapping',
   'imports.manualFormat': 'Manual settings',
   'imports.commaHint': 'Separate multiple values with commas.',

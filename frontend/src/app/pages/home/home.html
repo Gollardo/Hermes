@@ -52,14 +52,7 @@
               {{ t('home.freeByP0', { p0: (value.through_on | textDate) }) }}
               <strong>{{ value.ending_balance | money }} {{ baseCurrency() }}</strong>
             </p>
-            <p>
-              {{
-                t('home.theForecastStartsFromTheCurrentFree', {
-                  p0: (value.starting_balance | money),
-                  p1: baseCurrency(),
-                })
-              }}
-            </p>
+            <p>{{ t('home.forecastScope') }}</p>
           </div>
           <a class="button-link secondary" routerLink="/forecast">
             {{ t('home.exploreForecast') }}
@@ -110,29 +103,33 @@
           <div>
             <p class="section-label">{{ chart.context }}</p>
             <h2>{{ chart.title }}</h2>
+            <p class="scale-note">{{ t('home.scaleNote') }}</p>
           </div>
           @if (chartItems(chart.items).length) {
             <ul>
               @for (item of chartItems(chart.items); track item.category_id) {
                 <li>
-                  @if (chart.operationType) {
-                    <a
-                      routerLink="/operations"
-                      [queryParams]="{
-                        occurred_from: analyticsFrom(),
-                        occurred_to: analyticsThrough(),
-                        type: chart.operationType,
-                        category_id: item.category_id === 'other' ? null : item.category_id,
-                      }"
-                      >{{ item.category_name }}</a
-                    >
-                  } @else {
-                    <a routerLink="/funds">{{ item.category_name }}</a>
-                  }
-                  <strong>{{ item.amount | money }} {{ baseCurrency() }}</strong>
-                  <span class="breakdown-track" aria-hidden="true"
-                    ><i [style.width.%]="barWidth(item, chart.items)"></i
-                  ></span>
+                  <a
+                    class="breakdown-link"
+                    [routerLink]="chart.operationType ? '/operations' : '/funds'"
+                    [queryParams]="
+                      chart.operationType
+                        ? {
+                            occurred_from: analyticsFrom(),
+                            occurred_to: analyticsThrough(),
+                            type: chart.operationType,
+                            category_id: item.category_id === 'other' ? null : item.category_id,
+                          }
+                        : null
+                    "
+                  >
+                    <span>{{ item.category_name }}</span>
+                    <strong>{{ item.amount | money }} {{ baseCurrency() }}</strong>
+                    <span class="breakdown-arrow" aria-hidden="true">→</span>
+                    <span class="breakdown-track" aria-hidden="true"
+                      ><i [style.width.%]="barWidth(item, chart.items)"></i
+                    ></span>
+                  </a>
                 </li>
               }
             </ul>

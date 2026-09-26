@@ -89,7 +89,7 @@
 .segmented-control .active {
   background: var(--accent);
   border-color: var(--accent);
-  box-shadow: 0 0.35rem 0.9rem rgb(23 115 79 / 15%);
+  box-shadow: none;
   color: #fff;
 }
 
@@ -483,5 +483,42 @@ a.risk-item:hover {
   }
   .balance-mode-control {
     grid-column: auto;
+  }
+}
+
+.mobile-period {
+  display: none;
+}
+.safe-spend-summary .safe-spend-card {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+}
+.safe-spend-summary .safe-spend-card p {
+  grid-column: 1 / -1;
+}
+.kpi-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-block: 1rem;
+}
+@media (max-width: 38rem) {
+  .mobile-period {
+    display: block;
+    width: 100%;
+  }
+  .period-switcher {
+    display: none;
+  }
+  .balance-switcher {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .forecast-controls {
+    gap: 0.65rem;
+  }
+  .kpi-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .safe-spend-summary .safe-spend-card {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

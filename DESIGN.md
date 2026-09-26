@@ -238,8 +238,9 @@ CSS values into a permanent design system or approve unimplemented screens.
   visible.
 - SHOULD preserve filters, page, selection, scroll position, and scope when
   returning from transaction details.
-- MUST NOT choose a permanent narrow-screen navigation pattern until the
-  documented top-block versus bottom-navigation question is resolved.
+- MUST use the reviewed compact expandable top navigation on narrow screens;
+  the owner authorized the review corrections on 2026-09-26. A future bottom
+  navigation pattern remains a separate product decision.
 
 ### Responsive Behavior
 

@@ -60,6 +60,22 @@ horizontal page overflow remained in the checked narrow layouts. First setup,
 login, restore and every empty/error state were not individually captured;
 shared styles apply there and existing automated scenarios remain in place.
 
+## UI review corrections
+
+The follow-up owner-authorized review corrections address all eleven findings:
+compact mobile navigation, earlier forecast plot, explicit bar semantics, readable
+empty filter scope, larger breakdown text and whole-row links, compact overview
+surfaces, consistent directory actions, reduced account explanations, consistent
+selected controls and a keyboard skip link. Backend and financial contracts are
+unchanged. Verification: the 188-test frontend suite, lint, formatting, catalog checks,
+TypeScript, mypy and production build pass. Build size warnings remain; limits
+were not increased. Browser checks cover desktop and 390 px layouts, mobile
+menu keyboard navigation, skip-link focus and mobile period selection. At 390 px
+the collapsed navigation measures 56 px versus 373 px previously, and the plot
+begins around 1135 px versus 1940 px with the populated overdue state. No
+horizontal document overflow was observed on the checked routes. Backend tests
+were not repeated because this follow-up changes only presentation and client UI.
+
 ## Release verification
 
 For `1.1.0`: 109 backend tests, 70 PostgreSQL 17 integration tests and 171 frontend

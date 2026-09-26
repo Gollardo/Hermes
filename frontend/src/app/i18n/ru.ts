@@ -1,4 +1,8 @@
 export const ru = {
+  'app.skipContent': 'Перейти к содержимому',
+  'home.scaleNote': 'Длина полос — относительно крупнейшей суммы',
+  'home.forecastScope': 'По известным планам · свободные средства',
+
   'imports.formatSettings': 'Настройки формата и сопоставление колонок',
   'imports.manualFormat': 'Ручная настройка',
   'imports.commaHint': 'Несколько значений — через запятую.',

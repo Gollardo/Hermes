@@ -20,12 +20,22 @@
         [disabled]="loading()"
         [options]="accountOptions()"
         recentKey="accounts"
-        [placeholder]="t('accounts.allAccounts')"
+        [emptySelectionLabel]="t('accounts.allAccounts')"
         [allowEmpty]="true"
       />
     </div>
     <fieldset>
       <legend>{{ t('forecast.period') }}</legend>
+      <select
+        class="mobile-period"
+        [attr.aria-label]="t('forecast.period')"
+        [value]="selectedHorizon()"
+        (change)="changeHorizon($any($event.target).value)"
+      >
+        @for (item of horizons; track item.value) {
+          <option [value]="item.value">{{ item.label }}</option>
+        }
+      </select>
       <div class="segmented-control period-switcher">
         @for (item of horizons; track item.value) {
           <button
@@ -86,7 +96,7 @@
       </section>
     }
 
-    <section class="kpi-row" [attr.aria-label]="t('forecast.keyForecastFigures')">
+    <section class="safe-spend-summary" [attr.aria-label]="t('forecast.keyForecastFigures')">
       <article class="kpi-card safe-spend-card">
         <span class="kpi-label"> {{ t('forecast.availableToSpendNow') }} </span>
         <strong>{{ vm.metrics.safeToSpend | money }} {{ baseCurrency() }}</strong>
@@ -96,46 +106,10 @@
           <p>{{ t('forecast.maximumWithoutTheForecastDroppingBelow0', { p0: baseCurrency() }) }}</p>
         }
       </article>
-
-      <button
-        type="button"
-        class="kpi-card interactive-card"
-        [class.risk-card]="isNegative(vm.metrics.minimumBalance)"
-        (click)="selectRiskPoint(vm.minimumPointIndex, vm.metrics.minimumBalanceDate)"
-        aria-controls="forecast-day-detail"
-      >
-        <span class="kpi-label"> {{ t('forecast.minimumBalance') }} </span>
-        <strong>{{ vm.metrics.minimumBalance | money }} {{ baseCurrency() }}</strong>
-        <small>{{ vm.metrics.minimumBalanceDate | textDate }}</small>
-      </button>
-
-      <article class="kpi-card">
-        <span class="kpi-label"> {{ t('forecast.balanceAtPeriodEnd') }} </span>
-        <strong [class.negative]="isNegative(vm.metrics.forecastEndBalance)">
-          {{ vm.metrics.forecastEndBalance | money }} {{ baseCurrency() }}
-        </strong>
-        <small>{{ vm.dataset.through_on | textDate }}</small>
-      </article>
-
-      <article class="kpi-card flow-card">
-        <span class="kpi-label"> {{ t('forecast.netFlow') }} </span>
-        <strong
-          [class.positive]="isPositive(vm.metrics.netPlannedFlow)"
-          [class.negative]="isNegative(vm.metrics.netPlannedFlow)"
-        >
-          {{ signed(vm.metrics.netPlannedFlow) | money }} {{ baseCurrency() }}
-        </strong>
-        <small>
-          +{{ vm.metrics.totalPlannedIncome | money }} / −{{
-            vm.metrics.totalPlannedExpense | money
-          }}
-          {{ baseCurrency() }}
-        </small>
-      </article>
     </section>
 
     <div class="forecast-layout">
-      <main class="forecast-main">
+      <div class="forecast-main">
         <section class="panel chart-panel" aria-labelledby="chart-title">
           <div class="chart-heading">
             <div>
@@ -328,6 +302,43 @@
             </div>
           </div>
 
+          <section class="kpi-row" [attr.aria-label]="t('forecast.keyForecastFigures')">
+            <button
+              type="button"
+              class="kpi-card interactive-card"
+              [class.risk-card]="isNegative(vm.metrics.minimumBalance)"
+              (click)="selectRiskPoint(vm.minimumPointIndex, vm.metrics.minimumBalanceDate)"
+              aria-controls="forecast-day-detail"
+            >
+              <span class="kpi-label"> {{ t('forecast.minimumBalance') }} </span>
+              <strong>{{ vm.metrics.minimumBalance | money }} {{ baseCurrency() }}</strong>
+              <small>{{ vm.metrics.minimumBalanceDate | textDate }}</small>
+            </button>
+
+            <article class="kpi-card">
+              <span class="kpi-label"> {{ t('forecast.balanceAtPeriodEnd') }} </span>
+              <strong [class.negative]="isNegative(vm.metrics.forecastEndBalance)">
+                {{ vm.metrics.forecastEndBalance | money }} {{ baseCurrency() }}
+              </strong>
+              <small>{{ vm.dataset.through_on | textDate }}</small>
+            </article>
+
+            <article class="kpi-card flow-card">
+              <span class="kpi-label"> {{ t('forecast.netFlow') }} </span>
+              <strong
+                [class.positive]="isPositive(vm.metrics.netPlannedFlow)"
+                [class.negative]="isNegative(vm.metrics.netPlannedFlow)"
+              >
+                {{ signed(vm.metrics.netPlannedFlow) | money }} {{ baseCurrency() }}
+              </strong>
+              <small>
+                +{{ vm.metrics.totalPlannedIncome | money }} / −{{
+                  vm.metrics.totalPlannedExpense | money
+                }}
+                {{ baseCurrency() }}
+              </small>
+            </article>
+          </section>
           <section class="timeline-block" aria-labelledby="timeline-title">
             <div class="timeline-heading">
               <div>
@@ -443,7 +454,7 @@
             </section>
           }
         </section>
-      </main>
+      </div>
 
       <aside class="insights-column" [attr.aria-label]="t('forecast.periodRisksAndTotals')">
         <section class="panel risks-panel" aria-labelledby="risks-title">

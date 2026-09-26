@@ -48,8 +48,8 @@
   color: #fff;
 }
 .period-control .report-switch .active {
-  background: var(--surface-accent);
-  color: var(--accent-strong);
+  background: var(--accent);
+  color: #fff;
 }
 .report-summary {
   align-items: start;

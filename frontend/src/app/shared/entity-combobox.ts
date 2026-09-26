@@ -44,6 +44,7 @@ export class EntityCombobox implements ControlValueAccessor, OnChanges {
   @Input() recentKey = 'entities';
   @Input() emptyLabel: string | null = null;
   @Input() allowEmpty = false;
+  @Input() emptySelectionLabel: string | null = null;
   @Input() matchMode: 'prefix' | 'contains' = 'prefix';
   protected readonly query = signal('');
   protected readonly open = signal(false);

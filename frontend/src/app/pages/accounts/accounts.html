@@ -1,13 +1,9 @@
 <section class="directory-page">
   <header class="page-header">
     <div class="page-header-copy">
-      <p class="eyebrow">{{ t('accounts.financialStructure') }}</p>
-      <h1>{{ t('accounts.accounts') }}</h1>
-      <p>{{ t('accounts.whereYourMoneyIsHeldBalancesAre') }}</p>
-      <span class="accounts-rule">
-        <strong> {{ t('accounts.note') }} </strong>
-        {{ t('accounts.balancesCannotBeEditedDirectly') }}
-      </span>
+      <h1>
+        {{ t('accounts.accounts') }} <span class="accounts-count">· {{ accounts().length }}</span>
+      </h1>
     </div>
     <div class="page-actions">
       <button type="button" (click)="openCreate()">{{ t('accounts.addAccount') }}</button>
@@ -16,13 +12,12 @@
 
   <div class="directory-grid single-column">
     <section class="panel directory-list-panel" aria-labelledby="accounts-list-title">
-      <div class="panel-heading">
+      <div class="panel-heading sr-only">
         <div>
           <h2 id="accounts-list-title">
             {{ t('accounts.allAccounts') }}
             <span class="accounts-count">· {{ accounts().length }}</span>
           </h2>
-          <p>{{ t('accounts.activeAndArchivedAccountsRetainFinancialHistory') }}</p>
         </div>
       </div>
 
@@ -109,6 +104,7 @@
           </button>
         </div>
         <form [formGroup]="form" (ngSubmit)="submit()">
+          <p class="hint">{{ t('accounts.balancesCannotBeEditedDirectly') }}</p>
           <label for="account-name"> {{ t('accounts.name') }} </label>
           <input
             id="account-name"

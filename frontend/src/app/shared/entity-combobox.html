@@ -6,7 +6,7 @@
     [id]="inputId"
     [attr.aria-label]="accessibleLabel"
     [placeholder]="placeholder ?? t('entity-combobox.startTypingAName')"
-    [value]="query()"
+    [value]="!open() && !value && !query() && emptySelectionLabel ? emptySelectionLabel : query()"
     [disabled]="disabled()"
     [attr.aria-expanded]="open()"
     [attr.aria-controls]="optionsId"

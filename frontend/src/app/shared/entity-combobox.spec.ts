@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
@@ -12,11 +12,13 @@ import { EntityCombobox, EntityOption } from './entity-combobox';
       [options]="options"
       recentKey="test-options"
       [allowEmpty]="true"
+      [emptySelectionLabel]="emptySelectionLabel()"
     />
   `,
 })
 class ComboboxHost {
   @ViewChild(EntityCombobox) combobox!: EntityCombobox;
+  readonly emptySelectionLabel = signal<string | null>(null);
   readonly control = new FormControl('', { nonNullable: true });
   readonly options: EntityOption[] = [
     { id: 'housing', label: '🏠 Жильё' },
@@ -31,6 +33,22 @@ class ComboboxHost {
 
 describe('EntityCombobox', () => {
   let fixture: ComponentFixture<ComboboxHost>;
+
+  it('displays an empty scope without writing that label into the form value or search', () => {
+    fixture.componentInstance.emptySelectionLabel.set('All accounts');
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(input.value).toBe('All accounts');
+    expect(fixture.componentInstance.control.value).toBe('');
+    input.dispatchEvent(new FocusEvent('focus'));
+    fixture.detectChanges();
+    expect(input.value).toBe('');
+    input.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    fixture.detectChanges();
+    expect(input.value).toBe('All accounts');
+    expect(fixture.componentInstance.control.value).toBe('');
+  });
 
   beforeEach(async () => {
     localStorage.clear();

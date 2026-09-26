@@ -19,7 +19,10 @@ financial product, saved preference, illustration service or dependency is added
 
 - An integrated pale navigation rail replaces the floating white sidebar card.
   Active navigation has both a surface change and a leading marker. All labels,
-  groups, collapse behavior and the narrow-screen navigation remain available.
+  groups and desktop collapse preference remain available. Narrow screens start
+  with a compact brand/menu row; opening navigation is temporary and selecting
+  a destination closes it and focuses the main content. A skip link precedes
+  navigation for keyboard users.
 - A compact title, supporting scope and primary action share a header separated
   from content by one fine rule. A title identifies the workspace; the primary
   monetary answer receives greater emphasis where it is the screen's purpose.
@@ -54,7 +57,9 @@ before secondary analytics. Desktop attention entries use compact columns;
 mobile retains a sequential list.
 
 The three existing category/fund breakdowns use aligned horizontal bars instead
-of donuts. Every bar is relative to the largest displayed amount within that
+of donuts. Each entire breakdown row is a focusable link with a visible arrow and readable
+14.4 px labels. An explicit scale caption and an unfilled track distinguish
+relative magnitude bars from report shares. Every bar is relative to the largest displayed amount within that
 breakdown, not a displayed percentage of total. Decorative bar widths use integer
 arithmetic on exact decimal strings. Existing top-five/Other aggregation, amount
 labels, periods, source links and partial-error boundaries are unchanged.
@@ -69,9 +74,10 @@ when zero. Allocation percentages and goal progress are still distinct.
 
 ### Forecast
 
-Flexible controls wrap before they overflow. The existing four figures share a
-single surface with clear safe-spend emphasis; narrow layouts stack every value
-rather than hiding them in horizontal scrolling. The chart, known-plans notice,
+Flexible controls wrap before they overflow. Mobile uses a native period select
+and retains the selected scope. Safe spend appears above the chart; the other
+three figures follow the plot in both DOM and visual order, before the event
+feed. Narrow layouts stack these supporting figures without horizontal scrolling. The chart, known-plans notice,
 risk states, exact point details and fund projection remain intact. Intermediate
 widths use two control columns, wide layouts three, and mobile one.
 
@@ -110,3 +116,16 @@ keyboard focus, reduced motion and modal field/footer visibility. Tests continue
 to cover source links, formatting, language switching and domain behaviors.
 Owner visual acceptance, exhaustive accessibility certification and deployment
 are separate from local implementation and browser checks.
+
+## Review corrections (2026-09-26)
+
+The owner requested all eleven findings from the follow-up review be corrected.
+The implementation retains the light neutral/green language and domain behavior.
+Overview summaries no longer stretch each other's height; repeated forecast copy
+is shortened while known-plan/free-money scope remains visible. Account lists
+place actions below the amount on desktop, matching funds, and below content on
+mobile. The account title includes the count; duplicate descriptions are removed,
+with balance-edit guidance retained in the composer. Segmented selectors use one
+solid green selected state without a forecast-only shadow. Empty account filters
+render an explicit “All accounts” display value, separate from the empty model
+value and search query. Placeholder text uses the readable muted color.

@@ -7,8 +7,10 @@ import {
   effect,
   inject,
   signal,
+  computed,
 } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthService } from './core/auth.service';
 import { apiErrorMessage } from './core/api-error';
@@ -31,7 +33,28 @@ export class App implements OnInit, OnDestroy {
   protected readonly actionError = localizedSignal();
   protected readonly sidebarHidden = signal(readSidebarPreference());
 
+  private readonly viewport =
+    typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 58rem)') : null;
+  protected readonly narrow = signal(this.viewport?.matches ?? false);
+  protected readonly mobileMenuOpen = signal(false);
+  protected readonly navigationHidden = computed(() =>
+    this.narrow() ? !this.mobileMenuOpen() : this.sidebarHidden(),
+  );
+  private readonly viewportChanged = (event: MediaQueryListEvent) => {
+    this.narrow.set(event.matches);
+    this.mobileMenuOpen.set(false);
+  };
+
   constructor() {
+    this.viewport?.addEventListener('change', this.viewportChanged);
+    inject(Router)
+      .events.pipe(takeUntilDestroyed())
+      .subscribe((event) => {
+        if (event instanceof NavigationEnd && this.narrow() && this.mobileMenuOpen()) {
+          this.mobileMenuOpen.set(false);
+          document.getElementById('main-content')?.focus();
+        }
+      });
     effect(() => {
       if (this.auth.state() === 'authenticated') {
         this.idleSession.start(
@@ -50,6 +73,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.viewport?.removeEventListener('change', this.viewportChanged);
     this.idleSession.stop();
   }
 
@@ -62,6 +86,10 @@ export class App implements OnInit, OnDestroy {
   }
 
   protected toggleSidebar(): void {
+    if (this.narrow()) {
+      this.mobileMenuOpen.update((open) => !open);
+      return;
+    }
     this.sidebarHidden.update((hidden) => !hidden);
     localStorage.setItem('hermes-sidebar-hidden', String(this.sidebarHidden()));
   }

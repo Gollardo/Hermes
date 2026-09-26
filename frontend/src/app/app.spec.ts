@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 import { App } from './app';
@@ -26,6 +26,34 @@ describe('App', () => {
       imports: [App],
       providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
     }).compileComponents();
+  });
+
+  it('starts mobile navigation collapsed and closes it after a route change without changing desktop preference', async () => {
+    const media = { matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    const original = window.matchMedia;
+    window.matchMedia = vi.fn(() => media as unknown as MediaQueryList);
+    accessState.set('authenticated');
+    const fixture = TestBed.createComponent(App);
+    try {
+      fixture.detectChanges();
+      const toggle = fixture.nativeElement.querySelector('.sidebar-toggle') as HTMLButtonElement;
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      toggle.click();
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      await TestBed.inject(Router).navigateByUrl('/');
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      expect(localStorage.getItem('hermes-sidebar-hidden')).toBeNull();
+      const skip = fixture.nativeElement.querySelector('.skip-link') as HTMLAnchorElement;
+      expect(skip.getAttribute('href')).toBe('#main-content');
+      expect(fixture.nativeElement.querySelector('#main-content').getAttribute('tabindex')).toBe(
+        '-1',
+      );
+    } finally {
+      fixture.destroy();
+      window.matchMedia = original;
+    }
   });
 
   it('checks application access state on startup', () => {

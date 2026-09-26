@@ -1,9 +1,16 @@
 # Forecast
 
+## Follow-up review corrections
+
+Safe spend precedes the plot; minimum, ending balance and net flow follow it before the event feed in DOM and visual order. Mobile uses a native period select, with account and balance mode visible. Empty account scope is a display value, not a placeholder or submitted account identifier.
+
+This implemented correction supersedes older geometry descriptions below.
+
+
 ## Visual refresh — 2026-09-26
 
-Controls use flexible columns that wrap with available width. The four existing
-figures share one surface and stack on narrow screens without horizontal KPI
+Controls use flexible columns that wrap with available width. The existing
+figures remain fully visible without horizontal KPI
 scrolling. The chart, point selection, known-plans boundary, risk explanation
 and fund projection retain their existing calculation and interaction contracts.
 See [atlas refresh](../atlas-refresh.md). This records implementation under the
@@ -62,8 +69,8 @@ its own sake.
 ## Implemented composition
 
 1. One row for account scope, horizon, and free/all-money mode.
-2. One horizontal row of decision KPIs: safe to spend now, minimum, period end,
-   and net flow. Cash gap is not duplicated in another KPI card.
+2. Safe spend above the plot; minimum, period end and net flow below the plot.
+   Cash gap is not duplicated in another KPI card.
 3. The primary chart with an actual starting point, forecast line, and
    risk-aware zero boundary.
 4. Synchronized timeline and details for the selected day or interval.
@@ -197,9 +204,9 @@ unavailable source and offers retry; actual balance may appear separately.
   expenses, and overall net flow remain arithmetically explainable. Internal
   transfers are neutral in all-accounts total mode; their allocated portion
   appears as a decrease in free money in free mode.
-- The primary desktop layout uses a horizontal row of four KPIs and a full-width
-  chart. Risks and totals sit below it in two columns; narrow screens stack them
-  vertically, and KPIs become a grid or horizontal strip.
+- The primary layout places safe spend above the full-width chart and supporting
+  figures below it. Risks and totals sit below in two columns; narrow screens
+  stack them vertically without a horizontal KPI strip.
 - An event list for the selected point appears beside the chart; event actions
   remain in Calendar. Upcoming events and risk items select the same chart date.
 - The chart uses `Number` only for screen coordinates. Every displayed and

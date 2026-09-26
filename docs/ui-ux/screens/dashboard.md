@@ -1,5 +1,12 @@
 # Dashboard
 
+## Follow-up review corrections
+
+Breakdown rows are full-width links with arrows and larger text. Relative bars have an explicit largest-amount caption and no percentage track. Summary surfaces size to content; forecast copy preserves known-plan/free-money scope without repeating the current balance.
+
+This implemented correction supersedes older geometry descriptions below.
+
+
 ## Current visual composition — 2026-09-26
 
 Under the owner's whole-application redesign authorization, the overview now

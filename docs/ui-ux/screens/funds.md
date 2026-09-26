@@ -1,5 +1,12 @@
 # Funds
 
+## Follow-up review corrections
+
+Account and fund lists align desktop actions below the amount and mobile actions below the content. This is the shared row-action placement for financial directories.
+
+This implemented correction supersedes older geometry descriptions below.
+
+
 ## Visual refresh — 2026-09-26
 
 The current visual refresh places the summary and fund list before reserve,

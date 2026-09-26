@@ -154,3 +154,23 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+@media (min-width: 70rem) {
+  .accounts-list .directory-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.3rem 1.5rem;
+    padding-block: 1rem;
+  }
+  .accounts-list .directory-item-main {
+    grid-row: 1 / 3;
+  }
+  .accounts-list .balance-block {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .accounts-list .item-actions {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-end;
+  }
+}
