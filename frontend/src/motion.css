@@ -1,0 +1,89 @@
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --motion-press: 120ms;
+  --motion-popover: 180ms;
+  --motion-modal: 240ms;
+}
+
+/* The modality guard keeps keyboard operations instantaneous. */
+html[data-motion-input='pointer']
+  :is(
+    button[type='submit'],
+    .modal-close,
+    .create-menu-trigger,
+    .sidebar-toggle,
+    .page-actions > button,
+    .button-link
+  ) {
+  transition: transform var(--motion-press) var(--ease-out);
+}
+html[data-motion-input='pointer']
+  :is(
+    button[type='submit'],
+    .modal-close,
+    .create-menu-trigger,
+    .sidebar-toggle,
+    .page-actions > button,
+    .button-link
+  ):active:not(:disabled) {
+  transform: scale(0.97);
+}
+html[data-motion-input='pointer'] :is(.operation-disclosure, .category-disclosure) {
+  transition: transform var(--motion-press) var(--ease-in-out);
+}
+.create-menu-popover {
+  transform-origin: top right;
+}
+app-entity-combobox .options {
+  transform-origin: top left;
+}
+
+/* Native details retains its semantics. Unsupported engines open instantly. */
+@supports selector(details::details-content) {
+  html[data-motion-input='pointer']
+    :is(
+      details.item-more-actions,
+      details.fund-more-actions,
+      details.secondary-actions
+    )::details-content {
+    opacity: 0;
+    transition:
+      opacity var(--motion-popover) var(--ease-out),
+      content-visibility var(--motion-popover) allow-discrete;
+  }
+  html[data-motion-input='pointer']
+    :is(
+      details.item-more-actions,
+      details.fund-more-actions,
+      details.secondary-actions
+    )[open]::details-content {
+    opacity: 1;
+  }
+}
+
+html[data-motion-input='keyboard']
+  :is(button, a, input, select, textarea, .operation-disclosure, .category-disclosure) {
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion-input='pointer']
+    :is(
+      button[type='submit'],
+      .modal-close,
+      .create-menu-trigger,
+      .sidebar-toggle,
+      .page-actions > button,
+      .button-link
+    ):active:not(:disabled) {
+    transform: none;
+  }
+  html[data-motion-input='pointer'] :is(.operation-disclosure, .category-disclosure) {
+    transition: none;
+  }
+}
+
+:is(details.item-more-actions, details.fund-more-actions, details.secondary-actions):not([open])
+  :is(.item-actions-popover, .secondary-actions-body) {
+  pointer-events: none;
+}

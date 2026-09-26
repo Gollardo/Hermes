@@ -1,3 +1,4 @@
+import { UiMotion } from './shared/ui-motion';
 import { t, localizedSignal, LanguageService } from './i18n/i18n';
 import {
   ChangeDetectionStrategy,
@@ -27,6 +28,7 @@ import { SetupPage } from './pages/setup/setup';
 })
 export class App implements OnInit, OnDestroy {
   protected readonly t = t;
+  private readonly motion = inject(UiMotion);
   private readonly languageService = inject(LanguageService);
   protected readonly auth = inject(AuthService);
   private readonly idleSession = inject(IdleSessionService);

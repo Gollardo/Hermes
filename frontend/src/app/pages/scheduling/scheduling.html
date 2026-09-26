@@ -427,7 +427,13 @@
   </div>
 
   @if (selectedCalendarDay(); as selectedDay) {
-    <div class="modal-backdrop" role="presentation" (keydown.escape)="closeCalendarDay()">
+    <div
+      class="modal-backdrop"
+      (animate.enter)="motion.enter($event, 'modal')"
+      (animate.leave)="motion.leave($event, 'modal')"
+      role="presentation"
+      (keydown.escape)="closeCalendarDay()"
+    >
       <section
         class="modal-card calendar-day-dialog"
         role="dialog"
@@ -490,7 +496,13 @@
   }
 
   @if (ruleFormOpen()) {
-    <div class="modal-backdrop" role="presentation" (keydown.escape)="cancelEdit()">
+    <div
+      class="modal-backdrop"
+      (animate.enter)="motion.enter($event, 'modal')"
+      (animate.leave)="motion.leave($event, 'modal')"
+      role="presentation"
+      (keydown.escape)="cancelEdit()"
+    >
       <section
         id="rule-editor"
         class="modal-card form-panel"

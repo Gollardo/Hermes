@@ -1,3 +1,4 @@
+import { UiMotion } from '../../shared/ui-motion';
 import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
@@ -143,6 +144,7 @@ interface ExpectedOccurrence extends Omit<OneOffPlan, 'source_kind'> {
 })
 export class OperationsPage implements OnInit {
   protected readonly t = t;
+  protected readonly motion = inject(UiMotion);
   private readonly http = inject(HttpClient);
   private readonly builder = inject(NonNullableFormBuilder);
   private readonly route = inject(ActivatedRoute, { optional: true });

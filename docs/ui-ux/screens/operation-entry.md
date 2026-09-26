@@ -1,5 +1,9 @@
 # Operation entry
 
+Modal and popover motion follows the shared [motion contract](../motion.md).
+Financial content and keyboard interactions remain immediate.
+
+
 ## Visual refresh — 2026-09-26
 
 Composers inherit the shared neutral surfaces, restrained corners, stronger

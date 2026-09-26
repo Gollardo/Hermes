@@ -44,7 +44,13 @@
   }
 
   @if (formOpen()) {
-    <div class="modal-backdrop" role="presentation" (keydown.escape)="cancelEdit()">
+    <div
+      class="modal-backdrop"
+      (animate.enter)="motion.enter($event, 'modal')"
+      (animate.leave)="motion.leave($event, 'modal')"
+      role="presentation"
+      (keydown.escape)="cancelEdit()"
+    >
       <section
         class="modal-card wide entry-panel"
         role="dialog"

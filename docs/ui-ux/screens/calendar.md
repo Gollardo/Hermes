@@ -1,5 +1,9 @@
 # Calendar and recurring operations direction
 
+Modal and popover motion follows the shared [motion contract](../motion.md).
+Financial content and keyboard interactions remain immediate.
+
+
 ## Visual refresh — 2026-09-26
 
 The calendar retains attention before the month grid. Occurrence date and

@@ -1,3 +1,5 @@
+@import './motion.css';
+
 :root {
   --ink: #192c24;
   --ink-soft: #465c50;
@@ -666,7 +668,6 @@ p {
   *::before,
   *::after {
     scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
@@ -706,9 +707,6 @@ summary:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
-.modal-card {
-  animation: surface-arrive 180ms ease-out;
-}
 .modal-header h2 {
   font-size: 1.45rem;
   font-weight: 600;
@@ -716,16 +714,6 @@ summary:focus-visible {
 }
 .entry-form .modal-actions {
   background: var(--surface);
-}
-@keyframes surface-arrive {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 @media (max-width: 44rem) {
   .page-actions {

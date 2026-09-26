@@ -76,6 +76,21 @@ begins around 1135 px versus 1940 px with the populated overdue state. No
 horizontal document overflow was observed on the checked routes. Backend tests
 were not repeated because this follow-up changes only presentation and client UI.
 
+## Interaction motion
+
+The owner-authorized [motion pass](ui-ux/motion.md) adds shared 240 ms dialog,
+180 ms popover/More-menu and 120 ms press/disclosure feedback. Keyboard use is
+instant; reduced motion removes scaling and retains opacity. Exits are inert,
+interruptible and cleaned up before a fast reopen. No financial data or page
+navigation animates, and no dependency was added. Verification: 193 frontend tests pass, alongside lint, formatting, catalog
+checks, TypeScript, mypy and production build. Existing bundle/style budget
+warnings remain; limits were not increased. Browser checks confirm pointer and
+keyboard menu behavior, inert modal exits and removal, account composer, native
+More-menu transitions and entity-list origin. No records were saved. Reduced
+motion and interruption paths are unit-tested; real-device feel-check remains
+owner acceptance. Backend suites were not repeated for this presentation-only
+change.
+
 ## Release verification
 
 For `1.1.0`: 109 backend tests, 70 PostgreSQL 17 integration tests and 171 frontend

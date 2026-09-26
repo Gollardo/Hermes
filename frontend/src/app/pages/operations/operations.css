@@ -243,7 +243,6 @@
   line-height: 1;
   text-align: center;
   transform: rotate(0deg);
-  transition: transform 160ms ease;
 }
 .operation-disclosure.expanded {
   transform: rotate(90deg);

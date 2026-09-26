@@ -1,3 +1,4 @@
+import { UiMotion } from '../../shared/ui-motion';
 import { RouterLink } from '@angular/router';
 import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -140,6 +141,7 @@ interface AllocationTotals {
 })
 export class FundsPage implements OnInit {
   protected readonly t = t;
+  protected readonly motion = inject(UiMotion);
   private readonly http = inject(HttpClient);
   private readonly builder = inject(NonNullableFormBuilder);
   private previewRequestId = 0;

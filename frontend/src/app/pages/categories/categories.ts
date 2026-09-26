@@ -1,3 +1,4 @@
+import { UiMotion } from '../../shared/ui-motion';
 import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -37,6 +38,7 @@ interface Category {
 })
 export class CategoriesPage implements OnInit {
   protected readonly t = t;
+  protected readonly motion = inject(UiMotion);
   private readonly http = inject(HttpClient);
   private readonly builder = inject(NonNullableFormBuilder);
 

@@ -1,3 +1,4 @@
+import { UiMotion } from './ui-motion';
 import { t } from '../i18n/i18n';
 import {
   ChangeDetectionStrategy,
@@ -25,6 +26,7 @@ export type CreateOperationType = 'expense' | 'income' | 'transfer' | 'balance_a
 })
 export class OperationCreateMenu {
   protected readonly t = t;
+  protected readonly motion = inject(UiMotion);
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private readonly router = inject(Router);
 

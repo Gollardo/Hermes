@@ -38,8 +38,9 @@ financial product, saved preference, illustration service or dependency is added
   weights. Uppercase is limited to short contextual labels. Long amounts and
   controls must reflow instead of forcing the document wider.
 - Existing forms retain field order, defaults, error recovery and commit logic.
-  Modals use a short entrance transition; hover, focus and selection remain
-  distinguishable. Reduced motion disables animation as well as transitions.
+  Modals and popovers use symmetric, interruptible motion; hover, focus and
+  selection remain distinguishable. Keyboard actions are instantaneous and
+  reduced motion retains only gentle fades; see [motion](motion.md).
 - Do not add promotional heroes, carousels, parallax, stock photography, rolling
   money counters or scroll-pinned working data. Composition follows the task,
   not a landing-page conversion sequence.

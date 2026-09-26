@@ -83,3 +83,5 @@ design system.
 
 Each document distinguishes owner-confirmed rules, initialization decisions,
 assumptions, open questions and future work where those categories apply.
+
+- [Interface motion](ui-ux/motion.md) records interaction gates, timings, accessibility and verification.

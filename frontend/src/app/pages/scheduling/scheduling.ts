@@ -1,3 +1,4 @@
+import { UiMotion } from '../../shared/ui-motion';
 import { t, localizedSignal, locale, plural } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
@@ -138,6 +139,7 @@ interface UpcomingGroup {
 })
 export class SchedulingPage implements OnInit {
   protected readonly t = t;
+  protected readonly motion = inject(UiMotion);
   private readonly http = inject(HttpClient);
   private readonly builder = inject(NonNullableFormBuilder);
   private readonly route = inject(ActivatedRoute);

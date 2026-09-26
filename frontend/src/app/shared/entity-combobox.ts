@@ -1,3 +1,4 @@
+import { UiMotion } from './ui-motion';
 import { t } from '../i18n/i18n';
 import {
   ChangeDetectionStrategy,
@@ -31,6 +32,7 @@ export interface EntityOption {
 })
 export class EntityCombobox implements ControlValueAccessor, OnChanges {
   protected readonly t = t;
+  protected readonly motion = inject(UiMotion);
   private static nextId = 0;
   private readonly host = inject(ElementRef<HTMLElement>);
   protected value = '';

@@ -423,3 +423,5 @@ for reactive copy, errors, accessibility labels, dates and contributor checks.
 Language selection never changes financial payloads, the mandatory comma-based
 money/percentage format, existing names or unsaved form values. Track repeated
 controls by stable identity, not translated text.
+
+Shared motion follows [the motion contract](docs/ui-ux/motion.md): keyboard actions remain instant, financial data stays still, and reduced motion preserves gentle opacity feedback.

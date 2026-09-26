@@ -27,7 +27,13 @@
     </button>
   }
   @if (open()) {
-    <div class="options" role="listbox" [id]="optionsId">
+    <div
+      class="options"
+      (animate.enter)="motion.enter($event, 'popover')"
+      (animate.leave)="motion.leave($event, 'popover')"
+      role="listbox"
+      [id]="optionsId"
+    >
       @for (option of visibleOptions(); track option.id; let index = $index) {
         <button
           type="button"
