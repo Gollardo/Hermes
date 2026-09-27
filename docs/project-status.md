@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-09-26. This is the current release snapshot, not a task log.
+Last reviewed: 2026-09-27. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -37,6 +37,11 @@ Language selection does not change currency, financial precision, stored names,
 application dates or submitted domain values. The shared [UI contract](../DESIGN.md)
 retains exact two-place financial presentation and comma/dot numeric input.
 README images use synthetic English/USD data, never the owner's backup.
+All five README screenshots were refreshed on 2026-09-27 from the current
+production frontend build and an isolated local database. Desktop and mobile
+captures were visually inspected; browser checks verified English/USD content,
+no horizontal document overflow and no JavaScript page errors. Capture details
+are recorded in the [screenshot notes](assets/readme/README.md).
 
 ## Unreleased UI refresh
 
