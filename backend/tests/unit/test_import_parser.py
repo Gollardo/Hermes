@@ -115,3 +115,55 @@ def test_file_bounds_and_unsupported_format() -> None:
         read_file(file_request("x\n" * 2001))
     with pytest.raises(ValueError):
         read_file(FileRequest(filename="test.pdf", content=""))
+
+
+def workbook_reference(cell: str, row: str = "1") -> FileRequest:
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(
+            "xl/workbook.xml",
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<sheets><sheet name="Data" r:id="r1"/></sheets></workbook>',
+        )
+        archive.writestr(
+            "xl/_rels/workbook.xml.rels",
+            '<Relationships><Relationship Id="r1" '
+            'Target="/xl/worksheets/sheet1.xml"/></Relationships>',
+        )
+        archive.writestr(
+            "xl/worksheets/sheet1.xml",
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            f'<sheetData><row r="{row}"><c r="{cell}"><v>1.0001</v></c></row>'
+            "</sheetData></worksheet>",
+        )
+    return FileRequest(
+        filename="malformed.xlsx", content=base64.b64encode(stream.getvalue()).decode()
+    )
+
+
+@pytest.mark.parametrize(
+    "cell,row",
+    [
+        ("A" * 1_000_000 + "1", "1"),
+        ("a1", "1"),
+        ("A0", "1"),
+        ("A01", "1"),
+        ("A2", "1"),
+        ("CW1", "1"),
+        ("1", "1"),
+        ("A1", "0"),
+        ("A1", "1" * 100_000),
+        ("A2001", "2001"),
+    ],
+)
+def test_xlsx_rejects_long_malformed_and_out_of_range_coordinates(cell: str, row: str) -> None:
+    with pytest.raises(ValueError):
+        read_file(workbook_reference(cell, row))
+
+
+def test_xlsx_last_supported_column_and_row_preserve_exact_text() -> None:
+    _, _, rows = read_file(workbook_reference("CV2000", "2000"))
+    assert len(rows) == 2000
+    assert len(rows[-1]) == 100
+    assert rows[-1][-1] == "1.0001"

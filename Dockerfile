@@ -17,7 +17,7 @@ COPY backend/requirements.lock backend/requirements-dev.lock ./
 
 FROM backend-base AS development
 RUN pip install --no-cache-dir --require-hashes -r requirements-dev.lock
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--no-proxy-headers"]
 
 FROM backend-base AS backend-production
 RUN pip install --no-cache-dir --require-hashes -r requirements.lock
@@ -34,4 +34,4 @@ COPY --chown=hermes:hermes backend/ ./
 COPY --from=frontend-build --chown=hermes:hermes /workspace/frontend/dist/frontend/browser ./static
 USER hermes
 EXPOSE 8000
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-proxy-headers"]

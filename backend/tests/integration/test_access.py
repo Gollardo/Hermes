@@ -412,7 +412,7 @@ def test_failed_logins_are_rate_limited(postgres_database_settings: Settings) ->
         assert blocked_correct.status_code == 429
 
 
-def test_concurrent_failed_logins_share_one_throttle(
+def test_concurrent_failed_logins_admit_only_one_password_worker(
     postgres_database_settings: Settings,
 ) -> None:
     limited_settings = postgres_database_settings.model_copy(
@@ -432,6 +432,7 @@ def test_concurrent_failed_logins_share_one_throttle(
                 session,
                 limited_settings,
                 master_password="incorrect-password",
+                client_key="same-source",
             ).status
 
     try:
@@ -440,7 +441,10 @@ def test_concurrent_failed_logins_share_one_throttle(
     finally:
         engine.dispose()
 
-    assert sorted(status.value for status in statuses) == ["blocked", "invalid"]
+    assert sorted(status.value for status in statuses) in [
+        ["busy", "invalid"],
+        ["blocked", "invalid"],
+    ]
 
 
 def test_currency_update_serializes_with_financial_lock(

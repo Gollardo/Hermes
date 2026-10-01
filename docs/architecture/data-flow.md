@@ -28,9 +28,15 @@ create the new destination credential/session, replace settings and financial da
 post-write checks, then commit. Any validation or insertion failure rolls back
 the credential as well as restored data.
 
-After credential commit, setup can only report a conflict. Login throttling is
-locked and updated in the same database transaction as password verification
-and session issuance, preventing parallel attempts from bypassing the counter.
+After credential commit, setup rejects before backup parsing/decryption; ownership
+is rechecked after shared password-work admission to close a competing commit.
+Anonymous login uses persisted source counters and a separate short global work
+deadline, with a non-blocking transaction advisory lock across processes.
+Sensitive password checks share their own locked singleton failure counter;
+anonymous failures cannot block backup reauthentication or password change.
+Controlled rejection responses commit failed-attempt accounting. Transport byte
+limits run before framework parsing and request dependencies. See
+[authentication](../domains/authentication.md) for budgets and proxy policy.
 Database request dependencies close at FastAPI function scope, so a successful
 HTTP response and authentication cookies are sent only after transaction commit.
 The Angular shell also tracks keyboard, pointer, touch and scroll activity. It

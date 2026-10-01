@@ -1,4 +1,7 @@
 export const ru = {
+  'auth.passwordProcessingBusy':
+    'Обрабатывается другой вход или настройка. Повторите попытку чуть позже.',
+  'auth.requestTooLarge': 'Запрос слишком большой. Уменьшите его размер и повторите попытку.',
   'app.skipContent': 'Перейти к содержимому',
   'home.scaleNote': 'Длина полос — относительно крупнейшей суммы',
   'home.forecastScope': 'По известным планам · свободные средства',
@@ -131,7 +134,7 @@ export const ru = {
   'auth.insufficientFreeBalanceOnThisAccountTo':
     'На счёте недостаточно свободных денег для резервирования.',
   'auth.tooManyUnsuccessfulAttemptsTrySigningIn':
-    'Слишком много неудачных попыток. Повторите вход позже.',
+    'Слишком много неудачных попыток ввода пароля. Повторите попытку позже.',
   'auth.theOperationChangedInAnotherTabRefresh':
     'Операция уже изменена в другой вкладке. Обновите журнал.',
   'auth.operationNotFound': 'Операция не найдена.',

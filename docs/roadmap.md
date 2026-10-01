@@ -248,6 +248,19 @@ release. Existing protected-deployment restrictions remain in force.
 - [ ] Resolve known critical defects and complete the release/security
   checklist.
 
+## Security admission — unreleased bounded slice
+
+Owner-authorized on 2026-10-01 following the static security review. This slice
+implements setup admission/order, streamed body budgets, password-change
+throttling, separate anonymous source counters/aggregate work and bounded XLSX
+coordinates. It does not complete the broader operational milestone above.
+
+- [x] Local security regressions and required checks pass.
+- [ ] Validate actual HTTPS/proxy source mapping and an isolated upgrade/restore
+  before owner deployment approval.
+
+See [project status](project-status.md) for verification and remaining gates.
+
 ## Fund release to free money — unreleased slice
 
 - [x] Same-account release and atomic release with physical transfer.

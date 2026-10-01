@@ -11,7 +11,8 @@ yet.** Do not publish credentials, personal financial data or working exploits.
 ## Deployment expectations
 
 The project owner confirmed that the current release is intended for a trusted,
-protected network rather than direct public-internet exposure. That boundary
+protected network rather than direct public-internet exposure. Reachable peers
+and supplied files are treated as untrusted even inside that boundary. It
 does not remove the need for a strong owner password, secure HttpOnly session
 cookies, protected Docker volumes and tested backups.
 
@@ -33,5 +34,5 @@ cookies, protected Docker volumes and tested backups.
 The authentication design is documented in
 [the authentication domain](docs/domains/authentication.md). The current stable
 application has not undergone an external security audit. Password
-recovery, content-security policy and tested reverse-proxy configurations remain
+ recovery, content-security policy and tested reverse-proxy configurations remain
 future hardening work.

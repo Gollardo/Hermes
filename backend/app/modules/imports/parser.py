@@ -80,18 +80,30 @@ def read_file(request: FileRequest) -> tuple[str, list[str], list[list[str]]]:
                     ]
                 rows = []
                 for xml_row in xml(archive.read(target)).findall("m:sheetData/m:row", NS):
-                    number = int(xml_row.attrib["r"])
+                    row_reference = xml_row.attrib["r"]
+                    if (
+                        len(row_reference) > 4
+                        or re.fullmatch(r"[1-9][0-9]{0,3}", row_reference) is None
+                    ):
+                        raise ValueError("Invalid row reference")
+                    number = int(row_reference)
                     if number > MAX_ROWS:
                         raise ValueError("Too many rows")
                     while len(rows) < number:
                         rows.append([])
                     for cell in xml_row:
-                        letters = re.sub(r"[0-9]", "", cell.attrib["r"])
+                        reference = cell.attrib["r"]
+                        if len(reference) > 6:
+                            raise ValueError("Cell reference exceeds limit")
+                        coordinate = re.fullmatch(r"([A-Z]{1,2})([1-9][0-9]{0,3})", reference)
+                        if coordinate is None or coordinate[2] != row_reference:
+                            raise ValueError("Invalid cell reference")
+                        letters = coordinate[1]
                         col = 0
                         for letter in letters:
                             col = col * 26 + ord(letter) - 64
-                        if col > 100:
-                            raise ValueError("Too many columns")
+                            if col > 100:
+                                raise ValueError("Too many columns")
                         while len(rows[number - 1]) < col:
                             rows[number - 1].append("")
                         value = cell.findtext("m:v", default="", namespaces=NS)

@@ -1,8 +1,9 @@
 import { language, LANGUAGE_STORAGE_KEY } from '../../i18n/i18n';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { t } from '../../i18n/i18n';
 
 import { AuthService } from '../../core/auth.service';
 import { SettingsPage } from './settings';
@@ -10,6 +11,58 @@ import { SettingsPage } from './settings';
 describe('SettingsPage', () => {
   let fixture: ComponentFixture<SettingsPage>;
   let http: HttpTestingController;
+
+  it.each(['ru', 'en'] as const)(
+    'preserves password fields and permits retry after a throttle error in %s',
+    (selected) => {
+      language.set(selected);
+      vi.mocked(TestBed.inject(AuthService).changePassword).mockReturnValue(
+        throwError(
+          () =>
+            new HttpErrorResponse({
+              status: 429,
+              error: { detail: { code: 'login_rate_limited' } },
+            }),
+        ),
+      );
+      fixture.detectChanges();
+      http.expectOne('/api/v1/settings').flush({
+        base_currency: 'RUB',
+        timezone: 'UTC',
+        default_account_id: null,
+        base_currency_locked: false,
+        updated_at: '2026-10-01T00:00:00Z',
+      });
+      http.expectOne('/api/v1/accounts').flush([]);
+      fixture.detectChanges();
+      const values = [
+        ['current-password', 'current-master-password'],
+        ['new-password', 'new-master-password'],
+        ['new-password-confirmation', 'new-master-password'],
+      ];
+      for (const [id, value] of values) {
+        const input = fixture.nativeElement.querySelector('#' + id) as HTMLInputElement;
+        input.value = value;
+        input.dispatchEvent(new Event('input'));
+      }
+      const form = (
+        fixture.nativeElement.querySelector('#current-password') as HTMLInputElement
+      ).closest('form')!;
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain(
+        t('auth.tooManyUnsuccessfulAttemptsTrySigningIn'),
+      );
+      for (const [id, value] of values) {
+        expect((fixture.nativeElement.querySelector('#' + id) as HTMLInputElement).value).toBe(
+          value,
+        );
+      }
+      expect((form.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(
+        false,
+      );
+    },
+  );
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({

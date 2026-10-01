@@ -1,6 +1,8 @@
 import type { ru } from './ru';
 
 export const en = {
+  'auth.passwordProcessingBusy': 'Another sign-in or setup is being processed. Try again shortly.',
+  'auth.requestTooLarge': 'The request is too large. Reduce its size and try again.',
   'app.skipContent': 'Skip to content',
   'home.scaleNote': 'Bars are relative to the largest amount',
   'home.forecastScope': 'Known plans · free money',
@@ -134,7 +136,7 @@ export const en = {
   'auth.insufficientFreeBalanceOnThisAccountTo':
     'Insufficient free balance on this account to allocate money.',
   'auth.tooManyUnsuccessfulAttemptsTrySigningIn':
-    'Too many unsuccessful attempts. Try signing in later.',
+    'Too many unsuccessful password attempts. Try again later.',
   'auth.theOperationChangedInAnotherTabRefresh':
     'The operation changed in another tab. Refresh the journal.',
   'auth.operationNotFound': 'Operation not found.',

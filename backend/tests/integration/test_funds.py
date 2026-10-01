@@ -970,12 +970,8 @@ def test_concurrent_fund_expenses_cannot_overconsume_position(
 
     def spend() -> int:
         with TestClient(app) as client:
-            assert (
-                client.post(
-                    "/api/v1/auth/login", json={"master_password": MASTER_PASSWORD}
-                ).status_code
-                == 200
-            )
+            # Exercise the financial race with an already authorized session.
+            client.cookies.update(owner.cookies)
             barrier.wait()
             return client.post(
                 "/api/v1/operations",
@@ -1228,12 +1224,8 @@ def test_concurrent_allocations_cannot_overreserve_account(
 
     def allocate() -> int:
         with TestClient(app) as client:
-            assert (
-                client.post(
-                    "/api/v1/auth/login", json={"master_password": MASTER_PASSWORD}
-                ).status_code
-                == 200
-            )
+            # Exercise the financial race with an already authorized session.
+            client.cookies.update(owner.cookies)
             local_headers = _headers(client)
             barrier.wait()
             return client.post(
@@ -1272,12 +1264,8 @@ def test_concurrent_fund_definitions_cannot_exceed_percentage_limit(
 
     def create(name: str) -> int:
         with TestClient(app) as client:
-            assert (
-                client.post(
-                    "/api/v1/auth/login", json={"master_password": MASTER_PASSWORD}
-                ).status_code
-                == 200
-            )
+            # Exercise the financial race with an already authorized session.
+            client.cookies.update(owner.cookies)
             barrier.wait()
             return client.post(
                 "/api/v1/funds",

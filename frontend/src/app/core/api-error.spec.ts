@@ -3,6 +3,24 @@ import { apiErrorMessage } from './api-error';
 import { language, localizedSignal, t } from '../i18n/i18n';
 
 describe('localized API errors', () => {
+  it.each(['ru', 'en'] as const)(
+    'localizes body limits and admission backpressure in %s',
+    (selected) => {
+      language.set(selected);
+      for (const [status, code, key] of [
+        [413, 'request_too_large', 'auth.requestTooLarge'],
+        [429, 'auth_work_busy', 'auth.passwordProcessingBusy'],
+        [429, 'login_rate_limited', 'auth.tooManyUnsuccessfulAttemptsTrySigningIn'],
+      ] as const) {
+        expect(
+          apiErrorMessage(
+            new HttpErrorResponse({ status, error: { detail: { code, message: 'SECRET' } } }),
+            'fallback',
+          ),
+        ).toBe(t(key));
+      }
+    },
+  );
   afterEach(() => language.set('ru'));
   it.each(['ru', 'en'] as const)('keeps safe code and status fallbacks in %s', (selected) => {
     language.set(selected);

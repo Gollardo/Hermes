@@ -789,12 +789,8 @@ def test_rule_edit_protects_manual_occurrences_and_materialization_is_idempotent
 
     def materialize_concurrently() -> int:
         with TestClient(app) as concurrent_client:
-            assert (
-                concurrent_client.post(
-                    "/api/v1/auth/login", json={"master_password": MASTER_PASSWORD}
-                ).status_code
-                == 200
-            )
+            # Exercise the financial race with an already authorized session.
+            concurrent_client.cookies.update(client.cookies)
             barrier.wait()
             return concurrent_client.post(
                 "/api/v1/scheduling/materialize", headers=_headers(concurrent_client)
@@ -1114,12 +1110,8 @@ def test_concurrent_confirmation_and_rule_edit_are_serial_and_idempotent(
 
     def confirm_same_occurrence() -> tuple[int, str | None]:
         with TestClient(app) as concurrent_client:
-            assert (
-                concurrent_client.post(
-                    "/api/v1/auth/login", json={"master_password": MASTER_PASSWORD}
-                ).status_code
-                == 200
-            )
+            # Exercise the financial race with an already authorized session.
+            concurrent_client.cookies.update(client.cookies)
             confirm_barrier.wait()
             response = concurrent_client.post(
                 f"/api/v1/scheduling/occurrences/{duplicate_occurrence['id']}/confirm",
@@ -1157,12 +1149,8 @@ def test_concurrent_confirmation_and_rule_edit_are_serial_and_idempotent(
 
     def update_rule_concurrently() -> int:
         with TestClient(app) as concurrent_client:
-            assert (
-                concurrent_client.post(
-                    "/api/v1/auth/login", json={"master_password": MASTER_PASSWORD}
-                ).status_code
-                == 200
-            )
+            # Exercise the financial race with an already authorized session.
+            concurrent_client.cookies.update(client.cookies)
             replacement = _rule_payload(
                 operation_type="income",
                 start_on=today,
@@ -1181,12 +1169,8 @@ def test_concurrent_confirmation_and_rule_edit_are_serial_and_idempotent(
 
     def confirm_while_rule_changes() -> int:
         with TestClient(app) as concurrent_client:
-            assert (
-                concurrent_client.post(
-                    "/api/v1/auth/login", json={"master_password": MASTER_PASSWORD}
-                ).status_code
-                == 200
-            )
+            # Exercise the financial race with an already authorized session.
+            concurrent_client.cookies.update(client.cookies)
             race_barrier.wait()
             return concurrent_client.post(
                 f"/api/v1/scheduling/occurrences/{serial_occurrence['id']}/confirm",

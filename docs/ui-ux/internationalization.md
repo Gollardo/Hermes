@@ -74,6 +74,10 @@ are never renamed. Categories remain editable user data after creation.
 longer part of Auth. Known codes take precedence over a localized action-specific
 fallback. Network, authentication, throttling and validation errors have safe
 fallbacks. Unknown server messages are never displayed verbatim.
+Unreleased request admission adds `request_too_large` and `auth_work_busy`
+notices. Password-change throttling uses the existing password-attempt notice
+in both languages; it is no longer worded only as a login failure. Existing
+forms retain entered values and re-enable retry after rejection.
 
 Request validation retains HTTP 422 and the `detail` list with `loc`, `type` and
 `msg`. The HTTP adapter removes `input` and `ctx`, and emits generic diagnostic

@@ -83,6 +83,7 @@ def postgres_database_settings() -> Iterator[Settings]:
             database_name=database_name,
             database_user=user,
             database_password=password,
+            login_admission_interval_ms=0,
         )
     finally:
         get_settings.cache_clear()

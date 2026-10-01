@@ -1,5 +1,15 @@
 # Import, export and restore
 
+## Unreleased parser hardening
+
+XLSX row and cell references are length/grammar checked before integer conversion.
+Rows must be positive and within 2000; cells must use uppercase supported columns
+through `CV` (100), with the row matching their containing row. Long, malformed,
+zero or inconsistent references are rejected before financial writes. Sparse
+rows, numeric XML as exact decimal text and non-executable formula markers are
+preserved. The API admits up to 16 MiB of import JSON before parsing; existing
+5 MB decoded-file, 20 MB expanded ZIP and review limits still apply.
+
 ## Owner-confirmed import direction
 
 Future import supports CSV and Excel with column mapping, preview, account

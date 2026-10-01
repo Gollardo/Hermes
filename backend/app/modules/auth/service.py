@@ -3,12 +3,12 @@ from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from math import ceil
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, func, or_, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
-from app.modules.auth.models import AuthSession, LoginThrottle, OwnerCredential
+from app.modules.auth.models import AuthSession, ClientLoginThrottle, LoginThrottle, OwnerCredential
 from app.modules.auth.security import (
     hash_password,
     hash_token,
@@ -24,7 +24,7 @@ class AlreadyInitializedError(RuntimeError):
     pass
 
 
-class CurrentPasswordInvalidError(RuntimeError):
+class PasswordWorkBusyError(RuntimeError):
     pass
 
 
@@ -32,6 +32,26 @@ class LoginStatus(StrEnum):
     SUCCESS = "success"
     INVALID = "invalid"
     BLOCKED = "blocked"
+    BUSY = "busy"
+
+
+PASSWORD_WORK_LOCK = 0x4845524D41555448
+MAX_CLIENT_THROTTLES = 4096
+
+
+def _try_password_work(session: Session) -> bool:
+    return bool(
+        session.scalar(text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": PASSWORD_WORK_LOCK})
+    )
+
+
+def admit_setup_work(session: Session) -> None:
+    """Bound first-run hashing/decryption across all application workers."""
+    if not _try_password_work(session):
+        raise PasswordWorkBusyError
+    # A competing setup may commit between the early check and admission.
+    if is_initialized(session):
+        raise AlreadyInitializedError
 
 
 @dataclass(frozen=True)
@@ -112,13 +132,15 @@ def _get_locked_throttle(session: Session) -> LoginThrottle:
     return throttle
 
 
-def _blocked_seconds(throttle: LoginThrottle, now: datetime) -> int | None:
+def _blocked_seconds(throttle: LoginThrottle | ClientLoginThrottle, now: datetime) -> int | None:
     if throttle.blocked_until is None or throttle.blocked_until <= now:
         return None
     return max(1, ceil((throttle.blocked_until - now).total_seconds()))
 
 
-def _record_failed_login(throttle: LoginThrottle, now: datetime, settings: Settings) -> None:
+def _record_failed_login(
+    throttle: LoginThrottle | ClientLoginThrottle, now: datetime, settings: Settings
+) -> None:
     window = timedelta(minutes=settings.login_failure_window_minutes)
     if throttle.window_started_at is None or now - throttle.window_started_at >= window:
         throttle.failed_count = 1
@@ -129,12 +151,40 @@ def _record_failed_login(throttle: LoginThrottle, now: datetime, settings: Setti
         throttle.blocked_until = now + timedelta(minutes=settings.login_block_minutes)
 
 
-def login(session: Session, settings: Settings, *, master_password: str) -> LoginResult:
+def login(
+    session: Session, settings: Settings, *, master_password: str, client_key: str
+) -> LoginResult:
+    if not _try_password_work(session):
+        return LoginResult(LoginStatus.BUSY, retry_after_seconds=1)
     now = datetime.now(UTC)
-    throttle = _get_locked_throttle(session)
-    blocked_seconds = _blocked_seconds(throttle, now)
-    if blocked_seconds is not None:
+    admission = _get_locked_throttle(session)
+    # Anonymous callers cannot change the sensitive-action failure counters.
+    cutoff = now - timedelta(minutes=settings.login_failure_window_minutes)
+    session.execute(
+        delete(ClientLoginThrottle).where(
+            ClientLoginThrottle.window_started_at < cutoff,
+            or_(
+                ClientLoginThrottle.blocked_until.is_(None),
+                ClientLoginThrottle.blocked_until <= now,
+            ),
+        )
+    )
+    key = hash_token("login-client:" + client_key)
+    throttle = session.get(ClientLoginThrottle, key, with_for_update=True)
+    if throttle is not None and (blocked_seconds := _blocked_seconds(throttle, now)):
         return LoginResult(LoginStatus.BLOCKED, retry_after_seconds=blocked_seconds)
+    if admission.next_login_at is not None and admission.next_login_at > now:
+        return LoginResult(LoginStatus.BUSY, retry_after_seconds=1)
+    if throttle is None:
+        throttle = ClientLoginThrottle(client_hash=key, failed_count=0, window_started_at=now)
+        if (
+            session.scalar(select(func.count()).select_from(ClientLoginThrottle)) or 0
+        ) < MAX_CLIENT_THROTTLES:
+            session.add(throttle)
+        # At capacity, retain known blocks and still allow a correct owner
+        # password. New sources use the serialized global work budget without
+        # growing persistent state or creating a blanket owner lockout.
+    admission.next_login_at = now + timedelta(milliseconds=settings.login_admission_interval_ms)
 
     owner = session.get(OwnerCredential, 1)
     if owner is None or not verify_password(owner.password_hash, master_password):
@@ -145,7 +195,7 @@ def login(session: Session, settings: Settings, *, master_password: str) -> Logi
         return LoginResult(LoginStatus.INVALID)
 
     throttle.failed_count = 0
-    throttle.window_started_at = None
+    throttle.window_started_at = now
     throttle.blocked_until = None
     if password_hash_needs_upgrade(owner.password_hash):
         owner.password_hash = hash_password(master_password)
@@ -220,13 +270,17 @@ def logout_all(session: Session) -> None:
 def change_master_password(
     session: Session,
     auth_session: AuthSession,
+    settings: Settings,
     *,
     current_password: str,
     new_master_password: str,
-) -> None:
+) -> LoginResult:
+    result = reauthenticate_owner(session, settings, current_password)
+    if result.status is not LoginStatus.SUCCESS:
+        return result
     owner = session.get(OwnerCredential, 1)
-    if owner is None or not verify_password(owner.password_hash, current_password):
-        raise CurrentPasswordInvalidError
+    assert owner is not None
     owner.password_hash = hash_password(new_master_password)
     owner.password_changed_at = datetime.now(UTC)
     session.execute(delete(AuthSession).where(AuthSession.token_hash != auth_session.token_hash))
+    return result

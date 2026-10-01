@@ -52,6 +52,40 @@ Inspect logs with `make logs`. The app waits for healthy PostgreSQL, applies
 Alembic upgrades and then starts as a non-root user. PostgreSQL is not published
 to the host.
 
+## Unreleased security admission and proxy setup
+
+Migration `0017_auth_admission` adds per-source login counters and an aggregate
+admission timestamp. It resets legacy anonymous failures from the separate
+sensitive-action counter; credentials, sessions and financial records are unchanged.
+Take a verified backup before upgrading; test the migration against a disposable
+copy. No backup-schema change or authentication-state export is introduced.
+
+Container commands disable Uvicorn's automatic proxy-header handling. Native
+commands must also include `--no-proxy-headers`. For a reverse proxy, set
+`HERMES_TRUSTED_PROXY_NETWORKS` to a JSON array of its actual narrow networks,
+for example `["172.20.0.2/32"]` after confirming that address in your deployment.
+The default `[]` ignores forwarded client addresses. The proxy must replace or
+append the real connection address to `X-Forwarded-For`, and direct backend
+access must be restricted. Never trust every address or an arbitrary incoming
+header. Requests behind an unconfigured proxy or the same NAT share a source
+failure bucket; correct source mapping requires live acceptance, not just config.
+
+`HERMES_LOGIN_ADMISSION_INTERVAL_MS=250` spaces anonymous password work across
+all sources. One setup/login cryptographic worker is admitted at a time across
+application processes sharing the database. Temporary saturation returns
+`429 auth_work_busy` with a short retry hint. Source lockout is separate from
+sensitive password verification; a hostile source cannot set the latter's block.
+Do not disable pacing in production merely to make a load test pass. Capacity
+overflow retains known source blocks and uses aggregate admission for new sources.
+
+The API streams body limits before parsing: auth/fresh setup 64 KiB,
+financial/import routes 16 MiB, backup/setup restore 72 MiB. Apply matching or
+stricter upstream limits deliberately, allowing supported imports and backups.
+After upgrading, verify the real HTTPS URL/cookies, source resolution, rejection
+of missing/false-length oversized requests, independent owner login, and isolated
+backup/restore. These local code changes do not certify TLS, proxy policy, host
+storage protection or resistance to volumetric network exhaustion.
+
 ## Stop and restart
 
 ```bash

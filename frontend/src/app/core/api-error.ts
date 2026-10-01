@@ -81,6 +81,8 @@ export function apiErrorMessage(error: unknown, fallback: string | (() => string
       insufficient_fund_balance: t('auth.insufficientMoneyInTheSelectedFundOn'),
       insufficient_free_balance: t('auth.insufficientFreeBalanceOnThisAccountTo'),
       login_rate_limited: t('auth.tooManyUnsuccessfulAttemptsTrySigningIn'),
+      auth_work_busy: t('auth.passwordProcessingBusy'),
+      request_too_large: t('auth.requestTooLarge'),
       operation_conflict: t('auth.theOperationChangedInAnotherTabRefresh'),
       operation_not_found: t('auth.operationNotFound'),
       operation_linked_to_occurrence: t('auth.aConfirmedCalendarOperationCannotBeDeleted'),
@@ -107,6 +109,7 @@ export function apiErrorMessage(error: unknown, fallback: string | (() => string
   }
   if (error.status === 401) return t('auth.yourSessionHasEndedSignInAgain');
   if (error.status === 403) return t('errors.forbidden');
+  if (error.status === 413) return t('auth.requestTooLarge');
   if (error.status === 429) return t('auth.tooManyUnsuccessfulAttemptsTrySigningIn');
   if (error.status === 422) return t('errors.validationRequest');
   return typeof fallback === 'function' ? fallback() : fallback;

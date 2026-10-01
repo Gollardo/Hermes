@@ -245,10 +245,8 @@ def test_concurrent_releases_serialize(release_setup: Any, same_request: bool) -
 
     def release(index: int) -> int:
         with TestClient(owner.app) as client:
-            assert (
-                client.post("/api/v1/auth/login", json={"master_password": PASSWORD}).status_code
-                == 200
-            )
+            # Exercise the financial race with an already authorized session.
+            client.cookies.update(owner.cookies)
             headers = {"X-XSRF-TOKEN": str(client.cookies.get("XSRF-TOKEN"))}
             body = {
                 **payload,

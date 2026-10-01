@@ -1,7 +1,13 @@
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
-from app.modules.auth.contracts import IssuedSession, setup_owner
+from app.modules.auth.contracts import (
+    AlreadyInitializedError,
+    IssuedSession,
+    admit_setup_work,
+    is_initialized,
+    setup_owner,
+)
 from app.modules.backup.contracts import open_backup, preview_backup, restore_backup
 from app.modules.categories.contracts import (
     CategoryTemplateLanguage,
@@ -22,6 +28,9 @@ def initialize_fresh_application(
     category_template_language: CategoryTemplateLanguage = CategoryTemplateLanguage.RU,
 ) -> IssuedSession:
     """Create access state and optional owner-selected directories in one transaction."""
+    if is_initialized(session):
+        raise AlreadyInitializedError
+    admit_setup_work(session)
     issued = setup_owner(
         session,
         settings,
@@ -45,6 +54,9 @@ def initialize_application_from_backup(
     backup_password: str | None,
 ) -> IssuedSession:
     """Validate and restore a fresh instance without committing a partial setup."""
+    if is_initialized(session):
+        raise AlreadyInitializedError
+    admit_setup_work(session)
     document = open_backup(backup, backup_password)
     preview_backup(document)
     issued = setup_owner(

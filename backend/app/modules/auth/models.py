@@ -52,3 +52,16 @@ class LoginThrottle(Base):
     failed_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     window_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     blocked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    next_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ClientLoginThrottle(Base):
+    __tablename__ = "auth_client_login_throttle"
+    __table_args__ = (
+        CheckConstraint("failed_count >= 0", name="ck_auth_client_throttle_failed_count"),
+    )
+
+    client_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    failed_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    window_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    blocked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

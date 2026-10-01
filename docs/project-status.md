@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-09-27. This is the current release snapshot, not a task log.
+Last reviewed: 2026-10-01. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -18,6 +18,35 @@ explicitly deferred; the next product milestone is Oracle `2.0.0`, whose detaile
 design still requires approval.
 
 ## Implemented capabilities
+
+The owner-authorized security slice closes five source-confirmed boundaries:
+initialized setup rejects before backup work, including a concurrent ownership
+commit; streamed request byte budgets precede parsing; password change shares
+persisted sensitive-action throttling; anonymous failures have separate source
+counters and bounded aggregate work; XLSX coordinates are bounded before numeric
+conversion. Migration `0017_auth_admission` adds abuse-control state only.
+Financial rules, backup schemas and existing UI flows are preserved. RU/EN
+errors retain recoverable form values. See [authentication](domains/authentication.md)
+and [deployment](operations/deployment.md) for proxy policy and capacity tradeoffs.
+
+Local verification and live acceptance are separate. No production data/service
+or deployment was changed. TLS/proxy acceptance, SQL-log/storage review, current
+dependency advisories and real-device checks remain open. Source buckets behind
+the same NAT/unconfigured proxy remain shared; at source-table capacity, new
+sources use the global work budget without another persisted source counter.
+
+Security-slice verification on 2026-10-01: 206 default backend tests passed
+(121 PostgreSQL-gated skips), all 122 dedicated PostgreSQL integration tests
+passed, and all 197 frontend tests passed. The frontend suite was repeated after
+correcting a test's loading-state render preparation. Financial concurrency
+tests now reuse already authorized sessions so they test financial races rather
+than competing anonymous login admission. No financial assertions were relaxed.
+`make lint`, `make typecheck`, documentation checks, both Compose configuration
+checks and the production frontend build passed. Existing bundle/style budget
+warnings remain (543.72 kB initial bundle against 500 kB). A populated `0016`
+upgrade, legacy-block reset, downgrade/re-upgrade and Alembic metadata parity
+passed in disposable local PostgreSQL 15; this is not PostgreSQL 17/container
+or live-route acceptance. No dependency was added.
 
 | Area | Current behavior | Authoritative documentation |
 | --- | --- | --- |
@@ -202,6 +231,14 @@ Implemented domain documentation records narrower limits such as recurrence
 ranges, account overdraft policy and one-fund-per-operation support.
 
 ## Next action
+
+Validate migration `0017_auth_admission` against an isolated restored backup,
+configure exact trusted proxy networks and check the actual protected HTTPS
+route with two source addresses, owner login and sensitive backup operations.
+Obtain owner deployment approval after that acceptance; this change does not
+deploy or modify production data.
+
+### Previous forecast acceptance
 
 The 2026-09-23 free-money forecast correction now includes projected dynamic
 reserve movements as well as fund allocations. This preserves total-money

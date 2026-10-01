@@ -10,7 +10,7 @@ services:
       [
         "sh",
         "-c",
-        "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+        "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --no-proxy-headers",
       ]
     environment:
       HERMES_APP_ENV: development
@@ -26,6 +26,8 @@ services:
       HERMES_LOGIN_FAILURE_LIMIT: ${HERMES_LOGIN_FAILURE_LIMIT:-5}
       HERMES_LOGIN_FAILURE_WINDOW_MINUTES: ${HERMES_LOGIN_FAILURE_WINDOW_MINUTES:-15}
       HERMES_LOGIN_BLOCK_MINUTES: ${HERMES_LOGIN_BLOCK_MINUTES:-15}
+      HERMES_LOGIN_ADMISSION_INTERVAL_MS: ${HERMES_LOGIN_ADMISSION_INTERVAL_MS:-250}
+      HERMES_TRUSTED_PROXY_NETWORKS: ${HERMES_TRUSTED_PROXY_NETWORKS:-[]}
     volumes:
       - ./backend:/workspace/backend
     ports:

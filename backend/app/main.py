@@ -1,15 +1,31 @@
 from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from app import APP_VERSION
 from app.api.router import create_api_router
 from app.api.validation import validation_error_response
 from app.core.config import Settings, get_settings
 from app.core.database import create_database_engine, create_session_factory
+from app.core.http_limits import ApiBodyLimitMiddleware
 from app.core.static import mount_frontend
+from app.modules.auth.contracts import PasswordWorkBusyError
+
+
+async def password_work_busy(request: Request, error: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=429,
+        headers={"Retry-After": "1"},
+        content={
+            "detail": {
+                "code": "auth_work_busy",
+                "message": "Password processing is busy; retry shortly",
+            }
+        },
+    )
 
 
 def create_lifespan(settings: Settings) -> Callable[[FastAPI], AbstractAsyncContextManager[None]]:
@@ -34,7 +50,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=create_lifespan(resolved_settings),
     )
     application.add_exception_handler(RequestValidationError, validation_error_response)
+    application.add_exception_handler(PasswordWorkBusyError, password_work_busy)
     application.state.settings = resolved_settings
+    application.add_middleware(ApiBodyLimitMiddleware, api_prefix=resolved_settings.api_prefix)
     application.include_router(create_api_router(), prefix=resolved_settings.api_prefix)
     mount_frontend(application, resolved_settings.static_dir)
     return application

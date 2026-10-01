@@ -14,6 +14,16 @@ assigned.
 
 ### Fixed
 
+- Reject initialized setup before backup parsing/decryption, including competing
+  setup commits; bound concurrent first-run cryptographic work across processes.
+- Enforce streamed request byte limits before JSON/database dependencies and
+  preserve larger financial/import/backup budgets.
+- Persist password-change failures through the shared sensitive-action guard;
+  separate anonymous source blocks from owner reauthentication and bound
+  distributed login work without blanket long-lived owner lockout.
+- Reject malformed/long XLSX row and cell references before numeric conversion,
+  preserving exact numeric text and non-executable formulas.
+
 - Include future dynamic fund reserves in free-money forecasts after goals fill,
   including allocations with no active funds. Total-money projections retain
   internal-transfer neutrality; no migration or API shape change is needed.
@@ -30,6 +40,11 @@ assigned.
   changed groups conflict and unchanged retries cannot post twice.
 
 ### Compatibility
+
+- Security admission adds migration `0017_auth_admission`; it changes only
+  authentication abuse-control state. Financial records and backup schemas are
+  unchanged. Container commands disable automatic proxy headers; operators must
+  configure explicitly trusted proxy sources as documented in deployment.
 
 - Confirmation requests without a date keep the prior defaults. No new database
   migration or backup schema change is required for these two extensions.
