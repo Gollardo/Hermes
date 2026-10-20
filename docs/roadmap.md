@@ -141,8 +141,13 @@ creditor.
 
 The owner requested this bounded slice on 2026-09-10 ahead of the original
 sequence. This does not claim a published 4.0.0 release. See
-[ADR 0005](decisions/0005-statement-import.md) for the accepted all-status and
-user-selected fact-date scope. Bank date detection is no longer required.
+[ADR 0005](decisions/0005-statement-import.md) for the accepted all-status scope
+and the 2026-10-20 amendment that replaces one mandatory file-level fact date
+with a profile-mapped source date per row. Textual date formats are explicit
+profile settings; review may narrow the complete derived period with an
+inclusive filter. Invalid or future dates remain blocked until manually
+corrected or skipped, and legacy profiles require an explicit date mapping
+before their next review.
 
 “Universal” means a shared configurable pipeline, not a promise to understand
 every bank file automatically without configuration.
@@ -159,7 +164,21 @@ every bank file automatically without configuration.
 - [x] Bank-specific profiles build on the shared pipeline and receive no direct
   ledger access.
 
-- [x] User-selected fact dates, all-status review and links to planned payments.
+- [~] Profile-mapped source dates with editable per-row fact dates, a derived
+  import period, all-status review and links to planned payments. The existing
+  explicit-date flow is implemented; the mapped-date refinement is approved
+  but not implemented.
+- [~] Searchable hierarchical category selection and searchable planned-payment
+  selection. The shared combobox exists; import adoption is approved but not
+  implemented.
+- [~] Durable receipt provenance for source date and description, chronological
+  posting of up to 200 selected rows, and searchable existing-fact selection.
+  These refinements are approved but not implemented.
+- [~] Separate source-date import and fact-date posting periods, bounded common
+  date formats, selectable two-level category presentation and imported source
+  details on the operation. These refinements are approved but not implemented.
+  Fact-date corrections may expand the posting period, and period-filter changes
+  preserve browser-draft row edits until reload.
 - [x] Explicit compatible same-date income/expense row groups against one plan.
   Partial settlement, multi-date grouping and additions to closed plans remain
   outside this slice.

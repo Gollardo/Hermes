@@ -127,18 +127,69 @@ retain one non-diagnostic meaning in both languages.
 
 ## Statement import implemented on 2026-09-10
 
-[ADR 0005](../decisions/0005-statement-import.md) records the approved user-date
-and all-status policy, transaction boundaries, limits and exclusions.
+[ADR 0005](../decisions/0005-statement-import.md) records the approved mapped
+source-date and all-status policy, transaction boundaries, limits and
+exclusions. The mapped source date supplies each row's editable fact-date
+default; the file no longer requires one shared fact date. Profiles store an
+explicit format for textual dates, while native XLSX date cells retain their
+date meaning; ambiguous text formats are not guessed. Review may narrow the
+complete derived import period with an inclusive start/end filter and reports
+how many rows that filter excludes. The filter uses source dates; the review
+summary separately derives the posting period from reviewed fact dates.
+
+A manual fact-date correction outside the source-date filter remains part of
+the reviewed selection and expands the displayed posting period with a warning.
+Filtering a row out removes it only from the current confirmation; its edits
+remain in the browser draft and return when the filter is reset. Reload still
+discards the non-persisted draft.
+
+The bounded text formats are day-month-year with dots, ISO year-month-day and
+day/month/year, plus their corresponding date-time variants. Arbitrary
+user-defined format patterns are not supported in this refinement.
+
+Missing, invalid and future source dates leave their rows visible and blocked
+until the user supplies a valid non-future fact date or skips them. No implicit
+fallback supplies a date. A source date-time contributes its written calendar
+date without timezone conversion; the original cell remains review context.
+Legacy profiles remain readable but require an explicit date mapping before a
+new review and can then be resaved.
 `imports` now owns format profiles and durable per-source-row receipts. CSV and
 XLSX normalize exact numeric text without binary floats; preview creates no
 financial records, receipts or calendar instances. Profiles are explicitly saved.
+
+Each posted receipt retains only the parsed source date and source description
+needed for later provenance and duplicate review; it does not retain the full
+raw row or source file. Those fields participate in backup and restore. A
+reviewed change to the operation fact date or description does not rewrite its
+source values.
+
+Operations may expose those two receipt fields in imported-operation details.
+Imports does not add a separate import-history read model or screen.
+
+The statement's source description is evidence, not the user-owned operation
+description. It remains available to matching and review. New facts start with
+an empty operation description and may copy the source text explicitly; plan
+confirmation uses the plan description, while linking an existing fact never
+rewrites its description.
+
+Plan candidates are searched per row around its editable fact date, with the
+existing three-day window on either side as the default. An explicitly merged
+plan group also uses the plan description instead of the first row's source
+description.
+
+Every row defaults to skip even when suggestions are strong. The user may widen
+one row's plan window without changing its fact date. Category search matches
+within both levels of the displayed category path.
 
 Confirmation creates a fact or links an existing fact and optionally closes one
 plan through public module contracts. Explicit same-date groups combine
 compatible income/expense rows into one fact and close that plan once; each
 source row retains a receipt. Existing-fact links and transfers cannot be grouped.
-Group membership and all reviewed decisions participate in retry validation. A batch is all-or-nothing and retries are
-idempotent. Probable duplicates remain user decisions; imported rows from the
+Group membership and all reviewed decisions participate in retry validation. A
+batch of at most 200 selected rows is all-or-nothing and retries are idempotent.
+Selected rows post by ascending fact date, preserving source order within one
+date; larger selections must be narrowed and are not split automatically.
+Probable duplicates remain user decisions; imported rows from the
 same exact source cannot be posted twice. A deleted original fact is not
 silently recreated by reimport.
 

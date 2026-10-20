@@ -139,12 +139,19 @@ column. `Esc` and an explicit close action return to the originating context.
 
 Account and category selection in financial forms uses one searchable
 combobox. An empty field shows up to five genuinely recent selections; typing
-filters by name prefix, and a secondary line distinguishes identically named
-subcategories and shows financial context. A regular `select` remains suitable
+filters categories by a normalized substring in either the parent or child
+name, and a secondary line distinguishes identically named subcategories and
+shows financial context. Account matching retains its existing prefix behavior.
+A regular `select` remains suitable
 for short closed lists such as operation type or period. Technical directories
 with compound identifiers may explicitly support substring search: Settings
-uses this for IANA timezones so `Moscow` finds `Europe/Moscow`; financial
+uses this for IANA timezones so `Moscow` finds `Europe/Moscow`; other financial
 directories remain prefix-based.
+
+Category results retain their two-level tree: active roots remain selectable,
+active children are indented beneath them, and supporting text exposes the full
+parent-child path. Archived categories remain historical context rather than
+new-operation choices.
 
 ## Dashboard as a decision layer
 

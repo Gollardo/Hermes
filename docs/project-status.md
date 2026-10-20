@@ -58,7 +58,7 @@ or live-route acceptance. No dependency was added.
 | Plans | Recurring rules and one-off plans, postpone/cancel/confirm lifecycle, series shifts and compact calendar | [Scheduling](domains/scheduling.md) |
 | Forecast | Read-only exact free/total projections, fund effects, risks and event explanations | [Forecasting](domains/forecasting.md) |
 | Reports | Posted income/expense totals, category breakdown and source operations | [Reports](domains/reports.md) |
-| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions and explicit fact dates | [Import/export](domains/import-export.md) |
+| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions and explicit fact dates; mapped row dates and searchable review selectors are approved but not implemented | [Import/export](domains/import-export.md) |
 | Portability | Schema-1 JSON and protected Hermes V1 backup, validated atomic restore | [Import/export](domains/import-export.md) |
 | Languages | RU/EN interface, browser-local preference, independent fresh category-template language | [Internationalization](ui-ux/internationalization.md) |
 
@@ -166,6 +166,30 @@ row), format disclosure, source disclosure, empty selection, and 390 px reflow
 without page overflow. A synthetic CSV exercised editable operation fields and
 an exact negative account effect without posting. No production data or service
 was changed, and private fixtures/screenshots are outside the repository.
+
+## Approved statement-import workflow refinement
+
+On 2026-10-20 the owner approved replacing the mandatory file-level fact date
+with profile-mapped, editable source dates per row and a derived import period.
+The source description will remain review evidence instead of becoming the
+default operation description. Import review will adopt the established
+searchable category combobox with visible parent-child paths and a searchable
+planned-payment combobox with suggestions first. These decisions are documented
+in [ADR 0005](decisions/0005-statement-import.md) but are not implemented or
+verified capabilities. Explicit text formats, inclusive period filtering,
+per-row plan windows and plan-owned merged descriptions are approved but not
+implemented. Invalid/future-date blocking, explicit legacy-profile upgrades,
+substring category search and skip-by-default rows are also approved but not
+implemented. Receipt-level source date/description, chronological posting,
+searchable existing-fact selection and the explicit 200-row boundary are
+approved but not implemented. Bulk review actions remain out of scope.
+Source-date filtering and fact-date posting ranges are distinct; the approved
+UI uses bounded common date formats, a selectable two-level category tree and
+source provenance in operation details without a new import-history screen.
+Fact-date corrections outside the source period remain selected with a warning;
+period-filter changes preserve browser-draft edits until reload. The product
+decision tree for this refinement is complete; implementation and verification
+have not started.
 
 ## Release assumptions and technical debt
 

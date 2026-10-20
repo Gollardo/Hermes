@@ -214,7 +214,9 @@ CSS values into a permanent design system or approve unimplemented screens.
 - SHOULD provide “Save and add another” where it supports documented serial
   entry.
 - SHOULD use the documented searchable combobox pattern for accounts and
-  categories; use native select controls for short closed sets.
+  categories; category search matches within both levels of its displayed path,
+  while account search remains prefix-based. Use native select controls for
+  short closed sets.
 - AVOID hidden defaults, ambiguous signed amounts, and one long form containing
   every possible property.
 - AVOID adding payee, tags, templates, bulk actions, or automatic allocation
