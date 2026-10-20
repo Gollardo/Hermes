@@ -58,3 +58,19 @@
 Update documentation in the same change when modifying architecture,
 domain invariants, module ownership, data flows or deployment.
 ```
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live in this repository's GitHub Issues and are managed with
+`gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical triage roles use the default GitHub label vocabulary. See
+`docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a single-context repository. See `docs/agents/domain.md`.
