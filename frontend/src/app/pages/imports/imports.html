@@ -294,17 +294,17 @@
               }}</label
             >
           } @else {
-            <label
-              >{{ t('imports.category')
-              }}<select [(ngModel)]="row.category">
-                <option value="">{{ t('imports.choose') }}</option>
-                @for (c of categories(); track c.id) {
-                  @if (c.type === row.type) {
-                    <option [value]="c.id">{{ c.name }}</option>
-                  }
-                }
-              </select></label
-            >
+            <div class="control-label">
+              {{ t('imports.category') }}
+              <app-entity-combobox
+                [(ngModel)]="row.category"
+                [accessibleLabel]="t('imports.category')"
+                [options]="categoryOptions(row.type)"
+                [recentKey]="'categories-' + row.type"
+                [placeholder]="t('operations.typeACategoryName')"
+                matchMode="contains"
+              />
+            </div>
           }
           @if (row.type !== 'income' && !row.existing && !row.allocate) {
             <label

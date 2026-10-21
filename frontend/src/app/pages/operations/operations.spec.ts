@@ -204,6 +204,56 @@ describe('OperationsPage', () => {
     fixture.detectChanges();
   }
 
+  it('keeps category hierarchy searchable while account search remains prefix based', () => {
+    flushInitial({
+      accounts: [{ id: 'account-1', name: 'Основной счёт', balance: '100.0000', archived: false }],
+      categories: [
+        {
+          id: 'housing',
+          name: 'Жильё',
+          type: 'expense',
+          archived: false,
+          parent_id: null,
+        },
+        {
+          id: 'utilities',
+          name: 'Коммунальные услуги',
+          type: 'expense',
+          archived: false,
+          parent_id: 'housing',
+        },
+        {
+          id: 'archived',
+          name: 'Старая аренда',
+          type: 'expense',
+          archived: true,
+          parent_id: 'housing',
+        },
+      ],
+    });
+
+    const category = fixture.nativeElement.querySelector('#operation-category') as HTMLInputElement;
+    category.value = 'жиль';
+    category.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    const categoryOptions = [
+      ...category.closest('app-entity-combobox')!.querySelectorAll<HTMLElement>('[role="option"]'),
+    ];
+    expect(categoryOptions.map((option) => option.dataset['optionId'])).toEqual([
+      'housing',
+      'utilities',
+    ]);
+    expect(categoryOptions[1].textContent).toContain('Жильё → Коммунальные услуги');
+
+    const account = fixture.nativeElement.querySelector('#operation-account') as HTMLInputElement;
+    account.value = 'счёт';
+    account.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(
+      account.closest('app-entity-combobox')!.querySelectorAll('[role="option"]'),
+    ).toHaveLength(0);
+  });
+
   it.each(['ru', 'en'] as const)(
     'keeps a rejected expense error inside the composer in %s and preserves exact input',
     (selected) => {

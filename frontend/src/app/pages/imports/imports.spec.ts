@@ -116,6 +116,50 @@ describe('Statement import', () => {
     page.submit();
     http.expectOne('/api/v1/imports/commit').flush({ results: [] });
   });
+  it('searches the selectable category hierarchy by parent or child name', () => {
+    const page = preview();
+    page.rows()[0].action = 'new';
+    page.rows.set([...page.rows()]);
+    page.categories.set([
+      {
+        id: 'housing',
+        name: 'Жильё',
+        type: 'expense',
+        archived: false,
+        parent_id: null,
+      },
+      {
+        id: 'utilities',
+        name: 'Коммунальные услуги с очень длинным названием',
+        type: 'expense',
+        archived: false,
+        parent_id: 'housing',
+      },
+      {
+        id: 'archived',
+        name: 'Старая аренда',
+        type: 'expense',
+        archived: true,
+        parent_id: 'housing',
+      },
+    ]);
+    fixture.detectChanges();
+
+    const combobox = fixture.nativeElement.querySelector('.row app-entity-combobox') as HTMLElement;
+    expect(combobox).not.toBeNull();
+    const input = combobox.querySelector('input') as HTMLInputElement;
+    input.dispatchEvent(new FocusEvent('focus'));
+    input.value = 'жиль';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const options = [...combobox.querySelectorAll<HTMLElement>('[role="option"]')];
+    expect(options.map((option) => option.dataset['optionId'])).toEqual(['housing', 'utilities']);
+    expect(options[1].textContent).toContain('Жильё → Коммунальные услуги');
+    expect(options[1].classList).toContain('nested');
+    options[1].click();
+    expect(page.rows()[0].category).toBe('utilities');
+  });
   it('preserves exact amounts, choice and draft after a failed commit', () => {
     const page = preview();
     const row = page.rows()[0];

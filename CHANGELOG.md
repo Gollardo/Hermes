@@ -38,6 +38,10 @@ assigned.
   calendar date without timezone conversion. Missing, invalid and future dates
   remain visible and blocked without an invented fallback, while legacy
   profiles remain readable and can be explicitly upgraded.
+- Use one searchable two-level category combobox in statement review, ordinary
+  operation entry and scheduling. Search matches either parent or child names;
+  roots remain selectable, children show their full path and archived choices
+  remain historical-only.
 - Select an actual non-future payment date when confirming a one-off or recurring
   plan. Overdue plans default to their due date in Calendar and the composer;
   the journal retains an explicit Apply today shortcut.
