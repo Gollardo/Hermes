@@ -34,12 +34,15 @@ the server does not invent or truncate provenance.
 - Default backend suite: 223 passed, 128 PostgreSQL-gated tests skipped.
 - PostgreSQL integration suite: 129 passed against randomly named disposable
   databases, including the authenticated CSV and XLSX lifecycle scenarios.
-- Frontend suite: 211 passed across all 25 spec files when run sequentially,
-  each process using an isolated Node local-storage file.
-- The standard parallel frontend command reached 208 of 211 tests; its three
-  failures are the known cross-file local-storage/combobox race, not deterministic
-  product failures. The focused import component suite passed all 21 tests
-  after correcting the RU/EN source-date introduction.
+- The available host runs unsupported Node.js 26.10.0 and npm 11.19.1; the
+  documented development environment is Node.js 22.22.3 within the Node 22
+  release line and npm 10. Plain `make test-frontend` fails broadly because
+  Node 26's experimental global local storage masks jsdom's implementation.
+- With the Node 26 compatibility flag
+  `NODE_OPTIONS=--no-experimental-webstorage make test-frontend`, all 212
+  frontend tests passed across all 25 files in the standard parallel runner.
+  The focused import component suite passed all 21 tests after correcting the
+  RU/EN source-date introduction. Supported Node 22 was not tested in this run.
 - Ruff lint and format, ESLint, RU/EN catalog completeness, Prettier, mypy,
   TypeScript and documentation link/fence checks passed.
 - The production frontend build passed. Existing initial-bundle and component
