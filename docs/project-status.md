@@ -202,10 +202,14 @@ Inclusive source-date filtering is implemented in browser state: it defaults to
 the complete parsed period, counts excluded parsed rows, preserves hidden edits,
 and shows the selected fact-date posting period with an expansion warning.
 Per-row plan windows, plan-owned merged descriptions and the reconciliation
-selectors are also implemented. Receipt-level source date/description,
-chronological posting and the explicit 200-row boundary are approved;
-provenance remains unimplemented while the existing 200-decision request bound
-remains enforced. Bulk review actions remain out of scope.
+selectors are also implemented. Receipt-level source date/description remains
+approved but unimplemented. Chronological posting and the explicit 200-row
+boundary are implemented: the server orders by reviewed fact
+date and physical source row, the review shows and submits that order, oversized
+batches receive period-narrowing guidance, and no automatic splitting occurs.
+Atomic rollback, completed-row exclusion, journal links, unchanged retries and
+changed-decision conflicts retain their existing behavior. Bulk review actions
+remain out of scope.
 Source-date filtering and fact-date posting ranges are distinct; the approved
 UI uses bounded common date formats, a selectable two-level category tree and
 source provenance in operation details without a new import-history screen.
@@ -227,13 +231,23 @@ expanded posting warnings and unchanged account prefix matching. Real-browser de
 390 px acceptance remains part of the complete import refinement.
 
 Candidate-search verification on 2026-10-21: 220 default backend tests passed
-with 123 PostgreSQL-gated skips, all 124 PostgreSQL integration tests passed,
-and all 206 frontend tests passed. Lint, formatting, catalog, Python and
+with 125 PostgreSQL-gated skips, all 126 PostgreSQL integration tests passed,
+and all 208 frontend tests passed. Lint, formatting, catalog, Python and
 TypeScript type checks, documentation checks and the production frontend build
 also passed; the existing frontend budget warnings remain. Automated coverage
 includes authenticated per-row windows, widening, suggestion order, manual
 candidates without reasons, stale plans, exact searchable amounts and preserved
 row dates/drafts. Real-browser desktop and 390 px acceptance remains open.
+
+Chronological-confirmation verification on 2026-10-21: 220 default backend
+tests passed with 124 PostgreSQL-gated skips, all 125 PostgreSQL integration
+tests passed, and all 206 frontend tests passed when the 25 spec files were run
+sequentially with isolated local storage. The standard parallel frontend runner
+still has a pre-existing cross-file local-storage/combobox race. Focused import
+coverage passed 21 authenticated HTTP integration tests and 16 component tests.
+Lint, catalog and formatting checks, Python and TypeScript type checking,
+documentation checks and the production frontend build passed. Real-browser
+desktop/390 px and production acceptance remain open.
 
 ## Release assumptions and technical debt
 

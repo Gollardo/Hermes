@@ -40,6 +40,8 @@ described below remain in progress.
    Errors preserve the review for correction and retry. Completed rows are
    excluded from further submission and link to the journal. The summary shows
    ascending fact-date posting order, with source order retained within a date.
+   More than 200 selected rows show a blocking instruction to narrow the import
+   period; the screen never splits the selection into multiple requests.
 
 ## Contracts
 

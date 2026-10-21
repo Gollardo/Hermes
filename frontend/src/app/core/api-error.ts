@@ -50,7 +50,7 @@ export function apiErrorMessage(error: unknown, fallback: string | (() => string
       import_currency: t('imports.currencyError'),
       import_conflict: t('imports.conflictError'),
       import_mismatch: t('imports.mismatchError'),
-      import_limit: t('imports.limit'),
+      import_limit: t('imports.selectionLimit'),
       future_operation_requires_plan: t('errors.futureOperation'),
       invalid_default_account: t('errors.defaultAccount'),
       invalid_period: t('errors.period'),

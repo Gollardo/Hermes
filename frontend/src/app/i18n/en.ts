@@ -101,6 +101,9 @@ export const en = {
   'imports.review':
     'Review dates, accounts, categories and links. Selected rows commit together; an error rolls back the entire batch. Do not add historical transactions on top of an already recorded current balance.',
   'imports.selected': 'Selected rows: {count}',
+  'imports.postingOrder': 'Effective posting order',
+  'imports.selectionLimit':
+    'Select no more than 200 rows. Narrow the import period and confirm one atomic batch.',
   'imports.done': 'Batch committed. Results:',
   'imports.error': 'Import failed. Check the data and retry.',
   'imports.invalidRow': 'Row could not be normalized. Check the column mapping.',

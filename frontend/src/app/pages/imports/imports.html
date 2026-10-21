@@ -445,6 +445,12 @@
         </div>
       }
       @if (selected().length) {
+        <h3>{{ t('imports.postingOrder') }}</h3>
+        <ol class="posting-order">
+          @for (row of postingOrder(); track row.row) {
+            <li>{{ row.row }} · {{ row.date | textDate }}</li>
+          }
+        </ol>
         <h3>{{ t('imports.effect') }}</h3>
       } @else {
         <p class="empty-selection">{{ t('imports.noSelection') }}</p>

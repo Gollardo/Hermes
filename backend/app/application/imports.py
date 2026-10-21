@@ -195,6 +195,8 @@ def preview(session: Session, request: PreviewRequest) -> dict[str, Any]:
 
 
 def commit(session: Session, request: CommitRequest) -> dict[str, Any]:
+    if len(request.decisions) > 200:
+        raise ValueError("Too many selected rows; narrow the import period")
     digest, sheets, rows = read_file(request)
     sheet = request.mapping.sheet or sheets[0]
     # One owner, bounded rare batch: serialize imports and establish schedule-before-ledger order.

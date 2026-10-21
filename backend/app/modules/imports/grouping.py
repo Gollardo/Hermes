@@ -55,4 +55,5 @@ def decision_groups(request: CommitRequest) -> list[list[Decision]]:
         seen_plans.add(item.occurrence_id)
         seen_rows.update(member.row for member in group)
         result.append(group)
+    result.sort(key=lambda group: (group[0].operation.occurred_on, min(item.row for item in group)))
     return result

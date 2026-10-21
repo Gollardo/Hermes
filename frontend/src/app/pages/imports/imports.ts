@@ -451,6 +451,11 @@ export class ImportsPage {
   selected(): Row[] {
     return this.visibleRows().filter((r) => r.action !== 'skip' && !r.imported_id);
   }
+  postingOrder(): Row[] {
+    return [...this.selected()].sort((left, right) =>
+      left.date === right.date ? left.row - right.row : left.date.localeCompare(right.date),
+    );
+  }
   candidateOptions(row: Row, kind: 'plans' | 'facts'): EntityOption[] {
     return row[kind].map((candidate) => {
       const category = this.categories().find((item) => item.id === candidate.category_id)?.name;
@@ -557,10 +562,13 @@ export class ImportsPage {
       .join(', ');
   }
   submit(): void {
-    const selected = this.selected();
+    const selected = this.postingOrder();
     if (this.busy() || !this.file || !selected.length) return;
+    if (selected.length > 200) {
+      this.error.set(() => t('imports.selectionLimit'));
+      return;
+    }
     if (
-      selected.length > 200 ||
       selected.some(
         (r) =>
           r.error ||
