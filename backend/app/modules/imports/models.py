@@ -1,6 +1,7 @@
+from datetime import date
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, String
+from sqlalchemy import JSON, Date, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -19,4 +20,6 @@ class ImportReceipt(Base):
     source_key: Mapped[str] = mapped_column(String(64), unique=True)
     decision_hash: Mapped[str] = mapped_column(String(64))
     operation_id: Mapped[UUID] = mapped_column()
+    source_date: Mapped[date | None] = mapped_column(Date)
+    source_description: Mapped[str | None] = mapped_column(String(4000))
     # Deliberately retained after operation deletion; this is provenance, not a ledger FK.

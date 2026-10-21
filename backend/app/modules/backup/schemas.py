@@ -234,6 +234,8 @@ class ImportReceiptRecord(BackupModel):
     source_key: str = Field(pattern=r"^[0-9a-f]{64}$")
     decision_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     operation_id: UUID
+    source_date: date | None = None
+    source_description: str | None = Field(default=None, max_length=4000)
 
 
 class BackupData(BackupModel):

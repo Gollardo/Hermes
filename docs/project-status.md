@@ -58,7 +58,7 @@ or live-route acceptance. No dependency was added.
 | Plans | Recurring rules and one-off plans, postpone/cancel/confirm lifecycle, series shifts and compact calendar | [Scheduling](domains/scheduling.md) |
 | Forecast | Read-only exact free/total projections, fund effects, risks and event explanations | [Forecasting](domains/forecasting.md) |
 | Reports | Posted income/expense totals, category breakdown and source operations | [Reports](domains/reports.md) |
-| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions, profile-mapped per-row source/fact dates and hierarchical category search; period filtering, provenance and the remaining searchable review selectors are incomplete | [Import/export](domains/import-export.md) |
+| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions, profile-mapped per-row source/fact dates, durable receipt provenance, period filtering and hierarchical category search; the remaining searchable review selectors are incomplete | [Import/export](domains/import-export.md) |
 | Portability | Schema-1 JSON and protected Hermes V1 backup, validated atomic restore | [Import/export](domains/import-export.md) |
 | Languages | RU/EN interface, browser-local preference, independent fresh category-template language | [Internationalization](ui-ux/internationalization.md) |
 
@@ -198,13 +198,18 @@ Production and browser acceptance remain open.
 Inclusive source-date filtering is implemented in browser state: it defaults to
 the complete parsed period, counts excluded parsed rows, preserves hidden edits,
 and shows the selected fact-date posting period with an expansion warning.
-Per-row plan windows and the remaining
-reconciliation-selector work are also not implemented. Receipt-level source
-date/description, chronological posting,
-searchable existing-fact selection and the explicit 200-row boundary are
-approved; provenance and search remain unimplemented while the existing
-200-decision request bound remains enforced. Bulk review actions remain out of
-scope.
+Per-row plan windows and the remaining reconciliation-selector work are also
+not implemented. Receipt-level source date/description provenance is now
+implemented through forward migration `0018_import_provenance`: confirmation
+stores only those two narrow fields, retries and allowed operation edits do not
+rewrite them, and deletion leaves the receipt intact. Operation details compose
+the optional Imports-owned values through a public contract and show a distinct
+RU/EN statement-evidence block; ordinary operations show no synthetic source.
+Schema-1 JSON backup export and restore include the fields while older backups
+default them to unknown. Chronological posting, searchable existing-fact
+selection and the explicit 200-row boundary are approved; search and ordering
+remain in progress while the existing 200-decision request bound remains
+enforced. Bulk review actions remain out of scope.
 Source-date filtering and fact-date posting ranges are distinct; the approved
 UI uses bounded common date formats, a selectable two-level category tree and
 source provenance in operation details without a new import-history screen.

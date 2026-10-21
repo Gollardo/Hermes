@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
+from app.application.imports import operation_detail
 from app.core.database import DatabaseSession
 from app.modules.accounts.contracts import AccountReferenceError
 from app.modules.categories.contracts import CategoryReferenceError
@@ -156,7 +157,7 @@ def read_category_summary(
 @read_router.get("/{operation_id}", response_model=OperationResponse)
 def read_operation(operation_id: UUID, session: DatabaseSession) -> OperationResponse:
     try:
-        return get_operation_response(session, operation_id)
+        return operation_detail(session, operation_id)
     except OperationNotFoundError as error:
         _raise_domain_error(error)
         raise AssertionError from error

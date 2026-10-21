@@ -612,6 +612,9 @@
                       </div>
                     </dl>
                     <div class="detail-effects">
+                      @if (detailLoadingId() === operation.id) {
+                        <p class="detail-loading">{{ t('operations.loadingOperationDetails') }}</p>
+                      }
                       <div class="detail-effect">
                         <p class="detail-label">{{ t('operations.physicalMovement') }}</p>
                         <div class="movement-list">
@@ -646,6 +649,31 @@
                               >
                             }
                           </div>
+                        </div>
+                      }
+                      @if (operation.import_provenance?.length) {
+                        <div class="detail-effect import-source-evidence">
+                          <p class="detail-label">{{ t('operations.statementSourceEvidence') }}</p>
+                          @for (source of operation.import_provenance; track $index) {
+                            <dl class="import-provenance">
+                              <div>
+                                <dt>{{ t('operations.statementSourceDate') }}</dt>
+                                <dd>
+                                  {{
+                                    source.source_date
+                                      ? (source.source_date | textDate)
+                                      : t('operations.notRecorded')
+                                  }}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>{{ t('operations.statementSourceDescription') }}</dt>
+                                <dd>
+                                  {{ source.source_description || t('operations.notRecorded') }}
+                                </dd>
+                              </div>
+                            </dl>
+                          }
                         </div>
                       }
                     </div>
