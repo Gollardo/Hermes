@@ -169,8 +169,8 @@ every bank file automatically without configuration.
 
 - [~] Profile-mapped source dates with editable per-row fact dates, a derived
   import period, all-status review and links to planned payments. The existing
-  explicit-date flow is implemented; the mapped-date refinement is approved
-  but not implemented.
+  explicit-date flow and profile-mapped per-row preview dates are implemented;
+  derived period filtering and the remaining reconciliation refinements are not.
 - [~] Searchable hierarchical category selection and searchable planned-payment
   selection. The shared two-level category combobox is implemented in import,
   ordinary operation entry and scheduling; searchable planned-payment selection

@@ -37,6 +37,9 @@ interface Row {
   row: number;
   raw: string[];
   error: string | null;
+  date_error: string | null;
+  source_date: string | null;
+  fact_date: string | null;
   imported_id: string | null;
   imported_deleted: boolean;
   type: Kind;
@@ -64,6 +67,15 @@ interface Mapping {
   delimiter: string;
   amount: number;
   description: number;
+  source_date: number | null;
+  date_format:
+    | 'dmy_dot'
+    | 'iso'
+    | 'dmy_slash'
+    | 'dmy_dot_datetime'
+    | 'iso_datetime'
+    | 'dmy_slash_datetime'
+    | null;
   direction: number | null;
   debit: number | null;
   credit: number | null;
@@ -100,14 +112,20 @@ export class ImportsPage {
   readonly rows = signal<Row[]>([]);
   readonly headers = signal<string[]>([]);
   readonly sheets = signal<string[]>([]);
-  readonly profiles = signal<{ name: string; mapping: Mapping }[]>([]);
+  readonly profiles = signal<{ name: string; mapping: Partial<Mapping> }[]>([]);
   readonly results = signal<{ row: number; operation_id: string }[]>([]);
   mergePlans: Record<string, boolean> = {};
   facts: Candidate[] = [];
   plans: Candidate[] = [];
   file: { filename: string; content: string } | null = null;
   account = '';
-  date = '';
+  readonly today = (() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  })();
   window = 3;
   profileName = '';
   profile = '';
@@ -118,6 +136,8 @@ export class ImportsPage {
     delimiter: '',
     amount: 7,
     description: 6,
+    source_date: null,
+    date_format: null,
     direction: 12,
     debit: null,
     credit: null,
@@ -126,7 +146,15 @@ export class ImportsPage {
     expense_values: '',
     income_values: '',
   };
-  readonly columns = ['amount', 'description', 'direction', 'debit', 'credit', 'currency'] as const;
+  readonly columns = [
+    'source_date',
+    'amount',
+    'description',
+    'direction',
+    'debit',
+    'credit',
+    'currency',
+  ] as const;
   constructor() {
     this.http.get<Entity[]>(this.url('/accounts')).subscribe({
       next: (v) => this.accounts.set(v.filter((x) => !x.archived)),
@@ -168,25 +196,31 @@ export class ImportsPage {
     this.results.set([]);
   }
   loadProfiles(): void {
-    this.http.get<{ name: string; mapping: Mapping }[]>(this.url('/imports/profiles')).subscribe({
-      next: (v) => {
-        this.profiles.set(v);
-        if (!this.file && !this.profile && v.length) {
-          this.mapping = { ...v[0].mapping };
-        }
-      },
-      error: (e) => this.fail(e),
-    });
+    this.http
+      .get<{ name: string; mapping: Partial<Mapping> }[]>(this.url('/imports/profiles'))
+      .subscribe({
+        next: (v) => {
+          this.profiles.set(v);
+          if (!this.file && !this.profile && v.length) {
+            this.mapping = { ...this.mapping, ...v[0].mapping };
+          }
+        },
+        error: (e) => this.fail(e),
+      });
   }
   useProfile(): void {
     const p = this.profiles().find((p) => p.name === this.profile);
     if (p) {
-      this.mapping = { ...p.mapping };
+      const { source_date = null, date_format = null } = p.mapping;
+      this.mapping = { ...this.mapping, ...p.mapping, source_date, date_format };
       this.inspect();
     }
   }
   saveProfile(): void {
-    if (!this.profileName.trim()) return;
+    if (!this.profileName.trim() || !this.dateMappingReady()) {
+      this.error.set(() => t('imports.dateMappingRequired'));
+      return;
+    }
     this.http
       .put(this.url('/imports/profiles'), { name: this.profileName, mapping: this.mapping })
       .subscribe({
@@ -233,8 +267,10 @@ export class ImportsPage {
       });
   }
   preview(): void {
-    if (!this.file || !this.account || !this.date) {
-      this.error.set(() => t('imports.missing'));
+    if (!this.file || !this.account || !this.dateMappingReady()) {
+      this.error.set(() =>
+        !this.dateMappingReady() ? t('imports.dateMappingRequired') : t('imports.missing'),
+      );
       return;
     }
     this.busy.set(true);
@@ -245,7 +281,6 @@ export class ImportsPage {
         ...this.file,
         mapping: this.mapping,
         account_id: this.account,
-        occurred_on: this.date,
         window_days: this.window,
       })
       .subscribe({
@@ -264,7 +299,7 @@ export class ImportsPage {
               fundAmount: '',
               account: this.account,
               destination: '',
-              date: this.date,
+              date: r.fact_date ?? '',
               plan: '',
               existing: '',
               allocate: false,
@@ -274,6 +309,13 @@ export class ImportsPage {
         },
         error: (e) => this.fail(e),
       });
+  }
+  dateMappingReady(): boolean {
+    if (this.mapping.source_date === null) return false;
+    return !!this.file?.filename.toLowerCase().endsWith('.xlsx') || !!this.mapping.date_format;
+  }
+  changeFactDate(row: Row): void {
+    if (row.date && row.date <= this.today) row.date_error = null;
   }
   changeAction(row: Row): void {
     row.plan = '';
@@ -431,7 +473,9 @@ export class ImportsPage {
       selected.some(
         (r) =>
           r.error ||
+          r.date_error ||
           !r.date ||
+          r.date > this.today ||
           !r.account ||
           (r.type !== 'transfer' && !r.category) ||
           (r.type === 'transfer' && !r.destination) ||

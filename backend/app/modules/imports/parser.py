@@ -7,6 +7,7 @@ import io
 import posixpath
 import re
 import zipfile
+from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from xml.etree import ElementTree as ET
 
@@ -14,6 +15,51 @@ from app.modules.imports.schemas import FileRequest, Mapping
 
 NS = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 MAX_ROWS = 2000
+BUILTIN_XLSX_DATE_FORMATS = (
+    set(range(14, 23)) | set(range(27, 37)) | set(range(45, 48)) | set(range(50, 59))
+)
+
+
+class NativeDateCell(str):
+    """A string-compatible raw XLSX value carrying its native calendar date."""
+
+    source_date: date
+
+    def __new__(cls, value: str, source_date: date) -> "NativeDateCell":
+        instance = super().__new__(cls, value)
+        instance.source_date = source_date
+        return instance
+
+
+def _xlsx_date_formats(archive: zipfile.ZipFile) -> set[int]:
+    if "xl/styles.xml" not in archive.namelist():
+        return set()
+    styles = xml(archive.read("xl/styles.xml"))
+    custom = set()
+    for node in styles.findall("m:numFmts/m:numFmt", NS):
+        code = re.sub(r'"[^"]*"|\[[^]]*\]|\\.|_.|\*.', "", node.attrib.get("formatCode", ""))
+        if re.search("y", code, re.IGNORECASE) and re.search("d", code, re.IGNORECASE):
+            custom.add(int(node.attrib["numFmtId"]))
+    result: set[int] = set()
+    for index, node in enumerate(styles.findall("m:cellXfs/m:xf", NS)):
+        if int(node.attrib.get("numFmtId", "0")) in BUILTIN_XLSX_DATE_FORMATS | custom:
+            result.add(index)
+    return result
+
+
+def _xlsx_serial_date(value: str, uses_1904_epoch: bool) -> date:
+    try:
+        serial = Decimal(value)
+    except InvalidOperation as error:
+        raise ValueError("Invalid native XLSX date") from error
+    if not serial.is_finite() or serial < 0:
+        raise ValueError("Invalid native XLSX date")
+    days = int(serial)
+    epoch = date(1904, 1, 1) if uses_1904_epoch else date(1899, 12, 30)
+    try:
+        return epoch + timedelta(days=days)
+    except OverflowError as error:
+        raise ValueError("Invalid native XLSX date") from error
 
 
 def xml(raw: bytes) -> ET.Element:
@@ -53,6 +99,12 @@ def read_file(request: FileRequest) -> tuple[str, list[str], list[list[str]]]:
                 if any("externalLinks/" in name or "vbaProject" in name for name in names):
                     raise ValueError("External links and macros are unsupported")
                 workbook = xml(archive.read("xl/workbook.xml"))
+                workbook_properties = workbook.find("m:workbookPr", NS)
+                uses_1904_epoch = (
+                    workbook_properties is not None
+                    and workbook_properties.attrib.get("date1904", "0").lower() in {"1", "true"}
+                )
+                date_styles = _xlsx_date_formats(archive)
                 relations = {
                     r.attrib["Id"]: posixpath.normpath(
                         r.attrib["Target"].lstrip("/")
@@ -113,6 +165,14 @@ def read_file(request: FileRequest) -> tuple[str, list[str], list[list[str]]]:
                             value = strings[int(value)]
                         elif cell.attrib.get("t") == "inlineStr":
                             value = "".join(cell.itertext())
+                        elif cell.attrib.get("t") == "d":
+                            try:
+                                native = date.fromisoformat(value[:10])
+                            except ValueError as error:
+                                raise ValueError("Invalid native XLSX date") from error
+                            value = NativeDateCell(value, native)
+                        elif int(cell.attrib.get("s", "0")) in date_styles and value:
+                            value = NativeDateCell(value, _xlsx_serial_date(value, uses_1904_epoch))
                         rows[number - 1][col - 1] = value
         else:
             raise ValueError("Only CSV and XLSX are supported")
@@ -144,6 +204,50 @@ def number(value: str, mapping: Mapping) -> Decimal:
         return amount
     except InvalidOperation as error:
         raise ValueError("Invalid amount") from error
+
+
+DATE_PATTERNS: dict[str, re.Pattern[str]] = {
+    "dmy_dot": re.compile(r"(\d{2})\.(\d{2})\.(\d{4})"),
+    "iso": re.compile(r"(\d{4})-(\d{2})-(\d{2})"),
+    "dmy_slash": re.compile(r"(\d{2})/(\d{2})/(\d{4})"),
+    "dmy_dot_datetime": re.compile(r"(\d{2})\.(\d{2})\.(\d{4})[ T]\d{2}:\d{2}(?::\d{2})?"),
+    "iso_datetime": re.compile(r"(\d{4})-(\d{2})-(\d{2})[ T]\d{2}:\d{2}(?::\d{2})?"),
+    "dmy_slash_datetime": re.compile(r"(\d{2})/(\d{2})/(\d{4})[ T]\d{2}:\d{2}(?::\d{2})?"),
+}
+DATE_PARSE_FORMATS = {
+    "dmy_dot": "%d.%m.%Y",
+    "iso": "%Y-%m-%d",
+    "dmy_slash": "%d/%m/%Y",
+    "dmy_dot_datetime": "%d.%m.%Y %H:%M",
+    "iso_datetime": "%Y-%m-%d %H:%M",
+    "dmy_slash_datetime": "%d/%m/%Y %H:%M",
+}
+
+
+def parse_source_date(row: list[str], mapping: Mapping, *, today: date | None = None) -> date:
+    if mapping.source_date is None:
+        raise ValueError("Source date column is required")
+    value = row[mapping.source_date] if mapping.source_date < len(row) else ""
+    if isinstance(value, NativeDateCell):
+        parsed = value.source_date
+    else:
+        value = value.strip()
+        if mapping.date_format is None:
+            raise ValueError("Source date format is required for text values")
+        match = DATE_PATTERNS[mapping.date_format].fullmatch(value)
+        if match is None:
+            raise ValueError("Invalid source date")
+        try:
+            normalized = value.replace("T", " ")
+            date_format = DATE_PARSE_FORMATS[mapping.date_format]
+            if mapping.date_format.endswith("_datetime") and normalized.count(":") == 2:
+                date_format += ":%S"
+            parsed = datetime.strptime(normalized, date_format).date()
+        except ValueError as error:
+            raise ValueError("Invalid source date") from error
+    if parsed > (today or date.today()):
+        raise ValueError("Future source date")
+    return parsed
 
 
 def normalize(row: list[str], mapping: Mapping) -> tuple[str, str, str, str]:

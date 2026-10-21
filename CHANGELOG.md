@@ -32,6 +32,12 @@ assigned.
 
 ### Added
 
+- Map a statement source-date column in saved import profiles and derive each
+  preview row's editable fact-date default. CSV and textual XLSX dates use one
+  of six explicit date/date-time formats; native XLSX date cells keep their
+  calendar date without timezone conversion. Missing, invalid and future dates
+  remain visible and blocked without an invented fallback, while legacy
+  profiles remain readable and can be explicitly upgraded.
 - Separate bank-owned source descriptions from optional owner-written operation
   descriptions during statement review. New facts start blank with an explicit
   copy action; plan imports use the plan description and existing-fact links

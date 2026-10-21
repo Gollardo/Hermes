@@ -43,9 +43,7 @@
             <option [value]="a.id">{{ a.name }}</option>
           }
         </select></label
-      ><label
-        >{{ t('imports.date') }}<input type="date" [(ngModel)]="date" (change)="invalidate()"
-      /></label>
+      >
     </div>
     <details class="format-settings" [open]="!!file && !profile && !rows().length">
       <summary>
@@ -98,7 +96,7 @@
           <label
             >{{ columnLabel(column)
             }}<select [(ngModel)]="mapping[column]" (change)="invalidate()">
-              @if (column !== 'amount' && column !== 'description') {
+              @if (column !== 'amount' && column !== 'description' && column !== 'source_date') {
                 <option [ngValue]="null">{{ t('imports.none') }}</option>
               }
               @for (h of headers(); track $index) {
@@ -107,6 +105,22 @@
             </select></label
           >
         }
+        <label
+          >{{ t('imports.sourceDateFormat')
+          }}<select [(ngModel)]="mapping.date_format" (change)="invalidate()">
+            @if (file?.filename?.toLowerCase()?.endsWith('.xlsx')) {
+              <option [ngValue]="null">{{ t('imports.nativeDate') }}</option>
+            } @else {
+              <option [ngValue]="null">{{ t('imports.choose') }}</option>
+            }
+            <option value="dmy_dot">{{ t('imports.dateFormatDmyDot') }}</option>
+            <option value="iso">{{ t('imports.dateFormatIso') }}</option>
+            <option value="dmy_slash">{{ t('imports.dateFormatDmySlash') }}</option>
+            <option value="dmy_dot_datetime">{{ t('imports.dateTimeFormatDmyDot') }}</option>
+            <option value="iso_datetime">{{ t('imports.dateTimeFormatIso') }}</option>
+            <option value="dmy_slash_datetime">{{ t('imports.dateTimeFormatDmySlash') }}</option>
+          </select></label
+        >
         <label class="compact-field"
           >{{ t('imports.separator')
           }}<select [(ngModel)]="mapping.decimal_separator" (change)="invalidate()">
@@ -150,7 +164,11 @@
       </div>
     </details>
     <div class="setup-actions">
-      <button type="button" (click)="preview()" [disabled]="!file || !account || !date">
+      <button
+        type="button"
+        (click)="preview()"
+        [disabled]="!file || !account || !dateMappingReady()"
+      >
         {{ t('imports.preview') }}
       </button>
     </div>
@@ -195,6 +213,9 @@
       @if (row.error) {
         <p role="alert" class="form-error">{{ t('imports.invalidRow') }}</p>
       }
+      @if (row.date_error) {
+        <p role="alert" class="form-error">{{ t('imports.invalidSourceDate') }}</p>
+      }
       @if (!row.imported_id) {
         <label class="row-action"
           >{{ t('imports.action')
@@ -238,7 +259,14 @@
               </select></label
             >
           }
-          <label>{{ t('imports.date') }}<input type="date" [(ngModel)]="row.date" /></label>
+          <label
+            >{{ t('imports.date')
+            }}<input
+              type="date"
+              [(ngModel)]="row.date"
+              [max]="today"
+              (change)="changeFactDate(row)"
+          /></label>
           <label
             >{{ t('imports.type')
             }}<select [(ngModel)]="row.type">
@@ -311,6 +339,8 @@
       <details class="source-details">
         <summary>{{ t('imports.raw') }}</summary>
         <dl>
+          <dt>{{ t('imports.sourceDate') }}</dt>
+          <dd>{{ row.source_date ? (row.source_date | textDate) : '—' }}</dd>
           @for (value of row.raw; track $index) {
             <dt>{{ headers()[$index] || $index + 1 }}</dt>
             <dd>{{ value }}</dd>

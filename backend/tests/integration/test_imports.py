@@ -12,7 +12,7 @@ from app.core.config import Settings
 from app.core.database import create_database_engine, create_session_factory
 from app.main import create_app
 from app.modules.backup.service import create_backup, restore_backup
-from app.modules.imports.models import ImportReceipt
+from app.modules.imports.models import ImportProfile, ImportReceipt
 from app.modules.operations.models import FinancialOperation
 
 SETUP_PAYLOAD = {
@@ -43,12 +43,23 @@ def _category(client: TestClient, headers: dict[str, str], name: str, kind: str)
 
 
 def source(
-    text: str = "amount;description;status\n-10.50;Coffee;pending\n-20;Food;done\n",
+    text: str = (
+        "amount;description;status;date\n"
+        "-10.50;Coffee;pending;2026-01-01\n"
+        "-20;Food;done;2026-01-02\n"
+    ),
 ) -> dict[str, Any]:
     return dict(
         filename="test.csv",
         content=base64.b64encode(text.encode()).decode(),
-        mapping=dict(amount=0, description=1, direction=None, currency=None),
+        mapping=dict(
+            amount=0,
+            description=1,
+            direction=None,
+            currency=None,
+            source_date=3,
+            date_format="iso",
+        ),
     )
 
 
@@ -82,11 +93,13 @@ def test_import_preview_commit_retry_backup_and_rollback(
         preview = client.post(
             "/api/v1/imports/preview",
             headers=headers,
-            json={**request, "account_id": account, "occurred_on": "2026-01-01"},
+            json={**request, "account_id": account},
         )
         assert preview.status_code == 200, preview.text
         assert len(preview.json()["rows"]) == 2
         assert preview.json()["rows"][0]["raw"][2] == "pending"
+        assert preview.json()["rows"][0]["source_date"] == "2026-01-01"
+        assert preview.json()["rows"][0]["fact_date"] == "2026-01-01"
         assert client.get("/api/v1/accounts").json()[0]["balance"] == "100.0000"
         assert (
             client.put(
@@ -140,6 +153,85 @@ def test_import_preview_commit_retry_backup_and_rollback(
         # Changed decision cannot reuse the same source silently.
         body["decisions"][0]["operation"]["occurred_on"] = "2026-01-02"
         assert client.post("/api/v1/imports/commit", headers=headers, json=body).status_code == 422
+
+
+def test_profile_source_dates_invalid_rows_and_legacy_upgrade(
+    postgres_database_settings: Settings,
+) -> None:
+    app = create_app(postgres_database_settings)
+    with TestClient(app) as client:
+        client.post("/api/v1/setup", json=SETUP_PAYLOAD)
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "100")
+        mapping = source()["mapping"]
+        saved = client.put(
+            "/api/v1/imports/profiles",
+            headers=headers,
+            json={"name": "Dated CSV", "mapping": mapping},
+        )
+        assert saved.status_code == 200, saved.text
+        profile = next(
+            item
+            for item in client.get("/api/v1/imports/profiles").json()
+            if item["name"] == "Dated CSV"
+        )
+        assert profile["mapping"]["source_date"] == 3
+        assert profile["mapping"]["date_format"] == "iso"
+
+        future = (date.today() + timedelta(days=1)).isoformat()
+        statement = source(
+            "amount;description;status;date\n"
+            "-10;Missing;pending;\n"
+            "-20;Invalid;done;31/01/2026\n"
+            f"-30;Future;done;{future}\n"
+        )
+        preview = client.post(
+            "/api/v1/imports/preview",
+            headers=headers,
+            json={**statement, "account_id": account},
+        )
+        assert preview.status_code == 200, preview.text
+        rows = preview.json()["rows"]
+        assert [row["date_error"] for row in rows] == [
+            "Invalid source date",
+            "Invalid source date",
+            "Future source date",
+        ]
+        assert rows[0]["source_date"] is None and rows[0]["fact_date"] is None
+        assert rows[2]["source_date"] == future and rows[2]["fact_date"] == future
+
+        factory = create_session_factory(create_database_engine(postgres_database_settings))
+        with factory.begin() as session:
+            session.add(
+                ImportProfile(
+                    name="Legacy",
+                    mapping={
+                        "amount": 0,
+                        "description": 1,
+                        "direction": None,
+                        "currency": None,
+                    },
+                )
+            )
+        legacy = next(
+            item
+            for item in client.get("/api/v1/imports/profiles").json()
+            if item["name"] == "Legacy"
+        )
+        assert "source_date" not in legacy["mapping"]
+        blocked = client.post(
+            "/api/v1/imports/preview",
+            headers=headers,
+            json={**source(), "mapping": legacy["mapping"], "account_id": account},
+        )
+        assert blocked.status_code == 422
+        upgraded_mapping = {**legacy["mapping"], "source_date": 3, "date_format": "iso"}
+        upgraded = client.put(
+            "/api/v1/imports/profiles",
+            headers=headers,
+            json={"name": "Legacy", "mapping": upgraded_mapping},
+        )
+        assert upgraded.status_code == 200, upgraded.text
 
 
 def test_plan_confirmation_uses_user_date_and_existing_fact_without_reposting(
@@ -264,7 +356,7 @@ def test_matching_explains_candidates_and_preview_is_read_only(
         response = client.post(
             "/api/v1/imports/preview",
             headers=headers,
-            json={**source(), "account_id": account, "occurred_on": "2026-01-01"},
+            json={**source(), "account_id": account},
         )
         assert response.status_code == 200, response.text
         assert response.headers["cache-control"] == "no-store"
@@ -318,7 +410,7 @@ def test_stale_plan_rolls_back_and_deleted_fact_is_not_recreated(
         preview = client.post(
             "/api/v1/imports/preview",
             headers=headers,
-            json={**source(), "account_id": account, "occurred_on": "2026-01-01"},
+            json={**source(), "account_id": account},
         ).json()
         assert preview["rows"][0]["imported_deleted"]
 
@@ -539,7 +631,7 @@ def test_grouped_plan_import_exact_retry_conflict_and_backup(
         assert all(item["reused"] for item in replay.json()["results"])
         assert client.get("/api/v1/accounts").json()[0]["balance"] == "66.3087"
         preview_body = {k: v for k, v in body.items() if k not in {"decisions", "merge_plan_rows"}}
-        preview_body.update(account_id=account, occurred_on="2026-01-01")
+        preview_body.update(account_id=account)
         preview = client.post("/api/v1/imports/preview", headers=headers, json=preview_body).json()
         assert {row["imported_id"] for row in preview["rows"]} == {operation_id}
 

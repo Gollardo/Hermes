@@ -137,6 +137,12 @@ complete derived import period with an inclusive start/end filter and reports
 how many rows that filter excludes. The filter uses source dates; the review
 summary separately derives the posting period from reviewed fact dates.
 
+The profile mapping, bounded date parsing, native XLSX recognition, per-row
+preview defaults and explicit legacy-profile upgrade are implemented. The
+period filter, durable receipt provenance and later confirmation refinements in
+this section remain in progress; their accepted contract is recorded here so
+the slices compose without restoring the removed shared file date.
+
 A manual fact-date correction outside the source-date filter remains part of
 the reviewed selection and expands the displayed posting period with a warning.
 Filtering a row out removes it only from the current confirmation; its edits
