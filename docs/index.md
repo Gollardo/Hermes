@@ -75,6 +75,7 @@ design system.
 
 - [ADR registry and candidates](decisions/README.md)
 - [Statement import acceptance](operations/statement-import-acceptance-2026-09-10.md)
+- [Multi-day statement import acceptance](operations/multiday-import-acceptance-2026-10-21.md)
 - [Local development](operations/local-development.md)
 - [Deployment runbook](operations/deployment.md)
 - [Backup and restore](operations/backup-and-restore.md)

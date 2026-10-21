@@ -58,7 +58,7 @@ or live-route acceptance. No dependency was added.
 | Plans | Recurring rules and one-off plans, postpone/cancel/confirm lifecycle, series shifts and compact calendar | [Scheduling](domains/scheduling.md) |
 | Forecast | Read-only exact free/total projections, fund effects, risks and event explanations | [Forecasting](domains/forecasting.md) |
 | Reports | Posted income/expense totals, category breakdown and source operations | [Reports](domains/reports.md) |
-| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions, profile-mapped per-row source/fact dates, durable receipt provenance, period filtering and hierarchical category search; the remaining searchable review selectors are incomplete | [Import/export](domains/import-export.md) |
+| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, searchable duplicate/plan reconciliation, profile-mapped per-row source/fact dates, durable receipt provenance, period filtering and hierarchical category search | [Import/export](domains/import-export.md) |
 | Portability | Schema-1 JSON and protected Hermes V1 backup, validated atomic restore | [Import/export](domains/import-export.md) |
 | Languages | RU/EN interface, browser-local preference, independent fresh category-template language | [Internationalization](ui-ux/internationalization.md) |
 
@@ -255,6 +255,23 @@ coverage passed 21 authenticated HTTP integration tests and 16 component tests.
 Lint, catalog and formatting checks, Python and TypeScript type checking,
 documentation checks and the production frontend build passed. Real-browser
 desktop/390 px and production acceptance remain open.
+
+Integrated multi-day import verification on 2026-10-21 added an authenticated
+XLSX preview-to-restore scenario alongside the existing complete CSV scenario
+and aligned the candidate-search source-description limit with the parser,
+receipt and backup boundary of 4,000 characters. The default backend suite
+passed with 221 tests and 127 PostgreSQL-gated skips; all 128 PostgreSQL
+integration tests passed against disposable databases. All 209 frontend tests
+passed when the 25 spec files were run sequentially with isolated local storage;
+the standard parallel runner still exposes the pre-existing cross-file
+local-storage/combobox race. Ruff, Python formatting, ESLint, catalogs,
+Prettier, mypy, TypeScript and documentation checks passed. The production
+frontend build passed with unchanged budget warnings. A fresh disposable
+database upgraded through `0018_import_provenance`, and `alembic check` found no
+metadata drift. Native browser attachment was unavailable and then hung before
+the page could be observed, so desktop/390 px RU/EN browser acceptance remains
+open; no owner statement, production data or production service was used. See
+the [acceptance evidence](operations/multiday-import-acceptance-2026-10-21.md).
 
 ## Release assumptions and technical debt
 

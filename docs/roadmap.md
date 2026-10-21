@@ -175,15 +175,15 @@ every bank file automatically without configuration.
 - [x] Searchable hierarchical category, planned-payment and existing-fact
   selection. Candidate selectors use per-row fact-date windows, keep explained
   suggestions first and retain manual eligible choices.
-- [~] Durable receipt provenance for source date and description and
+- [x] Durable receipt provenance for source date and description and
   chronological posting of up to 200 selected rows. Server-authoritative
   chronological posting, its review summary, the explicit atomic boundary and
-  searchable existing-fact selection are implemented; provenance remains.
-- [~] Separate source-date import and fact-date posting periods, bounded common
+  searchable existing-fact selection are implemented.
+- [x] Separate source-date import and fact-date posting periods, bounded common
   date formats, selectable two-level category presentation and imported source
-  details on the operation. The separate period presentation, expanded-posting
-  warning and browser-draft-preserving source filter are implemented; imported
-  source details remain approved but not implemented.
+  details on the operation. The operation detail composes the narrow Imports
+  evidence through the public module contract; no raw source row or file is
+  persisted.
 - [x] Explicit compatible same-date income/expense row groups against one plan.
   Partial settlement, multi-date grouping and additions to closed plans remain
   outside this slice.

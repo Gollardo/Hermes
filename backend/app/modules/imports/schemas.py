@@ -53,7 +53,7 @@ class CandidateRequest(BaseModel):
     fact_date: date
     direction: Literal["income", "expense", "transfer"]
     amount: Decimal = Field(gt=0)
-    source_description: str = Field(default="", max_length=500)
+    source_description: str = Field(default="", max_length=4000)
     window_days: int = Field(default=3, ge=0, le=3660)
 
 

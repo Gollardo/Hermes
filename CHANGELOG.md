@@ -60,6 +60,10 @@ assigned.
 - Explicitly merge compatible same-date statement income/expense rows against
   one plan into one exact operation. Every source row retains its receipt;
   changed groups conflict and unchanged retries cannot post twice.
+- Preserve each confirmed row's source date and bank-owned description as
+  narrow receipt provenance. Operation details show this evidence separately
+  from the editable fact date and owner description; schema-1 backup export and
+  restore retain it without persisting the raw row or source file.
 
 ### Compatibility
 
@@ -67,9 +71,15 @@ assigned.
   authentication abuse-control state. Financial records and backup schemas are
   unchanged. Container commands disable automatic proxy headers; operators must
   configure explicitly trusted proxy sources as documented in deployment.
+- Import provenance adds forward migration `0018_import_provenance`. Older
+  receipts migrate with unknown source fields, populated provenance blocks a
+  destructive downgrade, and older schema-1 backups remain readable because
+  the two new receipt fields are optional; older applications cannot read an
+  extended backup document under the existing schema-1 compatibility policy.
 
 - Confirmation requests without a date keep the prior defaults. No new database
-  migration or backup schema change is required for these two extensions.
+  migration or backup schema change is required for the two scheduling
+  extensions described above.
 - Transfers, existing-fact merging, multi-date groups, partial settlement and
   additions to closed plans remain outside this slice.
 
