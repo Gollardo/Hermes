@@ -6,17 +6,22 @@ The integrated CSV/XLSX workflow is implemented and regression-green at its
 automated boundaries. A representative authenticated CSV scenario covers
 write-free preview, profile persistence, confirmation, retry identity,
 operation editing without provenance loss, journal readback, export, restore,
-rollback and destructive-downgrade protection. A representative authenticated
-XLSX scenario now covers profile persistence, write-free preview, a fact date
-corrected away from its source date, separate bank and owner descriptions,
-confirmation, operation-detail provenance, export, restore and readback.
+rollback and destructive-downgrade protection. A literal deterministic
+multi-day XLSX scenario covers authentication, profile persistence, write-free
+preview, the source dates needed for browser-local inclusive filtering, per-row
+plan and existing-fact candidate queries, chronological new/plan/existing
+confirmation, operation-detail provenance, schema-1 export, restore and exact
+readback. Component tests separately cover searching candidates by localized
+and ISO dates and the completed-row journal link; the API scenario does not
+claim to click that link in a browser.
 
 The broader suites retain source-period filtering, searchable category/plan/fact
 reconciliation, missing/invalid/future date rejection without fallback,
 outside-period warnings, new/plan/group/existing description ownership,
 chronological posting, the 200-row limit, exact decimal values, atomic rollback,
 stale conflicts, fund coverage and backup compatibility. Component tests retain
-the RU/EN, keyboard, focus, hierarchy, long-label, large-amount and responsive
+the RU/EN, keyboard, focus, hierarchy, long-label, large-amount,
+candidate-date localization, transfer-direction refresh and responsive
 presentation contracts.
 
 `CandidateRequest.source_description` now accepts the same maximum 4,000
@@ -26,14 +31,14 @@ the server does not invent or truncate provenance.
 
 ## Verification
 
-- Default backend suite: 221 passed, 127 PostgreSQL-gated tests skipped.
-- PostgreSQL integration suite: 128 passed against randomly named disposable
+- Default backend suite: 223 passed, 128 PostgreSQL-gated tests skipped.
+- PostgreSQL integration suite: 129 passed against randomly named disposable
   databases, including the authenticated CSV and XLSX lifecycle scenarios.
-- Frontend suite: 209 passed across all 25 spec files when run sequentially,
+- Frontend suite: 211 passed across all 25 spec files when run sequentially,
   each process using an isolated Node local-storage file.
-- The standard parallel frontend command reached 208 of 209 tests; its remaining
-  failure is the known cross-file local-storage/combobox race, not a deterministic
-  product failure.
+- The standard parallel frontend command reached 208 of 211 tests; its three
+  failures are the known cross-file local-storage/combobox race, not deterministic
+  product failures. The focused import component suite passed all 20 tests.
 - Ruff lint and format, ESLint, RU/EN catalog completeness, Prettier, mypy,
   TypeScript and documentation link/fence checks passed.
 - The production frontend build passed. Existing initial-bundle and component
@@ -48,7 +53,8 @@ the server does not invent or truncate provenance.
 Browser servers were started against the fresh disposable database, but the
 available in-app browser provider was unavailable and native Safari attachment
 hung before any page could be observed. The hanging attachment was stopped; it
-is not evidence of a product failure. Consequently the required real-browser
+is not evidence of a product failure. This review-fix pass made a bounded
+provider inventory attempt and found no attached browser provider. Consequently the required real-browser
 RU/EN desktop and 390 px run, visible-focus and horizontal-overflow observations
 remain open. Real-device/Safari assistive-technology, PostgreSQL 17 Compose,
 production deployment and owner visual acceptance also remain open.

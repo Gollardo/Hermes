@@ -14,6 +14,11 @@ assigned.
 
 ### Fixed
 
+- Validate statement source dates against the configured application timezone,
+  keep transfer candidate refreshes tied to the statement-side direction and
+  localize candidate dates while preserving ISO date search.
+- Keep import operation-detail composition behind the Operations public contract.
+
 - Reject initialized setup before backup parsing/decryption, including competing
   setup commits; bound concurrent first-run cryptographic work across processes.
 - Enforce streamed request byte limits before JSON/database dependencies and

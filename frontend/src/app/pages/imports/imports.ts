@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 import { t, localizedSignal, TranslationKey } from '../../i18n/i18n';
 import { DecimalInput, decimalPayload } from '../../shared/decimal-input';
 import { MoneyPipe, currencySymbol, formatMoney } from '../../shared/money.pipe';
-import { DateTextPipe } from '../../shared/date-text.pipe';
+import { DateTextPipe, formatTextDate } from '../../shared/date-text.pipe';
 import { apiErrorMessage } from '../../core/api-error';
 import { categoryComboboxOptions } from '../../shared/category-combobox';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
@@ -43,6 +43,7 @@ interface Row {
   imported_id: string | null;
   imported_deleted: boolean;
   type: Kind;
+  statementDirection: 'income' | 'expense';
   amount: string;
   description: string;
   sourceDescription: string;
@@ -295,6 +296,7 @@ export class ImportsPage {
           this.plans = v.plans;
           const rows = v.rows.map((r) => ({
             ...r,
+            statementDirection: r.type as 'income' | 'expense',
             sourceDescription: r.description,
             description: '',
             action: 'skip',
@@ -462,12 +464,14 @@ export class ImportsPage {
       const reasons = this.reason(candidate);
       const amount = formatMoney(candidate.amount);
       const categoryLabel = category ?? t('imports.none');
+      const localizedDate = formatTextDate(candidate.date);
       return {
         id: candidate.id,
-        label: `${candidate.date} · ${candidate.description || t('imports.unnamedRow')}`,
+        label: `${localizedDate} · ${candidate.description || t('imports.unnamedRow')}`,
         detail: `${amount} · ${categoryLabel} · ${reasons || t('imports.manual')}`,
         searchText: [
           candidate.date,
+          localizedDate,
           candidate.description,
           candidate.amount,
           amount,
@@ -484,7 +488,7 @@ export class ImportsPage {
       .post<{ facts: Candidate[]; plans: Candidate[] }>(this.url('/imports/candidates'), {
         account_id: this.account,
         fact_date: row.date,
-        direction: row.type,
+        direction: row.statementDirection,
         amount: row.amount,
         source_description: row.sourceDescription,
         window_days: row.windowDays,

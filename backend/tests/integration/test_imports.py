@@ -23,6 +23,23 @@ SETUP_PAYLOAD = {
     "timezone": "Europe/Moscow",
 }
 
+# Literal deterministic XLSX fixture: Jan 3 expense, Jan 1 income, Jan 2 expense.
+MULTIDAY_XLSX_BASE64 = (
+    "UEsDBBQAAAAIAAAAIVDz6XlMiwAAANkAAAAPAAAAeGwvd29ya2Jvb2sueG1sjY9BDoJADEWvQnoAiy5cEGDlDTzB"
+    "CMWZQKeTtkaPL4rsXf389P/X/PYpOt9E5urFS7YOontpEG2IxMEOUiivl0mUg69W72hFKYwWiZwXPNX1GTmkDBuh"
+    "0X8YMk1poIsMD6bsG0RpCZ4kW0zFoG+/H+ynVQ5MHVw9OH0qUGmTxg70CNi3uGdxn9O/AVBLAwQUAAAACAAAACFQ"
+    "zvrrekEAAABZAAAAGgAAAHhsL19yZWxzL3dvcmtib29rLnhtbC5yZWxzswlKzUksyczPK87ILCi2s0HmKnim2CoV"
+    "GSophCQWpaeW2CrpV+Tol+cXZRdnpKaWFOuDKUO9itwcJX07G31UkwBQSwMEFAAAAAgAAAAhUO3gJZj8AAAA2QIA"
+    "ABgAAAB4bC93b3Jrc2hlZXRzL3NoZWV0MS54bWx90l1uwyAMB/CrRHnPDCTqw0SQuo8LrCewUtKgBYjAa7vbL8km"
+    "1FWhb8bwt35ClhcfPuOgNRVXO7rYlgPR9AwQu0FbjE9+0m6+6X2wSPMxnCBOQeNxDdkRBGM7sGhcqeTae0NCJYO/"
+    "FKEt+dztlmLPy4La0rjROH2gMPdNVJIUWv/lSAIpCUsHur/ESy5x1LELZiLj3UbsNRtD0v/fw4xMUpGkS3VWlWAS"
+    "zrcekRn8oR0V04ibmlxIMLGrGK9Y/cBUJ1O9mji7N9WZ8QccMXxvgXKJBOIPQE0CNb+fxO9BTWb8+9VEMu5UdL7v"
+    "td6S5aJJJrZkcLN0kLZZ/QBQSwECFAMUAAAACAAAACFQ8+l5TIsAAADZAAAADwAAAAAAAAAAAAAAgAEAAAAAeGwv"
+    "d29ya2Jvb2sueG1sUEsBAhQDFAAAAAgAAAAhUM7663pBAAAAWQAAABoAAAAAAAAAAAAAAIABuAAAAHhsL19yZWxz"
+    "L3dvcmtib29rLnhtbC5yZWxzUEsBAhQDFAAAAAgAAAAhUO3gJZj8AAAA2QIAABgAAAAAAAAAAAAAAIABMQEAAHhs"
+    "L3dvcmtzaGVldHMvc2hlZXQxLnhtbFBLBQYAAAAAAwADAMsAAABjAgAAAAA="
+)
+
 
 def _headers(client: TestClient) -> dict[str, str]:
     return {"X-XSRF-TOKEN": str(client.cookies.get("XSRF-TOKEN"))}
@@ -96,6 +113,22 @@ def xlsx_source() -> dict[str, Any]:
         "content": base64.b64encode(stream.getvalue()).decode(),
         "worksheet": "Statement",
         "mapping": {
+            "amount": 0,
+            "description": 1,
+            "direction": None,
+            "currency": None,
+            "source_date": 2,
+            "date_format": "iso",
+        },
+    }
+
+
+def multiday_xlsx_source() -> dict[str, Any]:
+    return {
+        "filename": "representative-multiday.xlsx",
+        "content": MULTIDAY_XLSX_BASE64,
+        "mapping": {
+            "sheet": "Statement",
             "amount": 0,
             "description": 1,
             "direction": None,
@@ -367,6 +400,159 @@ def test_xlsx_authenticated_preview_commit_and_provenance_readback(
         )
         assert restored.status_code == 200, restored.text
         assert client.get(f"/api/v1/operations/{operation_id}").json() == operation
+
+
+def test_literal_multiday_xlsx_authenticated_review_post_export_restore_readback(
+    postgres_database_settings: Settings,
+) -> None:
+    """Exercise the authenticated API boundary with one literal multi-day workbook."""
+    with TestClient(create_app(postgres_database_settings)) as client:
+        assert client.post("/api/v1/imports/preview", json={}).status_code in {401, 403}
+        assert client.post("/api/v1/setup", json=SETUP_PAYLOAD).status_code == 201
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "100")
+        expense = _category(client, headers, "Expense", "expense")
+        income = _category(client, headers, "Income", "income")
+        request = multiday_xlsx_source()
+
+        saved = client.put(
+            "/api/v1/imports/profiles",
+            headers=headers,
+            json={"name": "Literal multi-day XLSX", "mapping": request["mapping"]},
+        )
+        assert saved.status_code == 200, saved.text
+
+        existing_payload = decision(account, expense, row=4, amount="10")["operation"]
+        existing_payload.update(occurred_on="2026-01-02", description="Existing coffee")
+        existing = client.post("/api/v1/operations", headers=headers, json=existing_payload).json()
+        plan_response = client.post(
+            "/api/v1/scheduling/one-off-plans",
+            headers=headers,
+            json={
+                "type": "expense",
+                "scheduled_on": "2026-01-03",
+                "amount": "20",
+                "account_id": account,
+                "category_id": expense,
+                "description": "Rent plan",
+            },
+        )
+        assert plan_response.status_code == 201, plan_response.text
+        plan = plan_response.json()
+        balance_before_preview = client.get("/api/v1/accounts").json()[0]["balance"]
+
+        preview_response = client.post(
+            "/api/v1/imports/preview",
+            headers=headers,
+            json={**request, "account_id": account},
+        )
+        assert preview_response.status_code == 200, preview_response.text
+        preview = preview_response.json()
+        assert [row["source_date"] for row in preview["rows"]] == [
+            "2026-01-03",
+            "2026-01-01",
+            "2026-01-02",
+        ]
+        # The API returns every parsed source date; inclusive period filtering is browser-local.
+        assert [row["row"] for row in preview["rows"] if row["source_date"] <= "2026-01-02"] == [
+            3,
+            4,
+        ]
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == balance_before_preview
+        factory = create_session_factory(create_database_engine(postgres_database_settings))
+        with factory() as session:
+            assert session.scalar(select(func.count()).select_from(ImportReceipt)) == 0
+
+        plan_search = client.post(
+            "/api/v1/imports/candidates",
+            headers=headers,
+            json={
+                "account_id": account,
+                "fact_date": "2026-01-03",
+                "direction": "expense",
+                "amount": "20",
+                "source_description": "Rent plan",
+                "window_days": 3,
+            },
+        )
+        fact_search = client.post(
+            "/api/v1/imports/candidates",
+            headers=headers,
+            json={
+                "account_id": account,
+                "fact_date": "2026-01-02",
+                "direction": "expense",
+                "amount": "10",
+                "source_description": "Existing coffee",
+                "window_days": 3,
+            },
+        )
+        assert plan_search.status_code == fact_search.status_code == 200
+        assert plan_search.json()["plans"][0]["id"] == plan["id"]
+        assert fact_search.json()["facts"][0]["id"] == existing["id"]
+
+        plan_decision = decision(account, expense, row=2, amount="20")
+        plan_decision["operation"].update(occurred_on="2026-01-03", description="Rent plan")
+        plan_decision.update(
+            action="plan", occurrence_id=plan["id"], occurrence_version=plan["version"]
+        )
+        income_decision = decision(account, income, row=3, amount="100")
+        income_decision["operation"].update(
+            type="income", occurred_on="2026-01-01", category_id=income, description="Salary"
+        )
+        existing_decision = decision(account, expense, row=4, amount="10")
+        existing_decision["operation"].update(
+            occurred_on="2026-01-02", description="Existing coffee"
+        )
+        existing_decision.update(
+            action="existing", existing_id=existing["id"], existing_version=existing["version"]
+        )
+        committed = client.post(
+            "/api/v1/imports/commit",
+            headers=headers,
+            json={
+                **request,
+                "decisions": [plan_decision, existing_decision, income_decision],
+            },
+        )
+        assert committed.status_code == 200, committed.text
+        results = committed.json()["results"]
+        assert [result["row"] for result in results] == [3, 4, 2]
+        assert results[1]["operation_id"] == existing["id"]
+
+        details = {
+            result["row"]: client.get(f"/api/v1/operations/{result['operation_id']}").json()
+            for result in results
+        }
+        assert details[3]["import_provenance"] == [
+            {"source_date": "2026-01-01", "source_description": "Salary"}
+        ]
+        assert details[4]["import_provenance"] == [
+            {"source_date": "2026-01-02", "source_description": "Existing coffee"}
+        ]
+        assert details[2]["import_provenance"] == [
+            {"source_date": "2026-01-03", "source_description": "Rent plan"}
+        ]
+
+        exported_response = client.get("/api/v1/backup/export")
+        assert exported_response.status_code == 200
+        exported = exported_response.json()
+        assert len(exported["data"]["import_receipts"]) == 3
+        restored = client.post(
+            "/api/v1/backup/restore",
+            headers=headers,
+            json={
+                "backup": exported,
+                "confirmation": "ЗАМЕНИТЬ ВСЕ ДАННЫЕ",
+                "master_password": SETUP_PAYLOAD["master_password"],
+            },
+        )
+        assert restored.status_code == 200, restored.text
+        for result in results:
+            assert (
+                client.get(f"/api/v1/operations/{result['operation_id']}").json()
+                == details[result["row"]]
+            )
 
 
 def test_profile_source_dates_invalid_rows_and_legacy_upgrade(

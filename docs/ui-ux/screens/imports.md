@@ -17,9 +17,11 @@ This is not a replacement design system.
 The source-date mapping slice is implemented: profiles record the source-date
 column and bounded text format, native XLSX dates need no text format, and each
 recognized row starts with its own editable fact date. Invalid dates remain
-visible and correctable. Searchable category, plan and existing-fact controls
-are implemented; import-period filtering and the remaining workflow refinements
-described below remain in progress.
+visible and correctable. Searchable category, plan and existing-fact controls,
+import-period filtering, durable provenance and chronological confirmation are
+implemented and covered at automated boundaries. Required real-browser desktop
+and 390 px RU/EN acceptance remains open, so the complete refinement is still
+in progress rather than visually accepted.
 
 ## User flow
 
