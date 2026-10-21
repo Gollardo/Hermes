@@ -32,6 +32,10 @@ assigned.
 
 ### Added
 
+- Separate bank-owned source descriptions from optional owner-written operation
+  descriptions during statement review. New facts start blank with an explicit
+  copy action; plan imports use the plan description and existing-fact links
+  preserve the recorded description.
 - Use one searchable two-level category combobox in statement review, ordinary
   operation entry and scheduling. Search matches either parent or child names;
   roots remain selectable, children show their full path and archived choices

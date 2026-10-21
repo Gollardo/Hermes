@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-10-01. This is the current release snapshot, not a task log.
+Last reviewed: 2026-10-21. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -171,15 +171,17 @@ was changed, and private fixtures/screenshots are outside the repository.
 
 On 2026-10-20 the owner approved replacing the mandatory file-level fact date
 with profile-mapped, editable source dates per row and a derived import period.
-The source description will remain review evidence instead of becoming the
-default operation description. Import review now uses the established searchable
-category combobox with visible parent-child paths, as do ordinary operation entry
-and scheduling. Normalized substring search covers either hierarchy level,
+Source/operation description separation is now implemented: new facts start
+blank with an explicit copy action, matching still uses the source text,
+plan-backed facts and merged groups use the plan description, and existing-fact
+links preserve their stored description. Import review now uses the established
+searchable category combobox with visible parent-child paths, as do ordinary
+operation entry and scheduling. Normalized substring search covers either hierarchy level,
 active roots remain selectable, active children are indented, and archived
 categories remain historical-only. The searchable planned-payment combobox with
 suggestions first is still only approved. These decisions are documented in
-[ADR 0005](decisions/0005-statement-import.md). Explicit text formats, inclusive period filtering,
-per-row plan windows and plan-owned merged descriptions are approved but not
+[ADR 0005](decisions/0005-statement-import.md). Explicit text formats, inclusive
+period filtering and per-row plan windows are approved but not
 implemented. Invalid/future-date blocking, explicit legacy-profile upgrades,
 and skip-by-default rows are also approved but not implemented. Receipt-level
 source date/description, chronological posting,
@@ -192,13 +194,16 @@ Fact-date corrections outside the source period remain selected with a warning;
 period-filter changes preserve browser-draft edits until reload. The product
 decision tree for this refinement is complete; implementation is in progress.
 
-Category-search slice verification on 2026-10-21: all 200 frontend tests, lint,
-catalog checks, formatting, TypeScript, documentation checks and the production
-frontend build passed. Existing bundle and component-style budget warnings
-remain. Automated tests cover parent/child substring search, selectable roots,
-archived exclusion, hierarchy context, keyboard behavior, recent choices, empty
-results, long Russian labels and unchanged account prefix matching. Real-browser
-desktop and 390 px acceptance remains part of the complete import refinement.
+Combined source-description and category-search verification on 2026-10-21:
+206 default backend tests passed with 121 PostgreSQL-gated skips, all 122
+PostgreSQL integration tests passed, and all 201 frontend tests passed. Lint,
+catalog checks, formatting, Python and TypeScript type checking, documentation
+checks and the production frontend build also passed. Existing bundle and
+component-style budget warnings remain. Automated tests cover description
+ownership, parent/child substring search, selectable roots, archived exclusion,
+hierarchy context, keyboard behavior, recent choices, empty results, long
+Russian labels and unchanged account prefix matching. Real-browser desktop and
+390 px acceptance remains part of the complete import refinement.
 
 ## Release assumptions and technical debt
 

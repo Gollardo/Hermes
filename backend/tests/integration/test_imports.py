@@ -97,14 +97,15 @@ def test_import_preview_commit_retry_backup_and_rollback(
             == 200
         )
         body = {**request, "decisions": [decision(account, category)]}
+        body["decisions"][0]["operation"]["description"] = ""
         response = client.post("/api/v1/imports/commit", headers=headers, json=body)
         assert response.status_code == 200, response.text
         operation_id = response.json()["results"][0]["operation_id"]
         again = client.post("/api/v1/imports/commit", headers=headers, json=body)
         assert again.status_code == 200 and again.json()["results"][0]["reused"]
-        assert (
-            client.get("/api/v1/operations/" + operation_id).json()["occurred_on"] == "2026-01-01"
-        )
+        imported = client.get("/api/v1/operations/" + operation_id).json()
+        assert imported["occurred_on"] == "2026-01-01"
+        assert imported["description"] is None
         assert client.get("/api/v1/accounts").json()[0]["balance"] == "89.5000"
         # One valid row followed by an impossible expense must roll back both receipts and money.
         failing = source("amount;description\n-1;Small\n-999;Large\n")
@@ -166,13 +167,16 @@ def test_plan_confirmation_uses_user_date_and_existing_fact_without_reposting(
         assert plan_response.status_code == 201, plan_response.text
         plan = plan_response.json()
         entry = decision(account, category)
+        entry["operation"]["description"] = "Noisy bank merchant text"
         entry.update(action="plan", occurrence_id=plan["id"], occurrence_version=plan["version"])
         response = client.post(
             "/api/v1/imports/commit", headers=headers, json={**source(), "decisions": [entry]}
         )
         assert response.status_code == 200, response.text
         op = response.json()["results"][0]["operation_id"]
-        assert client.get("/api/v1/operations/" + op).json()["occurred_on"] == "2026-01-01"
+        imported_plan = client.get("/api/v1/operations/" + op).json()
+        assert imported_plan["occurred_on"] == "2026-01-01"
+        assert imported_plan["description"] == "Coffee"
         # A fresh plan can attach to a separately entered matching fact without a ledger write.
         plan2 = client.post(
             "/api/v1/scheduling/one-off-plans",
@@ -186,8 +190,10 @@ def test_plan_confirmation_uses_user_date_and_existing_fact_without_reposting(
             ),
         ).json()
         payload = decision(account, category, 3, "20")["operation"]
+        payload["description"] = "Owner-reviewed existing meaning"
         fact = client.post("/api/v1/operations", headers=headers, json=payload).json()
         entry2 = decision(account, category, 3, "20")
+        entry2["operation"]["description"] = "Different statement text"
         entry2.update(
             action="plan",
             occurrence_id=plan2["id"],
@@ -201,6 +207,8 @@ def test_plan_confirmation_uses_user_date_and_existing_fact_without_reposting(
         )
         assert linked.status_code == 200, linked.text
         assert client.get("/api/v1/accounts").json() == before
+        preserved = client.get("/api/v1/operations/" + fact["id"]).json()
+        assert preserved["description"] == "Owner-reviewed existing meaning"
 
 
 def test_concurrent_import_and_invalid_currency_future_date(
@@ -494,6 +502,7 @@ def test_grouped_plan_import_exact_retry_conflict_and_backup(
         operation = client.get("/api/v1/operations/" + operation_id).json()
         assert operation["amount"] == "33.6913"
         assert operation["occurred_on"] == "2026-01-01"
+        assert operation["description"] == "Coffee plan"
         assert len(operation["movements"]) == 1
         actual_plan = client.get("/api/v1/scheduling/occurrences/" + plan["id"]).json()
         assert actual_plan["amount"] == "33.6913"
