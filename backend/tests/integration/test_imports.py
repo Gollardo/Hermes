@@ -1,4 +1,6 @@
 import base64
+import io
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, timedelta
 from typing import Any
@@ -61,6 +63,47 @@ def source(
             date_format="iso",
         ),
     )
+
+
+def xlsx_source() -> dict[str, Any]:
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, "w") as archive:
+        archive.writestr(
+            "xl/workbook.xml",
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<sheets><sheet name="Statement" r:id="r1"/></sheets></workbook>',
+        )
+        archive.writestr(
+            "xl/_rels/workbook.xml.rels",
+            '<Relationships><Relationship Id="r1" '
+            'Target="/xl/worksheets/sheet1.xml"/></Relationships>',
+        )
+        archive.writestr(
+            "xl/worksheets/sheet1.xml",
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            "<sheetData>"
+            '<row r="1"><c r="A1" t="inlineStr"><is><t>amount</t></is></c>'
+            '<c r="B1" t="inlineStr"><is><t>description</t></is></c>'
+            '<c r="C1" t="inlineStr"><is><t>date</t></is></c></row>'
+            '<row r="2"><c r="A2"><v>-10.50</v></c>'
+            '<c r="B2" t="inlineStr"><is><t>Bank coffee</t></is></c>'
+            '<c r="C2" t="inlineStr"><is><t>2026-01-01</t></is></c></row>'
+            "</sheetData></worksheet>",
+        )
+    return {
+        "filename": "statement.xlsx",
+        "content": base64.b64encode(stream.getvalue()).decode(),
+        "worksheet": "Statement",
+        "mapping": {
+            "amount": 0,
+            "description": 1,
+            "direction": None,
+            "currency": None,
+            "source_date": 2,
+            "date_format": "iso",
+        },
+    }
 
 
 def decision(account: str, category: str, row: int = 2, amount: str = "10.50") -> dict[str, Any]:
@@ -264,6 +307,66 @@ def test_import_preview_commit_retry_backup_and_rollback(
         # Changed decision cannot reuse the same source silently.
         body["decisions"][0]["operation"]["occurred_on"] = "2026-01-02"
         assert client.post("/api/v1/imports/commit", headers=headers, json=body).status_code == 422
+
+
+def test_xlsx_authenticated_preview_commit_and_provenance_readback(
+    postgres_database_settings: Settings,
+) -> None:
+    app = create_app(postgres_database_settings)
+    with TestClient(app) as client:
+        assert client.post("/api/v1/setup", json=SETUP_PAYLOAD).status_code == 201
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "100")
+        category = _category(client, headers, "Coffee", "expense")
+        request = xlsx_source()
+        saved = client.put(
+            "/api/v1/imports/profiles",
+            headers=headers,
+            json={"name": "Representative XLSX", "mapping": request["mapping"]},
+        )
+        assert saved.status_code == 200, saved.text
+
+        preview = client.post(
+            "/api/v1/imports/preview",
+            headers=headers,
+            json={**request, "account_id": account},
+        )
+        assert preview.status_code == 200, preview.text
+        assert preview.json()["rows"][0]["source_date"] == "2026-01-01"
+        assert preview.json()["rows"][0]["fact_date"] == "2026-01-01"
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "100.0000"
+
+        selected = decision(account, category)
+        selected["operation"].update(
+            occurred_on="2026-01-02",
+            description="Owner coffee note",
+        )
+        committed = client.post(
+            "/api/v1/imports/commit",
+            headers=headers,
+            json={**request, "decisions": [selected]},
+        )
+        assert committed.status_code == 200, committed.text
+        operation_id = committed.json()["results"][0]["operation_id"]
+        operation = client.get(f"/api/v1/operations/{operation_id}").json()
+        assert operation["occurred_on"] == "2026-01-02"
+        assert operation["description"] == "Owner coffee note"
+        assert operation["import_provenance"] == [
+            {"source_date": "2026-01-01", "source_description": "Bank coffee"}
+        ]
+
+        exported = client.get("/api/v1/backup/export").json()
+        restored = client.post(
+            "/api/v1/backup/restore",
+            headers=headers,
+            json={
+                "backup": exported,
+                "confirmation": "ЗАМЕНИТЬ ВСЕ ДАННЫЕ",
+                "master_password": SETUP_PAYLOAD["master_password"],
+            },
+        )
+        assert restored.status_code == 200, restored.text
+        assert client.get(f"/api/v1/operations/{operation_id}").json() == operation
 
 
 def test_profile_source_dates_invalid_rows_and_legacy_upgrade(
@@ -564,6 +667,34 @@ def test_row_candidate_search_uses_its_fact_date_window_and_ranks_suggestions(
             manual_fact["id"],
             outside_fact["id"],
         ]
+
+
+def test_candidate_search_accepts_the_full_source_description_boundary(
+    postgres_database_settings: Settings,
+) -> None:
+    with TestClient(create_app(postgres_database_settings)) as client:
+        assert client.post("/api/v1/setup", json=SETUP_PAYLOAD).status_code == 201
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "100")
+        request = {
+            "account_id": account,
+            "fact_date": date.today().isoformat(),
+            "direction": "expense",
+            "amount": "1.00",
+            "source_description": "Б" * 4000,
+            "window_days": 3,
+        }
+
+        accepted = client.post("/api/v1/imports/candidates", headers=headers, json=request)
+        assert accepted.status_code == 200, accepted.text
+        assert accepted.json() == {"facts": [], "plans": []}
+
+        rejected = client.post(
+            "/api/v1/imports/candidates",
+            headers=headers,
+            json={**request, "source_description": "Б" * 4001},
+        )
+        assert rejected.status_code == 422
 
 
 def test_stale_plan_rolls_back_and_deleted_fact_is_not_recreated(
