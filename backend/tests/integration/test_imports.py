@@ -79,6 +79,72 @@ def decision(account: str, category: str, row: int = 2, amount: str = "10.50") -
     )
 
 
+def test_commit_orders_reverse_chronological_rows_by_fact_date_then_source_row(
+    postgres_database_settings: Settings,
+) -> None:
+    app = create_app(postgres_database_settings)
+    with TestClient(app) as client:
+        assert client.post("/api/v1/setup", json=SETUP_PAYLOAD).status_code == 201
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "0")
+        expense = _category(client, headers, "Expense", "expense")
+        income = _category(client, headers, "Income", "income")
+        request = source(
+            "amount;description;status;date\n"
+            "-50;Later expense;done;2026-01-02\n"
+            "100;Funding;done;2026-01-01\n"
+            "-10;Same-day expense;done;2026-01-01\n"
+        )
+        later = decision(account, expense, 2, "50")
+        later["operation"]["occurred_on"] = "2026-01-02"
+        funding = decision(account, income, 3, "100")
+        funding["operation"].update(type="income", occurred_on="2026-01-01", category_id=income)
+        same_day = decision(account, expense, 4, "10")
+        response = client.post(
+            "/api/v1/imports/commit",
+            headers=headers,
+            json={**request, "decisions": [same_day, later, funding]},
+        )
+
+        assert response.status_code == 200, response.text
+        assert [item["row"] for item in response.json()["results"]] == [3, 4, 2]
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "40.0000"
+
+
+def test_commit_accepts_200_rows_and_rejects_201_with_period_guidance(
+    postgres_database_settings: Settings,
+) -> None:
+    app = create_app(postgres_database_settings)
+    with TestClient(app) as client:
+        assert client.post("/api/v1/setup", json=SETUP_PAYLOAD).status_code == 201
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "200")
+        category = _category(client, headers, "Expense", "expense")
+        statement = "amount;description;status;date\n" + "".join(
+            f"-1;Expense {index};done;2026-01-01\n" for index in range(1, 202)
+        )
+        request = source(statement)
+        decisions = [decision(account, category, row, "1") for row in range(2, 203)]
+
+        accepted = client.post(
+            "/api/v1/imports/commit",
+            headers=headers,
+            json={**request, "decisions": decisions[:200]},
+        )
+        assert accepted.status_code == 200, accepted.text
+        assert len(accepted.json()["results"]) == 200
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "0.0000"
+
+        oversized = client.post(
+            "/api/v1/imports/commit",
+            headers=headers,
+            json={**request, "decisions": decisions},
+        )
+        assert oversized.status_code == 422
+        assert oversized.json()["detail"] == {"code": "import_limit", "row": None}
+        assert client.get("/api/v1/accounts").json()[0]["balance"] == "0.0000"
+
+
 def test_import_preview_commit_retry_backup_and_rollback(
     postgres_database_settings: Settings,
 ) -> None:

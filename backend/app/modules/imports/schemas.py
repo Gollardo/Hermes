@@ -59,7 +59,7 @@ class Decision(BaseModel):
 
 
 class CommitRequest(FileRequest):
-    decisions: list[Decision] = Field(min_length=1, max_length=200)
+    decisions: list[Decision] = Field(min_length=1)
     merge_plan_rows: list[list[int]] = Field(default_factory=list, max_length=100)
 
 

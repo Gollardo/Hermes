@@ -198,18 +198,22 @@ Production and browser acceptance remain open.
 Inclusive source-date filtering is implemented in browser state: it defaults to
 the complete parsed period, counts excluded parsed rows, preserves hidden edits,
 and shows the selected fact-date posting period with an expansion warning.
-Per-row plan windows and the remaining reconciliation-selector work are also
-not implemented. Receipt-level source date/description provenance is now
+Per-row plan windows and the remaining reconciliation-selector work are not
+implemented. Receipt-level source date/description provenance is now
 implemented through forward migration `0018_import_provenance`: confirmation
 stores only those two narrow fields, retries and allowed operation edits do not
 rewrite them, and deletion leaves the receipt intact. Operation details compose
 the optional Imports-owned values through a public contract and show a distinct
 RU/EN statement-evidence block; ordinary operations show no synthetic source.
 Schema-1 JSON backup export and restore include the fields while older backups
-default them to unknown. Chronological posting, searchable existing-fact
-selection and the explicit 200-row boundary are approved; search and ordering
-remain in progress while the existing 200-decision request bound remains
-enforced. Bulk review actions remain out of scope.
+default them to unknown. Searchable existing-fact selection remains approved
+but unimplemented. Chronological posting and the
+explicit 200-row boundary are implemented: the server orders by reviewed fact
+date and physical source row, the review shows and submits that order, oversized
+batches receive period-narrowing guidance, and no automatic splitting occurs.
+Atomic rollback, completed-row exclusion, journal links, unchanged retries and
+changed-decision conflicts retain their existing behavior. Bulk review actions
+remain out of scope.
 Source-date filtering and fact-date posting ranges are distinct; the approved
 UI uses bounded common date formats, a selectable two-level category tree and
 source provenance in operation details without a new import-history screen.
@@ -229,6 +233,16 @@ hierarchy context, keyboard behavior, recent choices, empty results, long
 Russian labels, inclusive period boundaries, excluded counts, draft restoration,
 expanded posting warnings and unchanged account prefix matching. Real-browser desktop and
 390 px acceptance remains part of the complete import refinement.
+
+Chronological-confirmation verification on 2026-10-21: 220 default backend
+tests passed with 124 PostgreSQL-gated skips, all 125 PostgreSQL integration
+tests passed, and all 206 frontend tests passed when the 25 spec files were run
+sequentially with isolated local storage. The standard parallel frontend runner
+still has a pre-existing cross-file local-storage/combobox race. Focused import
+coverage passed 21 authenticated HTTP integration tests and 16 component tests.
+Lint, catalog and formatting checks, Python and TypeScript type checking,
+documentation checks and the production frontend build passed. Real-browser
+desktop/390 px and production acceptance remain open.
 
 ## Release assumptions and technical debt
 

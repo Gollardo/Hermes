@@ -199,6 +199,10 @@ Group membership and all reviewed decisions participate in retry validation. A
 batch of at most 200 selected rows is all-or-nothing and retries are idempotent.
 Selected rows post by ascending fact date, preserving source order within one
 date; larger selections must be narrowed and are not split automatically.
+The server is authoritative for that ordering and the review summary presents
+the same effective order before confirmation. A later-row failure rolls back
+all earlier financial effects and receipts in the request; completed rows are
+excluded from subsequent submissions and keep their journal links.
 Probable duplicates remain user decisions; imported rows from the
 same exact source cannot be posted twice. A deleted original fact is not
 silently recreated by reimport.
