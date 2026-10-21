@@ -180,6 +180,47 @@ describe('SchedulingPage recurrence editor', () => {
     expect(page.canSaveRule()).toBe(false);
   });
 
+  it('uses the same searchable category hierarchy in the rule editor', () => {
+    flushInitial([]);
+    const page = fixture.componentInstance as unknown as SchedulingHarness;
+    page.categories.set([
+      {
+        id: 'housing',
+        name: 'Жильё',
+        type: 'expense',
+        parent_id: null,
+        archived: false,
+      },
+      {
+        id: 'utilities',
+        name: 'Коммунальные услуги',
+        type: 'expense',
+        parent_id: 'housing',
+        archived: false,
+      },
+      {
+        id: 'archived',
+        name: 'Старая аренда',
+        type: 'expense',
+        parent_id: 'housing',
+        archived: true,
+      },
+    ]);
+    clickButton('Добавить правило');
+    setValue('.form-panel select[formControlName="type"]', 'expense');
+
+    const combobox = fixture.nativeElement.querySelector(
+      '.form-panel app-entity-combobox[formControlName="categoryId"]',
+    ) as HTMLElement;
+    const input = combobox.querySelector('input') as HTMLInputElement;
+    input.value = 'жиль';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    const options = [...combobox.querySelectorAll<HTMLElement>('[role="option"]')];
+    expect(options.map((option) => option.dataset['optionId'])).toEqual(['housing', 'utilities']);
+    expect(options[1].textContent).toContain('Жильё → Коммунальные услуги');
+  });
+
   it('renders a signed monthly total with a visible overdue count', () => {
     flushInitial([OCCURRENCE]);
     const text = fixture.nativeElement.textContent;

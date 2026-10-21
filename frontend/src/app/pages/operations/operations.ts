@@ -11,6 +11,7 @@ import { apiErrorMessage } from '../../core/api-error';
 import { DateTextPipe, formatTextDate } from '../../shared/date-text.pipe';
 import { currencySymbol, formatMoney, MoneyPipe } from '../../shared/money.pipe';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
+import { categoryComboboxOptions } from '../../shared/category-combobox';
 import {
   DecimalInput,
   decimalPayload,
@@ -316,15 +317,9 @@ export class OperationsPage implements OnInit {
   }
 
   protected categoryOptions(categories = this.categories()): EntityOption[] {
-    return categories.map((category) => {
-      const parent = category.parent_id
-        ? this.categories().find((item) => item.id === category.parent_id)
-        : null;
-      return {
-        id: category.id,
-        label: category.name,
-        detail: `${category.type === 'income' ? t('operation-create-menu.income') : t('operation-create-menu.expense')}${parent ? ` · ${parent.name}` : ''}${category.archived ? ' ' + t('funds.archived') : ''}`,
-      };
+    return categoryComboboxOptions(categories, {
+      allCategories: this.categories(),
+      archivedLabel: t('funds.archived'),
     });
   }
 
