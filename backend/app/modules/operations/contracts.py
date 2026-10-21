@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -8,7 +9,11 @@ from sqlalchemy.orm import Session
 
 from app.modules.operations.ledger import account_balance, account_balances
 from app.modules.operations.models import AccountMovement, FinancialOperation, OperationType
-from app.modules.operations.schemas import OperationCreateRequest, OperationResponse
+from app.modules.operations.schemas import (
+    ImportProvenanceResponse,
+    OperationCreateRequest,
+    OperationResponse,
+)
 from app.modules.operations.service import (
     FutureOperationDateError,
     InsufficientBalanceError,
@@ -54,6 +59,18 @@ class ReportOperation:
     description: str | None
     category_id: UUID
     amount: Decimal
+
+
+def operation_response_with_import_provenance(
+    response: OperationResponse,
+    provenance: Iterable[tuple[date | None, str | None]],
+) -> OperationResponse:
+    """Compose optional Imports-owned evidence without exposing Operations internals."""
+    items = [
+        ImportProvenanceResponse(source_date=source_date, source_description=source_description)
+        for source_date, source_description in provenance
+    ]
+    return response.model_copy(update={"import_provenance": items or None})
 
 
 def report_operations(
@@ -198,6 +215,7 @@ __all__ = [
     "InsufficientBalanceError",
     "FutureOperationDateError",
     "OperationHistoryReference",
+    "OperationResponse",
     "OperationType",
     "PhysicalTransferDraft",
     "ReportOperation",
@@ -207,6 +225,7 @@ __all__ = [
     "account_has_history",
     "category_has_history",
     "operation_history_references",
+    "operation_response_with_import_provenance",
     "post_initial_balance",
     "post_physical_transfer",
     "report_operations",

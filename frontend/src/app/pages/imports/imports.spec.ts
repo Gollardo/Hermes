@@ -328,6 +328,74 @@ describe('Statement import', () => {
     expect(row.category).toBe('category');
   });
 
+  it('localizes candidate dates while retaining ISO dates in searchable text', () => {
+    const page = preview();
+    const row = page.rows()[0];
+    row.plans = [
+      {
+        id: 'candidate',
+        version: 1,
+        type: 'expense',
+        direction: 'expense',
+        amount: '10.1234',
+        date: '2026-01-02',
+        description: 'Coffee',
+        category_id: 'category',
+        reasons: [],
+      },
+    ];
+
+    const ru = page.candidateOptions(row, 'plans')[0];
+    expect(ru.label).toContain('2 января 2026');
+    expect(ru.searchText).toContain('2026-01-02');
+    language.set('en');
+    const en = page.candidateOptions(row, 'plans')[0];
+    expect(en.label).toContain('2 January 2026');
+    expect(en.searchText).toContain('2026-01-02');
+  });
+
+  it('refreshes an existing transfer with its statement-side direction and keeps eligible choices', () => {
+    const page = preview();
+    const row = page.rows()[0];
+    const transfer = {
+      id: 'transfer',
+      version: 2,
+      type: 'transfer' as const,
+      direction: 'expense',
+      amount: '10.1234',
+      date: '2026-01-02',
+      description: 'Move to savings',
+      category_id: null,
+      reasons: ['amount'],
+    };
+    row.facts = [transfer];
+    row.existing = transfer.id;
+    row.action = 'existing';
+    row.type = 'transfer';
+    row.account = 'account';
+    row.destination = 'savings';
+
+    row.windowDays = 10;
+    page.changeCandidateWindow(row);
+    const request = http.expectOne('/api/v1/imports/candidates');
+    expect(request.request.body.direction).toBe('expense');
+    request.flush({ facts: [transfer], plans: [] });
+    expect(row.existing).toBe('transfer');
+    expect(row.type).toBe('transfer');
+    expect(row.destination).toBe('savings');
+
+    const plan = { ...transfer, id: 'transfer-plan' };
+    row.statementDirection = 'income';
+    row.plan = plan.id;
+    row.plans = [plan];
+    page.changeCandidateWindow(row);
+    const incoming = http.expectOne('/api/v1/imports/candidates');
+    expect(incoming.request.body.direction).toBe('income');
+    incoming.flush({ facts: [transfer], plans: [plan] });
+    expect(row.existing).toBe('transfer');
+    expect(row.plan).toBe('transfer-plan');
+  });
+
   it('widens candidates for only one row and drops a stale selected candidate', () => {
     const page = preview();
     const first = page.rows()[0];

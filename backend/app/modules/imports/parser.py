@@ -224,7 +224,7 @@ DATE_PARSE_FORMATS = {
 }
 
 
-def parse_source_date(row: list[str], mapping: Mapping, *, today: date | None = None) -> date:
+def parse_source_date(row: list[str], mapping: Mapping, *, today: date) -> date:
     if mapping.source_date is None:
         raise ValueError("Source date column is required")
     value = row[mapping.source_date] if mapping.source_date < len(row) else ""
@@ -245,7 +245,7 @@ def parse_source_date(row: list[str], mapping: Mapping, *, today: date | None = 
             parsed = datetime.strptime(normalized, date_format).date()
         except ValueError as error:
             raise ValueError("Invalid source date") from error
-    if parsed > (today or date.today()):
+    if parsed > today:
         raise ValueError("Future source date")
     return parsed
 

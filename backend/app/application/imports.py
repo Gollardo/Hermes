@@ -29,20 +29,21 @@ from app.modules.imports.contracts import (
     record_receipt,
 )
 from app.modules.operations.contracts import (
+    OperationResponse,
     get_operation_response,
     import_candidates,
     import_existing,
     operation_history_references,
+    operation_response_with_import_provenance,
     post_import_operation,
     validate_import_date,
 )
-from app.modules.operations.schemas import ImportProvenanceResponse, OperationResponse
 from app.modules.scheduling.contracts import (
     confirm_imported_occurrence,
     import_occurrence_description,
     import_plan_candidates,
 )
-from app.modules.settings.contracts import get_application_settings
+from app.modules.settings.contracts import application_today, get_application_settings
 
 
 def source_key(digest: str, sheet: str, row: int) -> str:
@@ -112,14 +113,11 @@ def candidates(session: Session, request: CandidateRequest) -> dict[str, Any]:
 def operation_detail(session: Session, operation_id: UUID) -> OperationResponse:
     """Compose ledger detail with optional Imports-owned source evidence."""
     response = get_operation_response(session, operation_id)
-    provenance = [
-        ImportProvenanceResponse(
-            source_date=item.source_date,
-            source_description=item.source_description,
-        )
-        for item in operation_provenance(session, operation_id)
-    ]
-    return response.model_copy(update={"import_provenance": provenance or None})
+    provenance = operation_provenance(session, operation_id)
+    return operation_response_with_import_provenance(
+        response,
+        ((item.source_date, item.source_description) for item in provenance),
+    )
 
 
 def preview(session: Session, request: PreviewRequest) -> dict[str, Any]:
@@ -130,11 +128,12 @@ def preview(session: Session, request: PreviewRequest) -> dict[str, Any]:
     parsed_dates: dict[int, date] = {}
     date_errors: dict[int, str] = {}
     source_dates: dict[int, date] = {}
+    today = application_today(session)
     for number, raw in enumerate(rows, 1):
         if number <= request.mapping.header_row:
             continue
         try:
-            parsed = parse_source_date(raw, request.mapping)
+            parsed = parse_source_date(raw, request.mapping, today=today)
             parsed_dates[number] = parsed
             source_dates[number] = parsed
         except ValueError as error:

@@ -8,6 +8,7 @@ import pytest
 from app.modules.operations.contracts import FutureOperationDateError, OperationType
 from app.modules.scheduling.models import ExpectedOccurrence, OccurrenceSourceKind, OccurrenceStatus
 from app.modules.scheduling.service import _today, confirm_occurrence
+from app.modules.settings.service import application_today
 
 
 def test_application_date_uses_timezone_at_utc_midnight_boundary() -> None:
@@ -17,6 +18,15 @@ def test_application_date_uses_timezone_at_utc_midnight_boundary() -> None:
     ):
         clock.now.return_value = datetime(2026, 9, 24, 21, 30, tzinfo=UTC)
         assert _today(Mock()) == date(2026, 9, 25)
+
+
+def test_shared_application_today_uses_configured_timezone_at_utc_boundary() -> None:
+    with patch(
+        "app.modules.settings.service.application_timezone", return_value="Pacific/Kiritimati"
+    ):
+        assert application_today(Mock(), now=datetime(2026, 9, 24, 10, 30, tzinfo=UTC)) == date(
+            2026, 9, 25
+        )
 
 
 @pytest.mark.parametrize("kind", list(OccurrenceSourceKind))

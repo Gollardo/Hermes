@@ -3,6 +3,7 @@
 from app.modules.settings.models import ApplicationSettings, FundAllocationMode
 from app.modules.settings.service import (
     application_timezone,
+    application_today,
     clear_default_account_if_matches,
     fund_allocation_mode,
     get_application_settings,
@@ -20,6 +21,7 @@ __all__ = [
     "get_application_settings",
     "FundAllocationMode",
     "initialize_settings",
+    "application_today",
     "application_timezone",
     "fund_allocation_mode",
     "clear_default_account_if_matches",

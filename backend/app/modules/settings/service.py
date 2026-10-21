@@ -1,5 +1,6 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -53,6 +54,12 @@ def get_application_settings(session: Session) -> ApplicationSettings:
 def application_timezone(session: Session) -> str:
     """Return the configured IANA timezone through the module's public contract."""
     return get_application_settings(session).timezone
+
+
+def application_today(session: Session, *, now: datetime | None = None) -> date:
+    """Return the financial calendar date in the configured application timezone."""
+    instant = now or datetime.now(UTC)
+    return instant.astimezone(ZoneInfo(application_timezone(session))).date()
 
 
 def fund_allocation_mode(session: Session) -> FundAllocationMode:
