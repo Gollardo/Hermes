@@ -291,8 +291,13 @@ decision hash binds the complete membership. Existing tables and module
 ownership remain unchanged.
 
 Preview has no domain writes or schedule materialization. Explicit profile save
-is separate. Source files are processed locally by the application and discarded;
-no external service or worker is introduced. Backup includes profiles/receipts.
+is separate. Confirmation stores only the parsed source date and normalized
+source description on each Imports-owned receipt. The operation-detail
+application query composes the Operations-owned fact with those public
+Imports-owned provenance values; neither module reads the other's private
+tables. Source files are processed locally by the application and discarded;
+no external service or worker is introduced. Backup includes profiles and
+receipts, including their narrow provenance fields.
 
 ## Release a fund into free money
 

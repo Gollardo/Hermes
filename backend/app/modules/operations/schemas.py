@@ -85,6 +85,11 @@ class OperationFundMovementResponse(BaseModel):
     amount: str
 
 
+class ImportProvenanceResponse(BaseModel):
+    source_date: date | None
+    source_description: str | None
+
+
 class OperationResponse(BaseModel):
     id: UUID
     type: OperationType
@@ -100,6 +105,7 @@ class OperationResponse(BaseModel):
     fund_id: UUID | None
     fund_amount: str | None
     fund_movements: list[OperationFundMovementResponse]
+    import_provenance: list[ImportProvenanceResponse] | None = None
     version: int
     created_at: datetime
     updated_at: datetime

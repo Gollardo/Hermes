@@ -291,6 +291,22 @@
   margin: 0 0 0.2rem;
   text-transform: uppercase;
 }
+.detail-loading {
+  color: var(--muted);
+  margin: 0;
+}
+.import-source-evidence {
+  border-top: 1px solid var(--line);
+  padding-top: 0.7rem;
+}
+.import-provenance {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.5rem !important;
+}
+.import-provenance dd {
+  overflow-wrap: anywhere;
+}
 .movement-list {
   display: grid;
   gap: 0.35rem;

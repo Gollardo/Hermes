@@ -6,7 +6,7 @@ from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 
 from app.core.config import Settings
 from app.core.database import create_database_engine, create_session_factory
@@ -185,6 +185,30 @@ def test_import_preview_commit_retry_backup_and_rollback(
         imported = client.get("/api/v1/operations/" + operation_id).json()
         assert imported["occurred_on"] == "2026-01-01"
         assert imported["description"] is None
+        assert imported["import_provenance"] == [
+            {
+                "source_date": "2026-01-01",
+                "source_description": "Coffee",
+            }
+        ]
+        updated = client.put(
+            "/api/v1/operations/" + operation_id,
+            headers=headers,
+            json={
+                "version": imported["version"],
+                "type": "expense",
+                "occurred_on": "2026-01-02",
+                "amount": "10.50",
+                "description": "Owner description",
+                "account_id": account,
+                "category_id": category,
+            },
+        )
+        assert updated.status_code == 200, updated.text
+        edited = client.get("/api/v1/operations/" + operation_id).json()
+        assert edited["occurred_on"] == "2026-01-02"
+        assert edited["description"] == "Owner description"
+        assert edited["import_provenance"] == imported["import_provenance"]
         assert client.get("/api/v1/accounts").json()[0]["balance"] == "89.5000"
         # One valid row followed by an impossible expense must roll back both receipts and money.
         failing = source("amount;description\n-1;Small\n-999;Large\n")
@@ -205,12 +229,33 @@ def test_import_preview_commit_retry_backup_and_rollback(
         with factory.begin() as session:
             backup = create_backup(session)
             assert len(backup.data.import_receipts) == 1
+            assert backup.data.import_receipts[0].source_date == date(2026, 1, 1)
+            assert backup.data.import_receipts[0].source_description == "Coffee"
             assert len(backup.data.import_profiles) == 1
             restore_backup(session, backup)
+        exported = client.get("/api/v1/backup/export")
+        assert exported.status_code == 200
+        backup_document = exported.json()
+        assert backup_document["data"]["import_receipts"][0]["source_date"] == "2026-01-01"
+        assert backup_document["data"]["import_receipts"][0]["source_description"] == "Coffee"
+        restored = client.post(
+            "/api/v1/backup/restore",
+            headers=headers,
+            json={
+                "backup": backup_document,
+                "confirmation": "ЗАМЕНИТЬ ВСЕ ДАННЫЕ",
+                "master_password": SETUP_PAYLOAD["master_password"],
+            },
+        )
+        assert restored.status_code == 200, restored.text
+        assert (
+            client.get("/api/v1/operations/" + operation_id).json()["import_provenance"]
+            == imported["import_provenance"]
+        )
         from alembic import command
         from alembic.config import Config
 
-        with pytest.raises(RuntimeError, match="Import receipts"):
+        with pytest.raises(RuntimeError, match="[Ii]mport (provenance|receipts)"):
             command.downgrade(Config("alembic.ini"), "0014_one_off_plans")
 
         assert client.post("/api/v1/imports/commit", headers=headers, json=body).json()["results"][
@@ -616,10 +661,39 @@ def test_migration_metadata_matches_and_guarded_downgrade(
     from alembic import command
     from alembic.config import Config
 
-    command.check(Config("alembic.ini"))
-    command.downgrade(Config("alembic.ini"), "0014_one_off_plans")
-    command.upgrade(Config("alembic.ini"), "head")
-    command.check(Config("alembic.ini"))
+    config = Config("alembic.ini")
+    command.check(config)
+    command.downgrade(config, "0017_auth_admission")
+    engine = create_database_engine(postgres_database_settings)
+    legacy_receipt_id = "00000000-0000-0000-0000-000000000018"
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO import_receipts "
+                "(id, source_key, decision_hash, operation_id) "
+                "VALUES (:id, :source_key, :decision_hash, :operation_id)"
+            ),
+            {
+                "id": legacy_receipt_id,
+                "source_key": "a" * 64,
+                "decision_hash": "b" * 64,
+                "operation_id": "00000000-0000-0000-0000-000000000019",
+            },
+        )
+    command.upgrade(config, "head")
+    with engine.begin() as connection:
+        migrated = connection.execute(
+            text("SELECT source_date, source_description FROM import_receipts WHERE id = :id"),
+            {"id": legacy_receipt_id},
+        ).one()
+        assert migrated == (None, None)
+        connection.execute(
+            text("DELETE FROM import_receipts WHERE id = :id"), {"id": legacy_receipt_id}
+        )
+    engine.dispose()
+    command.downgrade(config, "0014_one_off_plans")
+    command.upgrade(config, "head")
+    command.check(config)
 
 
 def test_import_fund_coverage_and_exact_fund_expense(postgres_database_settings: Settings) -> None:
@@ -749,6 +823,11 @@ def test_grouped_plan_import_exact_retry_conflict_and_backup(
         assert operation["amount"] == "33.6913"
         assert operation["occurred_on"] == "2026-01-01"
         assert operation["description"] == "Coffee plan"
+        assert operation["import_provenance"] == [
+            {"source_date": None, "source_description": "Coffee"},
+            {"source_date": None, "source_description": "Coffee"},
+            {"source_date": None, "source_description": "Coffee"},
+        ]
         assert len(operation["movements"]) == 1
         actual_plan = client.get("/api/v1/scheduling/occurrences/" + plan["id"]).json()
         assert actual_plan["amount"] == "33.6913"
@@ -779,6 +858,7 @@ def test_grouped_plan_import_exact_retry_conflict_and_backup(
             backup = create_backup(session)
             assert len(backup.data.import_receipts) == 3
             assert len({r.operation_id for r in backup.data.import_receipts}) == 1
+            assert {r.source_description for r in backup.data.import_receipts} == {"Coffee"}
             restore_backup(session, backup)
         replay = client.post("/api/v1/imports/commit", headers=headers, json=body)
         assert replay.status_code == 200, replay.text

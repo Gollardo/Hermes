@@ -70,6 +70,11 @@ interface OperationFundMovement {
   amount: string;
 }
 
+interface ImportProvenance {
+  source_date: string | null;
+  source_description: string | null;
+}
+
 interface Operation {
   id: string;
   type: OperationType;
@@ -85,6 +90,7 @@ interface Operation {
   fund_id: string | null;
   fund_amount: string | null;
   fund_movements: OperationFundMovement[];
+  import_provenance?: ImportProvenance[] | null;
   version: number;
 }
 
@@ -178,6 +184,7 @@ export class OperationsPage implements OnInit {
   protected readonly editingPlan = signal<OneOffPlan | null>(null);
   protected readonly confirmingOccurrence = signal<ExpectedOccurrence | null>(null);
   protected readonly expandedId = signal<string | null>(null);
+  protected readonly detailLoadingId = signal<string | null>(null);
   protected readonly formOpen = signal(false);
   protected readonly filtersOpen = signal(false);
   private defaultAccountWasApplied = false;
@@ -681,7 +688,26 @@ export class OperationsPage implements OnInit {
   }
 
   protected toggleDetails(operation: Operation): void {
-    this.expandedId.set(this.expandedId() === operation.id ? null : operation.id);
+    if (this.expandedId() === operation.id) {
+      this.expandedId.set(null);
+      return;
+    }
+    this.expandedId.set(operation.id);
+    this.detailLoadingId.set(operation.id);
+    this.http.get<Operation>(`${environment.apiBaseUrl}/operations/${operation.id}`).subscribe({
+      next: (detail) => {
+        this.operations.update((items) =>
+          items.map((item) => (item.id === detail.id ? detail : item)),
+        );
+        if (this.detailLoadingId() === detail.id) this.detailLoadingId.set(null);
+      },
+      error: (error: unknown) => {
+        if (this.detailLoadingId() === operation.id) this.detailLoadingId.set(null);
+        this.error.set(() =>
+          apiErrorMessage(error, t('operations.couldNotOpenTheOperationDetails')),
+        );
+      },
+    });
   }
 
   protected applyFilters(): void {
