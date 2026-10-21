@@ -72,6 +72,21 @@ describe('Statement import', () => {
     expect(page.selected()).toHaveLength(0);
     http.expectNone('/api/v1/imports/commit');
   });
+  it('explains mapped source dates and the write-free preview in both languages', () => {
+    expect(fixture.nativeElement.textContent).toContain(
+      'Исходная дата из сопоставленной колонки задаёт редактируемую дату факта каждой строки.',
+    );
+    expect(fixture.nativeElement.textContent).toContain('Предпросмотр не меняет балансы и планы.');
+
+    language.set('en');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain(
+      "The mapped source date seeds each row's editable fact date.",
+    );
+    expect(fixture.nativeElement.textContent).toContain(
+      'Preview does not change balances or plans.',
+    );
+  });
   it('filters inclusive source dates and restores excluded row drafts on reset', () => {
     const page = preview([
       statementRow(2, '2026-01-01'),

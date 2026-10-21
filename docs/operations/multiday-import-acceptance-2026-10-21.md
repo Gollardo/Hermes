@@ -38,7 +38,8 @@ the server does not invent or truncate provenance.
   each process using an isolated Node local-storage file.
 - The standard parallel frontend command reached 208 of 211 tests; its three
   failures are the known cross-file local-storage/combobox race, not deterministic
-  product failures. The focused import component suite passed all 20 tests.
+  product failures. The focused import component suite passed all 21 tests
+  after correcting the RU/EN source-date introduction.
 - Ruff lint and format, ESLint, RU/EN catalog completeness, Prettier, mypy,
   TypeScript and documentation link/fence checks passed.
 - The production frontend build passed. Existing initial-bundle and component
@@ -50,15 +51,19 @@ the server does not invent or truncate provenance.
 
 ## Browser and external gates
 
-Browser servers were started against the fresh disposable database, but the
-available in-app browser provider was unavailable and native Safari attachment
-hung before any page could be observed. The hanging attachment was stopped; it
-is not evidence of a product failure. This review-fix pass made a bounded
-provider inventory attempt and found no attached browser provider. Consequently the required real-browser
-RU/EN desktop and 390 px run, visible-focus and horizontal-overflow observations
-remain open. Real-device/Safari assistive-technology, PostgreSQL 17 Compose,
-production deployment and owner visual acceptance also remain open.
+A later browser run used a local disposable PostgreSQL database and a synthetic
+multi-day CSV. The complete Russian desktop flow verified the inclusive source
+period and excluded count, restoration of a hidden edited draft, keyboard
+category search, the out-of-period posting warning, chronological summary,
+atomic confirmation, success only after the response, journal links and source
+provenance in operation details. At 390 px the Russian and English layouts had
+equal document `clientWidth` and `scrollWidth`; the same was true for English at
+1440 px. The checked pages emitted no console warning or error.
 
-No owner statement or backup was available for this run. The conditional
+This evidence does not cover browser interaction with the literal XLSX fixture,
+real-device/Safari assistive technology, PostgreSQL 17 Compose, production
+deployment, owner data or owner visual acceptance. Those gates remain open.
+
+No owner statement or backup was available for either run. The conditional
 isolated-owner-data scenario was therefore not performed. No private fixture,
 screenshot, production database or production service was read or modified.
