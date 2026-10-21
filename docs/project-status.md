@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-10-01. This is the current release snapshot, not a task log.
+Last reviewed: 2026-10-21. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -171,14 +171,21 @@ was changed, and private fixtures/screenshots are outside the repository.
 
 On 2026-10-20 the owner approved replacing the mandatory file-level fact date
 with profile-mapped, editable source dates per row and a derived import period.
-The source description will remain review evidence instead of becoming the
-default operation description. Import review will adopt the established
-searchable category combobox with visible parent-child paths and a searchable
-planned-payment combobox with suggestions first. These decisions are documented
-in [ADR 0005](decisions/0005-statement-import.md) but are not implemented or
-verified capabilities. Explicit text formats, inclusive period filtering,
-per-row plan windows and plan-owned merged descriptions are approved but not
-implemented. Invalid/future-date blocking, explicit legacy-profile upgrades,
+Source/operation description separation is now implemented: new facts start
+blank with an explicit copy action, matching still uses the source text,
+plan-backed facts and merged groups use the plan description, and existing-fact
+links preserve their stored description. Focused import HTTP integration and
+frontend component checks pass. The full checks passed with 206 default backend
+tests (121 PostgreSQL-gated skips), 122 PostgreSQL integration tests and 198
+frontend tests, plus lint, formatting, documentation, type checking and the
+production frontend build. Browser acceptance remains open. Import review will
+also adopt the established searchable category
+combobox with visible parent-child paths and searchable plan/fact selectors.
+Those remaining decisions are documented in
+[ADR 0005](decisions/0005-statement-import.md) but are not yet verified
+capabilities. Explicit text formats, inclusive period filtering and per-row
+plan windows are approved but not implemented. Invalid/future-date blocking,
+explicit legacy-profile upgrades,
 substring category search and skip-by-default rows are also approved but not
 implemented. Receipt-level source date/description, chronological posting,
 searchable existing-fact selection and the explicit 200-row boundary are
@@ -188,8 +195,8 @@ UI uses bounded common date formats, a selectable two-level category tree and
 source provenance in operation details without a new import-history screen.
 Fact-date corrections outside the source period remain selected with a warning;
 period-filter changes preserve browser-draft edits until reload. The product
-decision tree for this refinement is complete; implementation and verification
-have not started.
+decision tree for this refinement is complete; implementation beyond the
+source-description slice remains in progress.
 
 ## Release assumptions and technical debt
 

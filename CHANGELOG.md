@@ -32,6 +32,10 @@ assigned.
 
 ### Added
 
+- Separate bank-owned source descriptions from optional owner-written operation
+  descriptions during statement review. New facts start blank with an explicit
+  copy action; plan imports use the plan description and existing-fact links
+  preserve the recorded description.
 - Select an actual non-future payment date when confirming a one-off or recurring
   plan. Overdue plans default to their due date in Calendar and the composer;
   the journal retains an explicit Apply today shortcut.
