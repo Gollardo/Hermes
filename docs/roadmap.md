@@ -171,13 +171,12 @@ every bank file automatically without configuration.
   import period, all-status review and links to planned payments. The existing
   explicit-date flow and profile-mapped per-row preview dates are implemented;
   derived period filtering and the remaining reconciliation refinements are not.
-- [~] Searchable hierarchical category selection and searchable planned-payment
-  selection. The shared two-level category combobox is implemented in import,
-  ordinary operation entry and scheduling; searchable planned-payment selection
-  remains approved but not implemented.
-- [~] Durable receipt provenance for source date and description, chronological
-  posting of up to 200 selected rows, and searchable existing-fact selection.
-  These refinements are approved but not implemented.
+- [x] Searchable hierarchical category, planned-payment and existing-fact
+  selection. Candidate selectors use per-row fact-date windows, keep explained
+  suggestions first and retain manual eligible choices.
+- [~] Durable receipt provenance for source date and description and
+  chronological posting of up to 200 selected rows. Searchable existing-fact
+  selection is implemented; provenance and posting-order refinements remain.
 - [~] Separate source-date import and fact-date posting periods, bounded common
   date formats, selectable two-level category presentation and imported source
   details on the operation. These refinements are approved but not implemented.

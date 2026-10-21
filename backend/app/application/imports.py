@@ -5,7 +5,7 @@ import json
 from datetime import date, timedelta
 from decimal import Decimal
 from difflib import SequenceMatcher
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.application.transfer_allocation import transfer_and_allocate
 from app.modules.funds.contracts import TransferAllocationCreateRequest
 from app.modules.imports.contracts import (
+    CandidateRequest,
     CommitRequest,
     ImportDecisionError,
     ImportGroupingError,
@@ -42,6 +43,66 @@ from app.modules.settings.contracts import get_application_settings
 
 def source_key(digest: str, sheet: str, row: int) -> str:
     return hashlib.sha256(f"{digest}:{sheet}:{row}".encode()).hexdigest()
+
+
+def _rank_candidates(
+    candidate_values: list[dict[str, object]],
+    *,
+    direction: str,
+    amount: Decimal,
+    source_description: str,
+    fact_date: date,
+) -> list[dict[str, object]]:
+    ranked: list[dict[str, object]] = []
+    for candidate in candidate_values:
+        if candidate["direction"] != direction:
+            continue
+        reasons = []
+        if Decimal(str(candidate["amount"])) == amount:
+            reasons.append("amount")
+        if (
+            source_description
+            and SequenceMatcher(
+                None,
+                source_description.casefold(),
+                str(candidate["description"]).casefold(),
+            ).ratio()
+            >= 0.45
+        ):
+            reasons.append("description")
+        if candidate["date"] == fact_date.isoformat():
+            reasons.append("date")
+        ranked.append(dict(candidate, reasons=reasons))
+    return sorted(
+        ranked,
+        key=lambda candidate: (
+            not bool(candidate["reasons"]),
+            -len(cast(list[str], candidate["reasons"])),
+            abs((date.fromisoformat(str(candidate["date"])) - fact_date).days),
+            str(candidate["id"]),
+        ),
+    )
+
+
+def candidates(session: Session, request: CandidateRequest) -> dict[str, Any]:
+    from_on = request.fact_date - timedelta(days=request.window_days)
+    through_on = request.fact_date + timedelta(days=request.window_days)
+    return {
+        "facts": _rank_candidates(
+            import_candidates(session, request.account_id, from_on, through_on),
+            direction=request.direction,
+            amount=request.amount,
+            source_description=request.source_description,
+            fact_date=request.fact_date,
+        ),
+        "plans": _rank_candidates(
+            import_plan_candidates(session, request.account_id, from_on, through_on),
+            direction=request.direction,
+            amount=request.amount,
+            source_description=request.source_description,
+            fact_date=request.fact_date,
+        ),
+    }
 
 
 def preview(session: Session, request: PreviewRequest) -> dict[str, Any]:
@@ -106,31 +167,19 @@ def preview(session: Session, request: PreviewRequest) -> dict[str, Any]:
                 continue
             from_on = row_date - timedelta(days=request.window_days)
             through_on = row_date + timedelta(days=request.window_days)
-            for label, candidates in (("facts", facts), ("plans", plans)):
-                matches = []
-                for candidate in candidates:
-                    candidate_date = date.fromisoformat(str(candidate["date"]))
-                    if (
-                        candidate["direction"] != kind
-                        or not from_on <= candidate_date <= through_on
-                    ):
-                        continue
-                    reasons = []
-                    if Decimal(str(candidate["amount"])) == Decimal(amount):
-                        reasons.append("amount")
-                    if (
-                        description
-                        and SequenceMatcher(
-                            None, description.casefold(), str(candidate["description"]).casefold()
-                        ).ratio()
-                        >= 0.45
-                    ):
-                        reasons.append("description")
-                    if reasons:
-                        if candidate["date"] == row_date.isoformat():
-                            reasons.append("date")
-                        matches.append(dict(candidate, reasons=reasons))
-                item[label] = sorted(matches, key=lambda x: (-len(x["reasons"]), str(x["id"])))
+            for label, candidate_values in (("facts", facts), ("plans", plans)):
+                within_window = [
+                    candidate
+                    for candidate in candidate_values
+                    if from_on <= date.fromisoformat(str(candidate["date"])) <= through_on
+                ]
+                item[label] = _rank_candidates(
+                    within_window,
+                    direction=kind,
+                    amount=Decimal(amount),
+                    source_description=description,
+                    fact_date=row_date,
+                )
         except ValueError as error:
             item["error"] = str(error)
         output.append(item)

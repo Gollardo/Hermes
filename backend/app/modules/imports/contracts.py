@@ -9,7 +9,7 @@ from app.modules.imports.errors import ImportDecisionError, ImportGroupingError
 from app.modules.imports.grouping import decision_groups
 from app.modules.imports.models import ImportReceipt
 from app.modules.imports.parser import normalize, parse_source_date, read_file
-from app.modules.imports.schemas import CommitRequest, PreviewRequest
+from app.modules.imports.schemas import CandidateRequest, CommitRequest, PreviewRequest
 
 
 def find_receipt(session: Session, key: str) -> ImportReceipt | None:
@@ -30,6 +30,7 @@ def receipt_ids(session: Session, keys: list[str]) -> dict[str, UUID]:
 
 
 __all__ = [
+    "CandidateRequest",
     "CommitRequest",
     "ImportGroupingError",
     "decision_groups",

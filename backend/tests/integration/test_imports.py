@@ -367,6 +367,94 @@ def test_matching_explains_candidates_and_preview_is_read_only(
             assert session.scalar(select(func.count()).select_from(ImportReceipt)) == 0
 
 
+def test_row_candidate_search_uses_its_fact_date_window_and_ranks_suggestions(
+    postgres_database_settings: Settings,
+) -> None:
+    with TestClient(create_app(postgres_database_settings)) as client:
+        assert client.post("/api/v1/imports/candidates", json={}).status_code in {401, 403}
+        client.post("/api/v1/setup", json=SETUP_PAYLOAD)
+        headers = _headers(client)
+        account = _account(client, headers, "Bank", "200")
+        category = _category(client, headers, "Food", "expense")
+        fact_date = date.today()
+
+        matching = decision(account, category)
+        matching["operation"].update(
+            occurred_on=fact_date.isoformat(), amount="10.50", description="Coffee shop"
+        )
+        matching_fact = client.post(
+            "/api/v1/operations", headers=headers, json=matching["operation"]
+        ).json()
+        manual = decision(account, category)
+        manual["operation"].update(
+            occurred_on=(fact_date - timedelta(days=2)).isoformat(),
+            amount="7.25",
+            description="Groceries",
+        )
+        manual_fact = client.post(
+            "/api/v1/operations", headers=headers, json=manual["operation"]
+        ).json()
+        outside = decision(account, category)
+        outside["operation"].update(
+            occurred_on=(fact_date - timedelta(days=8)).isoformat(),
+            amount="8",
+            description="Older purchase",
+        )
+        outside_fact = client.post(
+            "/api/v1/operations", headers=headers, json=outside["operation"]
+        ).json()
+        plan = client.post(
+            "/api/v1/scheduling/one-off-plans",
+            headers=headers,
+            json=dict(
+                type="expense",
+                scheduled_on=fact_date.isoformat(),
+                amount="10.50",
+                account_id=account,
+                category_id=category,
+                description="Coffee plan",
+            ),
+        )
+        assert plan.status_code == 201, plan.text
+
+        request = dict(
+            account_id=account,
+            fact_date=fact_date.isoformat(),
+            direction="expense",
+            amount="10.50",
+            source_description="Coffee statement merchant",
+            window_days=3,
+        )
+        response = client.post("/api/v1/imports/candidates", headers=headers, json=request)
+        assert response.status_code == 200, response.text
+        assert response.headers["cache-control"] == "no-store"
+        facts = response.json()["facts"]
+        assert [candidate["id"] for candidate in facts] == [matching_fact["id"], manual_fact["id"]]
+        assert facts[0]["reasons"] == ["amount", "description", "date"]
+        assert facts[1]["reasons"] == []
+        assert response.json()["plans"][0]["id"] == plan.json()["id"]
+
+        cancelled = client.post(
+            f"/api/v1/scheduling/occurrences/{plan.json()['id']}/cancel",
+            headers=headers,
+            json={"version": plan.json()["version"]},
+        )
+        assert cancelled.status_code == 200, cancelled.text
+        refreshed = client.post("/api/v1/imports/candidates", headers=headers, json=request)
+        assert refreshed.status_code == 200, refreshed.text
+        assert refreshed.json()["plans"] == []
+
+        widened = client.post(
+            "/api/v1/imports/candidates", headers=headers, json={**request, "window_days": 10}
+        )
+        assert widened.status_code == 200, widened.text
+        assert [candidate["id"] for candidate in widened.json()["facts"]] == [
+            matching_fact["id"],
+            manual_fact["id"],
+            outside_fact["id"],
+        ]
+
+
 def test_stale_plan_rolls_back_and_deleted_fact_is_not_recreated(
     postgres_database_settings: Settings,
 ) -> None:

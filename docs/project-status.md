@@ -175,12 +175,15 @@ Source/operation description separation is now implemented: new facts start
 blank with an explicit copy action, matching still uses the source text,
 plan-backed facts and merged groups use the plan description, and existing-fact
 links preserve their stored description. Import review now uses the established
-searchable category combobox with visible parent-child paths, as do ordinary
-operation entry and scheduling. Normalized substring search covers either
-hierarchy level,
+searchable combobox for categories, planned payments and existing facts.
+Category paths remain visible as in ordinary operation entry and scheduling.
+Normalized substring search covers either hierarchy level,
 active roots remain selectable, active children are indented, and archived
-categories remain historical-only. The searchable planned-payment combobox with
-suggestions first is still only approved. These decisions are documented in
+categories remain historical-only. Plan and existing-fact candidates are
+evaluated per editable row fact date with a default ±3-day window. Explained
+suggestions appear first, manual eligible candidates remain searchable, and a
+row can widen its own window without changing its fact date or another draft.
+These decisions are documented in
 [ADR 0005](decisions/0005-statement-import.md). The source-date implementation
 slice maps a source-date column in saved profiles, supports the six bounded
 text date/date-time formats and native XLSX dates, and defaults each preview
@@ -195,14 +198,12 @@ Lint, type checks, documentation checks and the
 production frontend build also passed with the existing budget warnings.
 Production and browser acceptance remain open.
 
-Inclusive period filtering, per-row plan windows and plan-owned merged
-descriptions are approved but not implemented. The remaining
-reconciliation-selector work is also not implemented. Receipt-level source
-date/description, chronological posting,
-searchable existing-fact selection and the explicit 200-row boundary are
-approved; provenance and search remain unimplemented while the existing
-200-decision request bound remains enforced. Bulk review actions remain out of
-scope.
+Inclusive period filtering remains approved but not implemented. Per-row plan
+windows, plan-owned merged descriptions and the reconciliation selectors are
+implemented. Receipt-level source date/description, chronological posting and
+the explicit 200-row boundary are approved; provenance remains unimplemented
+while the existing 200-decision request bound remains enforced. Bulk review
+actions remain out of scope.
 Source-date filtering and fact-date posting ranges are distinct; the approved
 UI uses bounded common date formats, a selectable two-level category tree and
 source provenance in operation details without a new import-history screen.
@@ -221,6 +222,15 @@ ownership, parent/child substring search, selectable roots, archived exclusion,
 hierarchy context, keyboard behavior, recent choices, empty results, long
 Russian labels and unchanged account prefix matching. Real-browser desktop and
 390 px acceptance remains part of the complete import refinement.
+
+Candidate-search verification on 2026-10-21: 220 default backend tests passed
+with 123 PostgreSQL-gated skips, all 124 PostgreSQL integration tests passed,
+and all 204 frontend tests passed. Lint, formatting, catalog, Python and
+TypeScript type checks, documentation checks and the production frontend build
+also passed; the existing frontend budget warnings remain. Automated coverage
+includes authenticated per-row windows, widening, suggestion order, manual
+candidates without reasons, stale plans, exact searchable amounts and preserved
+row dates/drafts. Real-browser desktop and 390 px acceptance remains open.
 
 ## Release assumptions and technical debt
 

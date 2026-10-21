@@ -17,8 +17,9 @@ This is not a replacement design system.
 The source-date mapping slice is implemented: profiles record the source-date
 column and bounded text format, native XLSX dates need no text format, and each
 recognized row starts with its own editable fact date. Invalid dates remain
-visible and correctable. Import-period filtering and the searchable
-reconciliation controls described below remain in progress.
+visible and correctable. Searchable category, plan and existing-fact controls
+are implemented; import-period filtering and the remaining workflow refinements
+described below remain in progress.
 
 ## User flow
 
@@ -114,6 +115,12 @@ Candidate plans are evaluated separately around each row's editable fact date,
 using the existing default window of three days before and after that row.
 Source descriptions remain visible in each member's source details.
 The user may widen the window for one row without changing its fact date.
+The plan and existing-fact comboboxes show the complete eligible row window,
+with explained suggestions first and manual candidates after them. Results show
+date, exact formatted amount, category, description and either the advisory
+reasons or a manual-candidate label. Search accepts any combination of those
+fields in RU or EN. Empty results remain explicit; long and duplicate labels
+retain their supporting date, amount and category context.
 
 All rows default to skip. Suggestions never choose a posting action. Category
 search matches within both the parent and child names, so a query need not start
@@ -123,7 +130,7 @@ An active category root is a selectable row. Active children appear beneath it
 with indentation and a supporting `Parent → Child` path. Archived categories
 are absent from new-fact choices but remain visible for existing facts.
 
-The existing-fact control is also a searchable combobox. Likely duplicates
+The existing-fact control is a searchable combobox. Likely duplicates
 remain first; search covers date, operation description, category and exact
 amount. More than 200 selected rows block confirmation and direct the owner to
 narrow the period. The screen does not split a confirmation automatically.
