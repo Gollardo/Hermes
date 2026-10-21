@@ -198,12 +198,14 @@ Lint, type checks, documentation checks and the
 production frontend build also passed with the existing budget warnings.
 Production and browser acceptance remain open.
 
-Inclusive period filtering remains approved but not implemented. Per-row plan
-windows, plan-owned merged descriptions and the reconciliation selectors are
-implemented. Receipt-level source date/description, chronological posting and
-the explicit 200-row boundary are approved; provenance remains unimplemented
-while the existing 200-decision request bound remains enforced. Bulk review
-actions remain out of scope.
+Inclusive source-date filtering is implemented in browser state: it defaults to
+the complete parsed period, counts excluded parsed rows, preserves hidden edits,
+and shows the selected fact-date posting period with an expansion warning.
+Per-row plan windows, plan-owned merged descriptions and the reconciliation
+selectors are also implemented. Receipt-level source date/description,
+chronological posting and the explicit 200-row boundary are approved;
+provenance remains unimplemented while the existing 200-decision request bound
+remains enforced. Bulk review actions remain out of scope.
 Source-date filtering and fact-date posting ranges are distinct; the approved
 UI uses bounded common date formats, a selectable two-level category tree and
 source provenance in operation details without a new import-history screen.
@@ -212,20 +214,21 @@ period-filter changes preserve browser-draft edits until reload. The product
 decision tree for this refinement is complete; implementation and verification
 continue in bounded slices.
 
-Combined source-date, source-description and category-search verification on
+Combined source-date, source-description, category-search and period-filter verification on
 2026-10-21: 220 default backend tests passed with 122 PostgreSQL-gated skips,
-all 123 PostgreSQL integration tests passed, and all 202 frontend tests passed. Lint,
+all 123 PostgreSQL integration tests passed, and all 204 frontend tests passed. Lint,
 catalog checks, formatting, Python and TypeScript type checking, documentation
 checks and the production frontend build also passed. Existing bundle and
 component-style budget warnings remain. Automated tests cover description
 ownership, parent/child substring search, selectable roots, archived exclusion,
 hierarchy context, keyboard behavior, recent choices, empty results, long
-Russian labels and unchanged account prefix matching. Real-browser desktop and
+Russian labels, inclusive period boundaries, excluded counts, draft restoration,
+expanded posting warnings and unchanged account prefix matching. Real-browser desktop and
 390 px acceptance remains part of the complete import refinement.
 
 Candidate-search verification on 2026-10-21: 220 default backend tests passed
 with 123 PostgreSQL-gated skips, all 124 PostgreSQL integration tests passed,
-and all 204 frontend tests passed. Lint, formatting, catalog, Python and
+and all 206 frontend tests passed. Lint, formatting, catalog, Python and
 TypeScript type checks, documentation checks and the production frontend build
 also passed; the existing frontend budget warnings remain. Automated coverage
 includes authenticated per-row windows, widening, suggestion order, manual

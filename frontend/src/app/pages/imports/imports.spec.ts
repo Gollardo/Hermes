@@ -28,7 +28,7 @@ describe('Statement import', () => {
     http.verify();
     language.set('ru');
   });
-  function preview() {
+  function preview(rows?: object[]) {
     const page = fixture.componentInstance;
     page.file = { filename: 'example.csv', content: 'YQ==' };
     page.account = 'account';
@@ -42,7 +42,7 @@ describe('Statement import', () => {
       sheets: ['CSV'],
       facts: [],
       plans: [],
-      rows: [
+      rows: rows ?? [
         {
           row: 2,
           raw: ['10.1234', 'pending'],
@@ -71,6 +71,85 @@ describe('Statement import', () => {
     expect(fixture.nativeElement.textContent).toContain('pending');
     expect(page.selected()).toHaveLength(0);
     http.expectNone('/api/v1/imports/commit');
+  });
+  it('filters inclusive source dates and restores excluded row drafts on reset', () => {
+    const page = preview([
+      statementRow(2, '2026-01-01'),
+      statementRow(3, '2026-01-02'),
+      statementRow(4, '2026-01-03'),
+    ]);
+    expect(page.importPeriodStart).toBe('2026-01-01');
+    expect(page.importPeriodEnd).toBe('2026-01-03');
+
+    page.rows()[0].action = 'new';
+    page.rows()[0].category = 'category';
+    page.rows()[0].description = 'Keep this browser draft';
+    page.rows()[1].action = 'new';
+    page.rows()[1].category = 'category';
+    page.rows()[2].action = 'new';
+    page.rows()[2].category = 'category';
+    page.importPeriodStart = '2026-01-02';
+    page.importPeriodEnd = '2026-01-03';
+
+    expect(page.visibleRows().map((row) => row.row)).toEqual([3, 4]);
+    expect(page.excludedRowCount()).toBe(1);
+    expect(page.selected().map((row) => row.row)).toEqual([3, 4]);
+    page.submit();
+    const request = http.expectOne('/api/v1/imports/commit');
+    expect(request.request.body.decisions.map((decision: { row: number }) => decision.row)).toEqual(
+      [3, 4],
+    );
+    request.flush(
+      { detail: { code: 'insufficient_balance' } },
+      { status: 409, statusText: 'Conflict' },
+    );
+    expect(page.importPeriodStart).toBe('2026-01-02');
+    expect(page.importPeriodEnd).toBe('2026-01-03');
+    expect(page.busy()).toBe(false);
+
+    (fixture.nativeElement.querySelector('.import-period button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(page.visibleRows().map((row) => row.row)).toEqual([2, 3, 4]);
+    expect(page.rows()[0].description).toBe('Keep this browser draft');
+    expect(page.selected().map((row) => row.row)).toEqual([2, 3, 4]);
+  });
+  it('separates import and posting periods and warns without dropping a corrected row', () => {
+    const page = preview([
+      statementRow(2, '2026-01-01'),
+      statementRow(3, '2026-01-02'),
+      statementRow(4, '2026-01-03'),
+    ]);
+    const corrected = page.rows()[1];
+    corrected.action = 'new';
+    corrected.category = 'category';
+    corrected.date = '2025-12-31';
+    page.rows.set([...page.rows()]);
+    fixture.detectChanges();
+
+    expect(page.selected()).toEqual([corrected]);
+    expect(page.postingPeriod()).toEqual({ start: '2025-12-31', end: '2025-12-31' });
+    expect(page.hasPostingOutsideImportPeriod()).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Период исходных дат для импорта');
+    expect(fixture.nativeElement.textContent).toContain('Период проведения фактов');
+    expect(fixture.nativeElement.textContent).toContain('выходит за период импорта');
+
+    const [start, end] = fixture.nativeElement.querySelectorAll(
+      '.import-period input[type="date"]',
+    ) as NodeListOf<HTMLInputElement>;
+    start.value = '2026-02-01';
+    start.dispatchEvent(new Event('input'));
+    end.value = '2026-02-28';
+    end.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(page.visibleRows()).toHaveLength(0);
+    expect(page.selected()).toHaveLength(0);
+    expect(fixture.nativeElement.textContent).toContain('Исключено строк: 3');
+    expect(fixture.nativeElement.textContent).toContain('изменения по счетам отсутствуют');
+
+    language.set('en');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Source-date import period');
+    expect(fixture.nativeElement.textContent).toContain('Fact-date posting period');
   });
   it('blocks legacy mappings and lets an invalid dated row be corrected or skipped', () => {
     const page = fixture.componentInstance;
@@ -418,3 +497,21 @@ describe('Statement import', () => {
     http.expectNone('/api/v1/imports/commit');
   });
 });
+
+function statementRow(row: number, sourceDate: string): object {
+  return {
+    row,
+    raw: ['10.1234', sourceDate],
+    type: 'expense',
+    amount: '10.1234',
+    description: `Coffee ${row}`,
+    source_date: sourceDate,
+    fact_date: sourceDate,
+    date_error: null,
+    currency: 'RUB',
+    error: null,
+    imported_id: null,
+    facts: [],
+    plans: [],
+  };
+}

@@ -115,6 +115,8 @@ export class ImportsPage {
   readonly sheets = signal<string[]>([]);
   readonly profiles = signal<{ name: string; mapping: Partial<Mapping> }[]>([]);
   readonly results = signal<{ row: number; operation_id: string }[]>([]);
+  importPeriodStart = '';
+  importPeriodEnd = '';
   mergePlans: Record<string, boolean> = {};
   facts: Candidate[] = [];
   plans: Candidate[] = [];
@@ -195,6 +197,8 @@ export class ImportsPage {
     this.mergePlans = {};
     this.rows.set([]);
     this.results.set([]);
+    this.importPeriodStart = '';
+    this.importPeriodEnd = '';
   }
   loadProfiles(): void {
     this.http
@@ -289,24 +293,24 @@ export class ImportsPage {
           this.mergePlans = {};
           this.facts = v.facts;
           this.plans = v.plans;
-          this.rows.set(
-            v.rows.map((r) => ({
-              ...r,
-              sourceDescription: r.description,
-              description: '',
-              action: 'skip',
-              category: this.suggestCategory(r),
-              fund: '',
-              fundAmount: '',
-              account: this.account,
-              destination: '',
-              date: r.fact_date ?? '',
-              plan: '',
-              existing: '',
-              allocate: false,
-              windowDays: this.window,
-            })),
-          );
+          const rows = v.rows.map((r) => ({
+            ...r,
+            sourceDescription: r.description,
+            description: '',
+            action: 'skip',
+            category: this.suggestCategory(r),
+            fund: '',
+            fundAmount: '',
+            account: this.account,
+            destination: '',
+            date: r.fact_date ?? '',
+            plan: '',
+            existing: '',
+            allocate: false,
+            windowDays: this.window,
+          }));
+          this.rows.set(rows);
+          this.resetImportPeriod();
           this.busy.set(false);
         },
         error: (e) => this.fail(e),
@@ -408,8 +412,44 @@ export class ImportsPage {
       };
     });
   }
+  visibleRows(): Row[] {
+    return this.rows().filter(
+      (row) =>
+        !row.source_date ||
+        ((!this.importPeriodStart || row.source_date >= this.importPeriodStart) &&
+          (!this.importPeriodEnd || row.source_date <= this.importPeriodEnd)),
+    );
+  }
+  excludedRowCount(): number {
+    const visible = new Set(this.visibleRows().map((row) => row.row));
+    return this.rows().filter((row) => row.source_date && !visible.has(row.row)).length;
+  }
+  completeImportPeriod(): { start: string; end: string } | null {
+    const dates = this.sourceDates();
+    return dates.length ? { start: dates[0], end: dates.at(-1)! } : null;
+  }
+  postingPeriod(): { start: string; end: string } | null {
+    const dates = this.selected()
+      .map((row) => row.date)
+      .filter(Boolean)
+      .sort();
+    return dates.length ? { start: dates[0], end: dates.at(-1)! } : null;
+  }
+  hasPostingOutsideImportPeriod(): boolean {
+    return this.selected().some(
+      (row) =>
+        !!row.date &&
+        ((!!this.importPeriodStart && row.date < this.importPeriodStart) ||
+          (!!this.importPeriodEnd && row.date > this.importPeriodEnd)),
+    );
+  }
+  resetImportPeriod(): void {
+    const dates = this.sourceDates();
+    this.importPeriodStart = dates[0] ?? '';
+    this.importPeriodEnd = dates.at(-1) ?? '';
+  }
   selected(): Row[] {
-    return this.rows().filter((r) => r.action !== 'skip' && !r.imported_id);
+    return this.visibleRows().filter((r) => r.action !== 'skip' && !r.imported_id);
   }
   candidateOptions(row: Row, kind: 'plans' | 'facts'): EntityOption[] {
     return row[kind].map((candidate) => {
@@ -590,5 +630,11 @@ export class ImportsPage {
         },
         error: (e) => this.fail(e),
       });
+  }
+  private sourceDates(): string[] {
+    return this.rows()
+      .map((row) => row.source_date)
+      .filter((date): date is string => Boolean(date))
+      .sort();
   }
 }

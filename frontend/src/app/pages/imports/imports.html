@@ -176,7 +176,34 @@
   @if (busy()) {
     <p role="status">{{ t('imports.loading') }}</p>
   }
-  @for (row of rows(); track row.row) {
+  @if (rows().length) {
+    <section class="panel import-period" aria-labelledby="import-period-title">
+      <h2 id="import-period-title">{{ t('imports.importPeriod') }}</h2>
+      @if (completeImportPeriod(); as completePeriod) {
+        <p class="hint">
+          {{ t('imports.completeSourcePeriod') }}: {{ completePeriod.start | textDate }} —
+          {{ completePeriod.end | textDate }}
+        </p>
+      }
+      <div class="fields period-fields">
+        <label>
+          {{ t('imports.periodStart') }}
+          <input type="date" [(ngModel)]="importPeriodStart" />
+        </label>
+        <label>
+          {{ t('imports.periodEnd') }}
+          <input type="date" [(ngModel)]="importPeriodEnd" />
+        </label>
+        <button type="button" class="secondary" (click)="resetImportPeriod()">
+          {{ t('imports.resetImportPeriod') }}
+        </button>
+      </div>
+      <p class="excluded-count" role="status">
+        {{ t('imports.excludedRows', { count: excludedRowCount() }) }}
+      </p>
+    </section>
+  }
+  @for (row of visibleRows(); track row.row) {
     <fieldset
       class="panel row"
       [class.imported-row]="!!row.imported_id"
@@ -370,6 +397,27 @@
     <section class="panel review-summary">
       <h2>{{ t('imports.selected', { count: selected().length }) }}</h2>
       <p class="hint">{{ t('imports.review') }}</p>
+      <dl class="period-summary">
+        <dt>{{ t('imports.importPeriod') }}</dt>
+        <dd>
+          @if (importPeriodStart && importPeriodEnd) {
+            {{ importPeriodStart | textDate }} — {{ importPeriodEnd | textDate }}
+          } @else {
+            —
+          }
+        </dd>
+        <dt>{{ t('imports.postingPeriod') }}</dt>
+        <dd>
+          @if (postingPeriod(); as posting) {
+            {{ posting.start | textDate }} — {{ posting.end | textDate }}
+          } @else {
+            —
+          }
+        </dd>
+      </dl>
+      @if (hasPostingOutsideImportPeriod()) {
+        <p class="period-warning" role="alert">{{ t('imports.postingOutsideImportPeriod') }}</p>
+      }
       @for (group of planGroups(); track group.id) {
         <div class="merge-plan-group">
           <label>
