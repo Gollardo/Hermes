@@ -121,6 +121,26 @@ summary:focus-visible {
   margin-bottom: 0.25rem;
 }
 
+.import-period h2 {
+  font-size: 1.15rem;
+  margin: 0 0 0.5rem;
+}
+
+.period-fields {
+  align-items: end;
+  grid-template-columns: repeat(2, minmax(0, 14rem)) auto;
+  margin-block: 1rem 0.5rem;
+}
+
+.period-fields button {
+  justify-self: start;
+}
+
+.excluded-count {
+  color: var(--ink-soft);
+  margin: 0;
+}
+
 .setup-actions {
   margin-top: 1rem;
 }
@@ -212,6 +232,17 @@ dd {
 
 .review-summary h3 {
   font-size: 1rem;
+}
+
+.period-summary {
+  margin-block: 1rem;
+}
+
+.period-warning {
+  background: var(--warning-soft);
+  border-inline-start: 3px solid var(--warning);
+  overflow-wrap: anywhere;
+  padding: 0.75rem;
 }
 
 .empty-selection {
