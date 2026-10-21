@@ -249,8 +249,9 @@ row dates/drafts. Real-browser desktop and 390 px acceptance remains open.
 Chronological-confirmation verification on 2026-10-21: 220 default backend
 tests passed with 124 PostgreSQL-gated skips, all 125 PostgreSQL integration
 tests passed, and all 206 frontend tests passed when the 25 spec files were run
-sequentially with isolated local storage. The standard parallel frontend runner
-still has a pre-existing cross-file local-storage/combobox race. Focused import
+sequentially with isolated local storage. Later investigation attributed the
+plain parallel-run failures to unsupported Node 26 experimental web storage,
+not to a demonstrated application race. Focused import
 coverage passed 21 authenticated HTTP integration tests and 16 component tests.
 Lint, catalog and formatting checks, Python and TypeScript type checking,
 documentation checks and the production frontend build passed. Real-browser
@@ -262,9 +263,13 @@ and aligned the candidate-search source-description limit with the parser,
 receipt and backup boundary of 4,000 characters. The default backend suite
 passed with 223 tests and 128 PostgreSQL-gated skips; all 129 PostgreSQL
 integration tests passed against disposable databases. All 211 frontend tests
-passed when the 25 spec files were run sequentially with isolated local storage;
-the standard parallel runner still exposes the pre-existing cross-file
-local-storage/combobox race. Ruff, Python formatting, ESLint, catalogs,
+passed when the 25 spec files were run sequentially with isolated local storage.
+The host is unsupported Node.js 26.10.0/npm 11.19.1 versus documented Node.js
+22.22.3 within the Node 22 line and npm 10. Plain `make test-frontend` fails
+broadly because Node 26's experimental global local storage masks jsdom. The
+standard parallel suite passed all 212 tests across 25 files with
+`NODE_OPTIONS=--no-experimental-webstorage make test-frontend`; supported Node
+22 was not tested. Ruff, Python formatting, ESLint, catalogs,
 Prettier, mypy, TypeScript and documentation checks passed. The production
 frontend build passed with unchanged budget warnings. A fresh disposable
 database upgraded through `0018_import_provenance`, and `alembic check` found no
