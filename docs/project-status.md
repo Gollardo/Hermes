@@ -229,10 +229,10 @@ expanded posting warnings and unchanged account prefix matching. Real-browser de
 
 Chronological-confirmation verification on 2026-10-21: 220 default backend
 tests passed with 124 PostgreSQL-gated skips, all 125 PostgreSQL integration
-tests passed, and all 204 frontend tests passed when the 25 spec files were run
+tests passed, and all 206 frontend tests passed when the 25 spec files were run
 sequentially with isolated local storage. The standard parallel frontend runner
 still has a pre-existing cross-file local-storage/combobox race. Focused import
-coverage passed 21 authenticated HTTP integration tests and 14 component tests.
+coverage passed 21 authenticated HTTP integration tests and 16 component tests.
 Lint, catalog and formatting checks, Python and TypeScript type checking,
 documentation checks and the production frontend build passed. Real-browser
 desktop/390 px and production acceptance remain open.
