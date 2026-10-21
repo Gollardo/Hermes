@@ -299,6 +299,41 @@ describe('Statement import', () => {
     expect(page.results()).toHaveLength(1);
     expect(page.selected()).toHaveLength(0);
   });
+  it('shows and submits the effective chronological posting order', () => {
+    const page = preview();
+    const base = { ...page.rows()[0], action: 'new', category: 'category' };
+    page.rows.set([
+      { ...base, row: 2, date: '2026-01-02' },
+      { ...base, row: 4, date: '2026-01-01' },
+      { ...base, row: 3, date: '2026-01-01' },
+    ]);
+    fixture.detectChanges();
+
+    expect(page.postingOrder().map((row) => row.row)).toEqual([3, 4, 2]);
+    const summary = fixture.nativeElement.querySelector('.posting-order') as HTMLElement;
+    expect(summary.textContent).toContain('3 · 1 января 2026');
+    expect(summary.textContent?.indexOf('3 ·')).toBeLessThan(summary.textContent?.indexOf('4 ·'));
+    expect(summary.textContent?.indexOf('4 ·')).toBeLessThan(summary.textContent?.indexOf('2 ·'));
+
+    page.submit();
+    const request = http.expectOne('/api/v1/imports/commit');
+    expect(request.request.body.decisions.map((item: { row: number }) => item.row)).toEqual([
+      3, 4, 2,
+    ]);
+    request.flush({ results: [] });
+  });
+  it('blocks 201 selected rows with guidance to narrow the import period', () => {
+    const page = preview();
+    const base = { ...page.rows()[0], action: 'new', category: 'category' };
+    page.rows.set(Array.from({ length: 201 }, (_, index) => ({ ...base, row: index + 2 })));
+
+    page.submit();
+
+    http.expectNone('/api/v1/imports/commit');
+    expect(page.error()).toContain('200');
+    expect(page.error()).toContain('период');
+    expect(page.selected()).toHaveLength(201);
+  });
   it('invalidates preview after mapping changes and clears stale links when action changes', () => {
     const page = preview();
     const row = page.rows()[0];
