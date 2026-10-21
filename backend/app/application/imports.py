@@ -32,7 +32,11 @@ from app.modules.operations.contracts import (
     post_import_operation,
     validate_import_date,
 )
-from app.modules.scheduling.contracts import confirm_imported_occurrence, import_plan_candidates
+from app.modules.scheduling.contracts import (
+    confirm_imported_occurrence,
+    import_occurrence_description,
+    import_plan_candidates,
+)
 from app.modules.settings.contracts import get_application_settings
 
 
@@ -237,6 +241,10 @@ def commit(session: Session, request: CommitRequest) -> dict[str, Any]:
                 if decision.existing_version is None:
                     raise ValueError("Existing version is required")
                 existing = import_existing(session, decision.existing_id, decision.existing_version)
+                # Linking is reconciliation, not an edit: the recorded owner's description wins.
+                payload = type(payload).model_validate(
+                    {**payload.model_dump(), "description": existing.description}
+                )
                 if (
                     existing.type != payload.type
                     or Decimal(existing.amount) != payload.amount
@@ -247,29 +255,39 @@ def commit(session: Session, request: CommitRequest) -> dict[str, Any]:
                     or existing.fund_id != payload.fund_id
                     or (Decimal(existing.fund_amount) if existing.fund_amount else None)
                     != payload.fund_amount
-                    or existing.description != payload.description
                 ):
                     raise ValueError("Existing fact does not match the reviewed fields")
                 operation_id = decision.existing_id
-            elif decision.allocate_to_funds:
-                if (
-                    payload.type.value != "transfer"
-                    or payload.destination_account_id is None
-                    or payload.fund_id
-                ):
-                    raise ValueError("Allocation requires an ordinary transfer")
-                operation_id = transfer_and_allocate(
-                    session,
-                    TransferAllocationCreateRequest(
-                        occurred_on=payload.occurred_on,
-                        amount=payload.amount,
-                        description=payload.description,
-                        source_account_id=payload.account_id,
-                        destination_account_id=payload.destination_account_id,
-                    ),
-                ).operation_id
             else:
-                operation_id = post_import_operation(session, payload)
+                if decision.occurrence_id:
+                    if decision.occurrence_version is None:
+                        raise ValueError("Plan version is required")
+                    plan_description = import_occurrence_description(
+                        session, decision.occurrence_id, decision.occurrence_version
+                    )
+                    payload = type(payload).model_validate(
+                        {**payload.model_dump(), "description": plan_description}
+                    )
+            if not decision.existing_id:
+                if decision.allocate_to_funds:
+                    if (
+                        payload.type.value != "transfer"
+                        or payload.destination_account_id is None
+                        or payload.fund_id
+                    ):
+                        raise ValueError("Allocation requires an ordinary transfer")
+                    operation_id = transfer_and_allocate(
+                        session,
+                        TransferAllocationCreateRequest(
+                            occurred_on=payload.occurred_on,
+                            amount=payload.amount,
+                            description=payload.description,
+                            source_account_id=payload.account_id,
+                            destination_account_id=payload.destination_account_id,
+                        ),
+                    ).operation_id
+                else:
+                    operation_id = post_import_operation(session, payload)
             if decision.occurrence_id:
                 if decision.occurrence_version is None:
                     raise ValueError("Plan version is required")

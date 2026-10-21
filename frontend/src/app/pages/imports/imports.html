@@ -187,7 +187,8 @@
         <h2>
           <span class="row-number">{{ t('imports.rowNumber', { row: row.row }) }}</span
           >{{
-            row.description || (row.error ? t('imports.unrecognized') : t('imports.unnamedRow'))
+            row.sourceDescription ||
+              (row.error ? t('imports.unrecognized') : t('imports.unnamedRow'))
           }}
         </h2>
         @if (row.amount) {
@@ -227,6 +228,10 @@
         >
       }
       @if (row.action !== 'skip') {
+        <p class="source-description">
+          <strong>{{ t('imports.sourceDescription') }}:</strong>
+          {{ row.sourceDescription || t('imports.unnamedRow') }}
+        </p>
         <div class="fields">
           @if (row.action === 'plan') {
             <label
@@ -323,8 +328,12 @@
             }
           }
           <label
-            >{{ t('imports.description') }}<input [(ngModel)]="row.description" maxlength="2000"
+            >{{ t('imports.operationDescription')
+            }}<input [(ngModel)]="row.description" maxlength="2000"
           /></label>
+          <button type="button" class="copy-description" (click)="copySourceDescription(row)">
+            {{ t('imports.copySourceDescription') }}
+          </button>
         </div>
       }
       <details class="source-details">
@@ -359,7 +368,11 @@
             {{ group.rows[0].date | textDate }}
           </p>
           <p class="hint">
-            {{ t('imports.mergedDescription', { description: group.rows[0].description || '—' }) }}
+            {{
+              t('imports.mergedDescription', {
+                description: planDescription(group.id) || '—',
+              })
+            }}
           </p>
           @if (!group.compatible) {
             <p class="field-error">{{ t('imports.groupError') }}</p>

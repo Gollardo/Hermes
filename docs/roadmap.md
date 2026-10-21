@@ -159,6 +159,9 @@ every bank file automatically without configuration.
 - [x] Account selection, normalization of operation sign and type, and category
   suggestions.
 - [x] Explainable duplicate candidates and manual conflict resolution.
+- [x] Separate source descriptions from optional operation descriptions during
+  active review; provide an explicit copy action, use plan descriptions for
+  plan-backed facts and preserve linked existing-fact descriptions.
 - [x] Explicit confirmation, atomic writes through owning modules' public
   contracts, and a result report.
 - [x] Bank-specific profiles build on the shared pipeline and receive no direct

@@ -87,7 +87,8 @@ the profile name stays beside its save action. Narrow layouts stack controls.
 Review rows lead with source context and the exact formatted amount. A new fact
 starts with an empty optional operation description and offers an explicit
 copy-from-source action. Choosing a plan uses its description; linking an
-existing fact preserves the existing description. Completed
+existing fact preserves the existing description. These description controls
+and outcomes are implemented in the 2026-10-21 refinement slice. Completed
 rows retain status, operation link and source details without a disabled action
 selector. Unrecognized rows remain visible with a textual error. Source data
 follows financial context and retains its original values. An empty selection

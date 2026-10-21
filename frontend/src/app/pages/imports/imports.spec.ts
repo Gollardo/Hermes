@@ -116,6 +116,25 @@ describe('Statement import', () => {
     page.submit();
     http.expectOne('/api/v1/imports/commit').flush({ results: [] });
   });
+  it('keeps source evidence separate and copies it only on explicit request', () => {
+    const page = preview();
+    const row = page.rows()[0];
+    expect(row.sourceDescription).toBe('Coffee');
+    expect(row.description).toBe('');
+    row.action = 'new';
+    page.rows.set([...page.rows()]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Исходное описание');
+    expect(fixture.nativeElement.textContent).toContain('Описание операции');
+    page.copySourceDescription(row);
+    expect(row.description).toBe('Coffee');
+    row.description = 'Coffee with colleague';
+    expect(row.sourceDescription).toBe('Coffee');
+    language.set('en');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Source description');
+    expect(fixture.nativeElement.textContent).toContain('Operation description');
+  });
   it('searches the selectable category hierarchy by parent or child name', () => {
     const page = preview();
     page.rows()[0].action = 'new';
@@ -229,10 +248,14 @@ describe('Statement import', () => {
         category_id: 'category',
       },
     ];
+    first.description = 'Noisy merchant text';
+    page.selectPlan(first);
+    expect(first.description).toBe('Coffee');
     page.rows.set([first, { ...first, row: 3, amount: '20.5678' }]);
     fixture.detectChanges();
     expect(page.planGroups()[0].total).toBe('30.6912');
     expect(fixture.nativeElement.textContent).toContain('30,69');
+    expect(fixture.nativeElement.textContent).toContain('Coffee');
     page.submit();
     http.expectNone('/api/v1/imports/commit');
     page.mergePlans['plan'] = true;

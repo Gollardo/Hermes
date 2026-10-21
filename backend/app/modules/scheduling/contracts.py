@@ -316,6 +316,22 @@ def confirm_imported_occurrence(
     session.flush()
 
 
+def import_occurrence_description(
+    session: Session, occurrence_id: UUID, version: int
+) -> str | None:
+    """Return the plan-owned description for a locked, actionable import choice."""
+    occurrence = session.scalar(
+        select(ExpectedOccurrence).where(ExpectedOccurrence.id == occurrence_id).with_for_update()
+    )
+    if (
+        occurrence is None
+        or occurrence.version != version
+        or occurrence.status not in {OccurrenceStatus.PENDING, OccurrenceStatus.POSTPONED}
+    ):
+        raise ValueError("Plan changed or is no longer actionable")
+    return occurrence.description
+
+
 def lock_import_occurrences(session: Session, ids: set[UUID]) -> None:
     session.scalars(
         select(ExpectedOccurrence)

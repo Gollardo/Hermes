@@ -45,6 +45,7 @@ interface Row {
   type: Kind;
   amount: string;
   description: string;
+  sourceDescription: string;
   currency: string;
   facts: Candidate[];
   plans: Candidate[];
@@ -290,6 +291,8 @@ export class ImportsPage {
           this.rows.set(
             v.rows.map((r) => ({
               ...r,
+              sourceDescription: r.description,
+              description: '',
               action: 'skip',
               category: this.suggestCategory(r),
               fund: '',
@@ -318,6 +321,10 @@ export class ImportsPage {
     row.plan = '';
     row.existing = '';
     row.allocate = false;
+    row.description = '';
+  }
+  copySourceDescription(row: Row): void {
+    row.description = row.sourceDescription;
   }
   selectPlan(row: Row): void {
     const plan = this.plans.find((p) => p.id === row.plan);
@@ -327,6 +334,7 @@ export class ImportsPage {
     row.account = plan.account_id ?? this.account;
     row.destination = plan.destination_account_id ?? '';
     row.allocate = plan.allocate_to_funds ?? false;
+    row.description = plan.description;
   }
   selectExisting(row: Row): void {
     const fact = this.facts.find((p) => p.id === row.existing);
@@ -439,6 +447,9 @@ export class ImportsPage {
           total: `${units / 10000n}.${String(units % 10000n).padStart(4, '0')}`,
         };
       });
+  }
+  planDescription(id: string): string {
+    return this.plans.find((plan) => plan.id === id)?.description ?? '';
   }
   groupRowNumbers(rows: Row[]): string {
     return rows.map((row) => row.row).join(', ');
