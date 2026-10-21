@@ -198,11 +198,13 @@ Production and browser acceptance remain open.
 Inclusive period filtering, per-row plan windows and plan-owned merged
 descriptions are approved but not implemented. The remaining
 reconciliation-selector work is also not implemented. Receipt-level source
-date/description, chronological posting,
-searchable existing-fact selection and the explicit 200-row boundary are
-approved; provenance and search remain unimplemented while the existing
-200-decision request bound remains enforced. Bulk review actions remain out of
-scope.
+date/description and searchable existing-fact selection remain approved but
+unimplemented. Chronological posting and the explicit 200-row boundary are
+implemented: the server orders by reviewed fact date and physical source row,
+the review shows and submits that order, oversized batches receive
+period-narrowing guidance, and no automatic splitting occurs. Atomic rollback,
+completed-row exclusion, journal links, unchanged retries and changed-decision
+conflicts retain their existing behavior. Bulk review actions remain out of scope.
 Source-date filtering and fact-date posting ranges are distinct; the approved
 UI uses bounded common date formats, a selectable two-level category tree and
 source provenance in operation details without a new import-history screen.
@@ -221,6 +223,16 @@ ownership, parent/child substring search, selectable roots, archived exclusion,
 hierarchy context, keyboard behavior, recent choices, empty results, long
 Russian labels and unchanged account prefix matching. Real-browser desktop and
 390 px acceptance remains part of the complete import refinement.
+
+Chronological-confirmation verification on 2026-10-21: 220 default backend
+tests passed with 124 PostgreSQL-gated skips, all 125 PostgreSQL integration
+tests passed, and all 204 frontend tests passed when the 25 spec files were run
+sequentially with isolated local storage. The standard parallel frontend runner
+still has a pre-existing cross-file local-storage/combobox race. Focused import
+coverage passed 21 authenticated HTTP integration tests and 14 component tests.
+Lint, catalog and formatting checks, Python and TypeScript type checking,
+documentation checks and the production frontend build passed. Real-browser
+desktop/390 px and production acceptance remain open.
 
 ## Release assumptions and technical debt
 

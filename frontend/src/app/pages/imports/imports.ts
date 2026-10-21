@@ -404,6 +404,11 @@ export class ImportsPage {
   selected(): Row[] {
     return this.rows().filter((r) => r.action !== 'skip' && !r.imported_id);
   }
+  postingOrder(): Row[] {
+    return [...this.selected()].sort((left, right) =>
+      left.date === right.date ? left.row - right.row : left.date.localeCompare(right.date),
+    );
+  }
   candidates(row: Row, kind: 'plans' | 'facts'): Candidate[] {
     return [
       ...row[kind],
@@ -466,10 +471,13 @@ export class ImportsPage {
       .join(', ');
   }
   submit(): void {
-    const selected = this.selected();
+    const selected = this.postingOrder();
     if (this.busy() || !this.file || !selected.length) return;
+    if (selected.length > 200) {
+      this.error.set(() => t('imports.selectionLimit'));
+      return;
+    }
     if (
-      selected.length > 200 ||
       selected.some(
         (r) =>
           r.error ||

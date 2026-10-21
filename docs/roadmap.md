@@ -177,7 +177,9 @@ every bank file automatically without configuration.
   remains approved but not implemented.
 - [~] Durable receipt provenance for source date and description, chronological
   posting of up to 200 selected rows, and searchable existing-fact selection.
-  These refinements are approved but not implemented.
+  Server-authoritative chronological posting, the matching review summary and
+  the explicit atomic 200-row boundary are implemented; provenance and
+  searchable existing-fact selection remain approved but not implemented.
 - [~] Separate source-date import and fact-date posting periods, bounded common
   date formats, selectable two-level category presentation and imported source
   details on the operation. These refinements are approved but not implemented.
