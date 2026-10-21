@@ -32,6 +32,10 @@ assigned.
 
 ### Added
 
+- Filter statement review by an inclusive source-date period without discarding
+  browser-draft edits. Review now shows excluded-row counts and a separate
+  fact-date posting period, warning when corrected dates extend beyond the
+  current import period.
 - Map a statement source-date column in saved import profiles and derive each
   preview row's editable fact-date default. CSV and textual XLSX dates use one
   of six explicit date/date-time formats; native XLSX date cells keep their

@@ -195,16 +195,18 @@ Lint, type checks, documentation checks and the
 production frontend build also passed with the existing budget warnings.
 Production and browser acceptance remain open.
 
-Inclusive period filtering, per-row plan windows and plan-owned merged
-descriptions are approved but not implemented. The remaining
-reconciliation-selector work is also not implemented. Receipt-level source
-date/description and searchable existing-fact selection remain approved but
-unimplemented. Chronological posting and the explicit 200-row boundary are
-implemented: the server orders by reviewed fact date and physical source row,
-the review shows and submits that order, oversized batches receive
-period-narrowing guidance, and no automatic splitting occurs. Atomic rollback,
-completed-row exclusion, journal links, unchanged retries and changed-decision
-conflicts retain their existing behavior. Bulk review actions remain out of scope.
+Inclusive source-date filtering is implemented in browser state: it defaults to
+the complete parsed period, counts excluded parsed rows, preserves hidden edits,
+and shows the selected fact-date posting period with an expansion warning.
+Per-row plan windows and the remaining reconciliation-selector work are not
+implemented. Receipt-level source date/description and searchable existing-fact
+selection remain approved but unimplemented. Chronological posting and the
+explicit 200-row boundary are implemented: the server orders by reviewed fact
+date and physical source row, the review shows and submits that order, oversized
+batches receive period-narrowing guidance, and no automatic splitting occurs.
+Atomic rollback, completed-row exclusion, journal links, unchanged retries and
+changed-decision conflicts retain their existing behavior. Bulk review actions
+remain out of scope.
 Source-date filtering and fact-date posting ranges are distinct; the approved
 UI uses bounded common date formats, a selectable two-level category tree and
 source provenance in operation details without a new import-history screen.
@@ -213,15 +215,16 @@ period-filter changes preserve browser-draft edits until reload. The product
 decision tree for this refinement is complete; implementation and verification
 continue in bounded slices.
 
-Combined source-date, source-description and category-search verification on
+Combined source-date, source-description, category-search and period-filter verification on
 2026-10-21: 220 default backend tests passed with 122 PostgreSQL-gated skips,
-all 123 PostgreSQL integration tests passed, and all 202 frontend tests passed. Lint,
+all 123 PostgreSQL integration tests passed, and all 204 frontend tests passed. Lint,
 catalog checks, formatting, Python and TypeScript type checking, documentation
 checks and the production frontend build also passed. Existing bundle and
 component-style budget warnings remain. Automated tests cover description
 ownership, parent/child substring search, selectable roots, archived exclusion,
 hierarchy context, keyboard behavior, recent choices, empty results, long
-Russian labels and unchanged account prefix matching. Real-browser desktop and
+Russian labels, inclusive period boundaries, excluded counts, draft restoration,
+expanded posting warnings and unchanged account prefix matching. Real-browser desktop and
 390 px acceptance remains part of the complete import refinement.
 
 Chronological-confirmation verification on 2026-10-21: 220 default backend

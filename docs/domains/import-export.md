@@ -138,16 +138,19 @@ how many rows that filter excludes. The filter uses source dates; the review
 summary separately derives the posting period from reviewed fact dates.
 
 The profile mapping, bounded date parsing, native XLSX recognition, per-row
-preview defaults and explicit legacy-profile upgrade are implemented. The
-period filter, durable receipt provenance and later confirmation refinements in
-this section remain in progress; their accepted contract is recorded here so
-the slices compose without restoring the removed shared file date.
+preview defaults, explicit legacy-profile upgrade and browser-local period
+filter are implemented. Durable receipt provenance and later confirmation
+refinements in this section remain in progress; their accepted contract is
+recorded here so the slices compose without restoring the removed shared file
+date.
 
 A manual fact-date correction outside the source-date filter remains part of
 the reviewed selection and expands the displayed posting period with a warning.
 Filtering a row out removes it only from the current confirmation; its edits
 remain in the browser draft and return when the filter is reset. Reload still
-discards the non-persisted draft.
+discards the non-persisted draft. Rows without a parsed source date remain
+visible for correction or an explicit skip and do not count as period-filtered
+rows.
 
 The bounded text formats are day-month-year with dots, ISO year-month-day and
 day/month/year, plus their corresponding date-time variants. Arbitrary

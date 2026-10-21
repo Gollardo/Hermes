@@ -45,9 +45,10 @@ reconciliation controls described below remain in progress.
 ## Contracts
 
 The mapped statement date supplies each row's editable fact-date default; no
-date comes from the browser. The selected rows expose their derived inclusive
-import period. An optional inclusive start/end filter defaults to that complete
-period, shows the number of excluded rows and can be reset. Source amounts remain exact;
+date comes from the browser. The preview exposes its complete derived inclusive
+source-date period. An optional inclusive start/end filter defaults to that
+complete period, shows the number of excluded rows and can be reset. Source
+amounts remain exact;
 rendering uses two fractional digits and never rewrites the payload. All strings
 are RU/EN except user/source values. Mapping changes invalidate the preview.
 The user must rerun review after a stale fact/plan conflict. Empty selections
@@ -64,7 +65,9 @@ the source-date import period separately from the fact-date posting period.
 If a corrected fact date lies outside the import period, the row stays selected
 and a warning explains the expanded posting period. Filtering a row out keeps
 its browser-draft edits; resetting the filter restores the edited row. Reloading
-the page still clears the draft.
+the page still clears the draft. This source-period filtering, excluded-row
+count, separate posting-period summary and out-of-period warning are implemented
+in the 2026-10-21 refinement slice.
 
 ## Presentation refinement (2026-09-11)
 

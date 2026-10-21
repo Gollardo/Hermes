@@ -169,8 +169,9 @@ every bank file automatically without configuration.
 
 - [~] Profile-mapped source dates with editable per-row fact dates, a derived
   import period, all-status review and links to planned payments. The existing
-  explicit-date flow and profile-mapped per-row preview dates are implemented;
-  derived period filtering and the remaining reconciliation refinements are not.
+  explicit-date flow, profile-mapped per-row preview dates and browser-local
+  inclusive period filtering are implemented; the remaining reconciliation
+  refinements are not.
 - [~] Searchable hierarchical category selection and searchable planned-payment
   selection. The shared two-level category combobox is implemented in import,
   ordinary operation entry and scheduling; searchable planned-payment selection
@@ -182,9 +183,9 @@ every bank file automatically without configuration.
   searchable existing-fact selection remain approved but not implemented.
 - [~] Separate source-date import and fact-date posting periods, bounded common
   date formats, selectable two-level category presentation and imported source
-  details on the operation. These refinements are approved but not implemented.
-  Fact-date corrections may expand the posting period, and period-filter changes
-  preserve browser-draft row edits until reload.
+  details on the operation. The separate period presentation, expanded-posting
+  warning and browser-draft-preserving source filter are implemented; imported
+  source details remain approved but not implemented.
 - [x] Explicit compatible same-date income/expense row groups against one plan.
   Partial settlement, multi-date grouping and additions to closed plans remain
   outside this slice.
