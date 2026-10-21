@@ -549,6 +549,23 @@ def test_schema_one_checksum_remains_compatible_with_omitted_optional_fields() -
     verify_integrity(document)
 
 
+def test_legacy_import_receipt_defaults_missing_provenance_to_unknown() -> None:
+    legacy = valid_data()
+    legacy["import_receipts"] = [
+        {
+            "id": str(uuid4()),
+            "source_key": "a" * 64,
+            "decision_hash": "b" * 64,
+            "operation_id": legacy["operations"][0]["id"],
+        }
+    ]
+
+    receipt = BackupData.model_validate(legacy).import_receipts[0]
+
+    assert receipt.source_date is None
+    assert receipt.source_description is None
+
+
 def test_backup_rejects_fund_allocation_on_non_transfer_schedule() -> None:
     invalid = valid_data()
     invalid["recurring_rules"][0]["allocate_to_funds"] = True

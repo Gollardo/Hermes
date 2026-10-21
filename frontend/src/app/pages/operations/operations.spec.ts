@@ -27,6 +27,12 @@ interface TestOperation {
     account_name: string;
     amount: string;
   }[];
+  import_provenance?:
+    | {
+        source_date: string | null;
+        source_description: string | null;
+      }[]
+    | null;
   version: number;
 }
 
@@ -1027,7 +1033,12 @@ describe('OperationsPage', () => {
       totalAmount: '20.0000',
     });
     fixture.nativeElement.querySelector('.row-main').click();
+    http.expectOne('/api/v1/operations/adjustment-1').flush({
+      ...adjustment,
+      import_provenance: null,
+    });
     fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Источник из выписки');
     fixture.nativeElement.querySelector('.row-actions .secondary').click();
     fixture.detectChanges();
     expect(
@@ -1078,6 +1089,10 @@ describe('OperationsPage', () => {
     expect(fixture.nativeElement.textContent).toContain('Main → Old savings');
 
     fixture.nativeElement.querySelector('.row-main').click();
+    http.expectOne('/api/v1/operations/operation-1').flush({
+      ...transfer,
+      import_provenance: null,
+    });
     fixture.detectChanges();
     fixture.nativeElement.querySelector('.row-actions .secondary').click();
     fixture.detectChanges();
@@ -1089,6 +1104,45 @@ describe('OperationsPage', () => {
     destinationInput.dispatchEvent(new Event('focus'));
     fixture.detectChanges();
     expect(destination.textContent).toContain('25,00 ₽ · в архиве');
+  });
+
+  it('shows immutable statement evidence separately in imported operation details', () => {
+    const imported: TestOperation = {
+      id: 'imported-1',
+      type: 'expense',
+      occurred_on: '2026-08-02',
+      amount: '10.0000',
+      description: 'Owner description',
+      reason: null,
+      category_id: 'category-1',
+      category_name: 'Food',
+      account_id: 'account-1',
+      destination_account_id: null,
+      movements: [{ account_id: 'account-1', account_name: 'Main', amount: '-10.0000' }],
+      fund_id: null,
+      fund_amount: null,
+      fund_movements: [],
+      version: 2,
+    };
+    flushInitial({ operations: [imported] });
+
+    fixture.nativeElement.querySelector('.row-main').click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Загружаем детали операции');
+    http.expectOne('/api/v1/operations/imported-1').flush({
+      ...imported,
+      import_provenance: [
+        { source_date: '2026-08-01', source_description: 'Very long bank source description' },
+      ],
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Источник из выписки');
+    expect(fixture.nativeElement.textContent).toContain('Дата в выписке');
+    expect(fixture.nativeElement.textContent).toContain('1 августа 2026');
+    expect(fixture.nativeElement.textContent).toContain('Описание в выписке');
+    expect(fixture.nativeElement.textContent).toContain('Very long bank source description');
+    expect(fixture.nativeElement.textContent).toContain('Owner description');
   });
 
   it('uses application timezone for the default financial date', () => {

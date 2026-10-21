@@ -134,7 +134,8 @@ amount. More than 200 selected rows block confirmation and direct the owner to
 narrow the period. The screen does not split a confirmation automatically.
 Bulk action, category and plan assignment are outside this refinement.
 
-After posting, operation details may expose the receipt's original source date
-and source description. The complete source row and file remain available only
-during the active browser review and are not persisted.
+After posting, expandable operation details expose each receipt's original
+source date and source description in a separately labelled statement-evidence
+block. Ordinary operations do not show that block. The complete source row and
+file remain available only during the active browser review and are not persisted.
 No separate import-history screen is introduced.

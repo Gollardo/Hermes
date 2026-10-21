@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from difflib import SequenceMatcher
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -20,18 +21,21 @@ from app.modules.imports.contracts import (
     decision_groups,
     find_receipt,
     normalize,
+    operation_provenance,
     parse_source_date,
     read_file,
     receipt_ids,
     record_receipt,
 )
 from app.modules.operations.contracts import (
+    get_operation_response,
     import_candidates,
     import_existing,
     operation_history_references,
     post_import_operation,
     validate_import_date,
 )
+from app.modules.operations.schemas import ImportProvenanceResponse, OperationResponse
 from app.modules.scheduling.contracts import (
     confirm_imported_occurrence,
     import_occurrence_description,
@@ -42,6 +46,19 @@ from app.modules.settings.contracts import get_application_settings
 
 def source_key(digest: str, sheet: str, row: int) -> str:
     return hashlib.sha256(f"{digest}:{sheet}:{row}".encode()).hexdigest()
+
+
+def operation_detail(session: Session, operation_id: UUID) -> OperationResponse:
+    """Compose ledger detail with optional Imports-owned source evidence."""
+    response = get_operation_response(session, operation_id)
+    provenance = [
+        ImportProvenanceResponse(
+            source_date=item.source_date,
+            source_description=item.source_description,
+        )
+        for item in operation_provenance(session, operation_id)
+    ]
+    return response.model_copy(update={"import_provenance": provenance or None})
 
 
 def preview(session: Session, request: PreviewRequest) -> dict[str, Any]:
@@ -186,11 +203,19 @@ def commit(session: Session, request: CommitRequest) -> dict[str, Any]:
                 )
                 continue
             total = Decimal(0)
+            provenance: dict[int, tuple[date | None, str | None]] = {}
             for item in group:
                 try:
                     if item.row <= request.mapping.header_row or item.row > len(rows):
                         raise ValueError("Invalid source row")
-                    kind, amount, _, currency = normalize(rows[item.row - 1], request.mapping)
+                    raw = rows[item.row - 1]
+                    kind, amount, source_description, currency = normalize(raw, request.mapping)
+                    try:
+                        source_date = parse_source_date(raw, request.mapping, today=date.max)
+                    except ValueError:
+                        # A manually corrected fact may originate from an invalid or absent date.
+                        source_date = None
+                    provenance[item.row] = (source_date, source_description or None)
                     payload = item.operation
                     validate_import_date(session, payload.occurred_on)
                     bank_side = (
@@ -302,7 +327,15 @@ def commit(session: Session, request: CommitRequest) -> dict[str, Any]:
                     decision.allocate_to_funds,
                 )
             for item, key in zip(group, keys, strict=True):
-                record_receipt(session, key, fingerprint, operation_id)
+                receipt_source_date, receipt_source_description = provenance[item.row]
+                record_receipt(
+                    session,
+                    key,
+                    fingerprint,
+                    operation_id,
+                    source_date=receipt_source_date,
+                    source_description=receipt_source_description,
+                )
                 results.append(dict(row=item.row, operation_id=str(operation_id), reused=False))
         except (ValueError, RuntimeError) as error:
             raise ImportDecisionError(decision.row, error) from error

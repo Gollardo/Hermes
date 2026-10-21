@@ -179,9 +179,8 @@ The statement's source description is evidence, not the user-owned operation
 description. It remains available to matching and review. New facts start with
 an empty operation description and may copy the source text explicitly; plan
 confirmation uses the plan description, while linking an existing fact never
-rewrites its description. This source/operation description separation is the
-implemented 2026-10-21 refinement slice; durable receipt provenance described
-above belongs to a separate slice.
+rewrites its description. Source/operation description separation and durable
+receipt provenance are implemented in the 2026-10-21 refinement slices.
 
 Plan candidates are searched per row around its editable fact date, with the
 existing three-day window on either side as the default. An explicitly merged
