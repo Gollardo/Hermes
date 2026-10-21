@@ -58,7 +58,7 @@ or live-route acceptance. No dependency was added.
 | Plans | Recurring rules and one-off plans, postpone/cancel/confirm lifecycle, series shifts and compact calendar | [Scheduling](domains/scheduling.md) |
 | Forecast | Read-only exact free/total projections, fund effects, risks and event explanations | [Forecasting](domains/forecasting.md) |
 | Reports | Posted income/expense totals, category breakdown and source operations | [Reports](domains/reports.md) |
-| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions and explicit fact dates; mapped row dates and searchable review selectors are approved but not implemented | [Import/export](domains/import-export.md) |
+| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions and explicit fact dates; hierarchical category search is implemented, while mapped row dates and the remaining searchable review selectors are approved but not implemented | [Import/export](domains/import-export.md) |
 | Portability | Schema-1 JSON and protected Hermes V1 backup, validated atomic restore | [Import/export](domains/import-export.md) |
 | Languages | RU/EN interface, browser-local preference, independent fresh category-template language | [Internationalization](ui-ux/internationalization.md) |
 
@@ -174,20 +174,17 @@ with profile-mapped, editable source dates per row and a derived import period.
 Source/operation description separation is now implemented: new facts start
 blank with an explicit copy action, matching still uses the source text,
 plan-backed facts and merged groups use the plan description, and existing-fact
-links preserve their stored description. Focused import HTTP integration and
-frontend component checks pass. The full checks passed with 206 default backend
-tests (121 PostgreSQL-gated skips), 122 PostgreSQL integration tests and 198
-frontend tests, plus lint, formatting, documentation, type checking and the
-production frontend build. Browser acceptance remains open. Import review will
-also adopt the established searchable category
-combobox with visible parent-child paths and searchable plan/fact selectors.
-Those remaining decisions are documented in
-[ADR 0005](decisions/0005-statement-import.md) but are not yet verified
-capabilities. Explicit text formats, inclusive period filtering and per-row
-plan windows are approved but not implemented. Invalid/future-date blocking,
-explicit legacy-profile upgrades,
-substring category search and skip-by-default rows are also approved but not
-implemented. Receipt-level source date/description, chronological posting,
+links preserve their stored description. Import review now uses the established
+searchable category combobox with visible parent-child paths, as do ordinary
+operation entry and scheduling. Normalized substring search covers either hierarchy level,
+active roots remain selectable, active children are indented, and archived
+categories remain historical-only. The searchable planned-payment combobox with
+suggestions first is still only approved. These decisions are documented in
+[ADR 0005](decisions/0005-statement-import.md). Explicit text formats, inclusive
+period filtering and per-row plan windows are approved but not
+implemented. Invalid/future-date blocking, explicit legacy-profile upgrades,
+and skip-by-default rows are also approved but not implemented. Receipt-level
+source date/description, chronological posting,
 searchable existing-fact selection and the explicit 200-row boundary are
 approved but not implemented. Bulk review actions remain out of scope.
 Source-date filtering and fact-date posting ranges are distinct; the approved
@@ -195,8 +192,18 @@ UI uses bounded common date formats, a selectable two-level category tree and
 source provenance in operation details without a new import-history screen.
 Fact-date corrections outside the source period remain selected with a warning;
 period-filter changes preserve browser-draft edits until reload. The product
-decision tree for this refinement is complete; implementation beyond the
-source-description slice remains in progress.
+decision tree for this refinement is complete; implementation is in progress.
+
+Combined source-description and category-search verification on 2026-10-21:
+206 default backend tests passed with 121 PostgreSQL-gated skips, all 122
+PostgreSQL integration tests passed, and all 201 frontend tests passed. Lint,
+catalog checks, formatting, Python and TypeScript type checking, documentation
+checks and the production frontend build also passed. Existing bundle and
+component-style budget warnings remain. Automated tests cover description
+ownership, parent/child substring search, selectable roots, archived exclusion,
+hierarchy context, keyboard behavior, recent choices, empty results, long
+Russian labels and unchanged account prefix matching. Real-browser desktop and
+390 px acceptance remains part of the complete import refinement.
 
 ## Release assumptions and technical debt
 

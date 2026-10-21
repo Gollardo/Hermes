@@ -41,6 +41,7 @@
           [id]="optionId(option.id)"
           [attr.data-option-id]="option.id"
           [class.active]="index === activeIndex()"
+          [class.nested]="option.level === 1"
           [attr.aria-selected]="option.id === value"
           [disabled]="option.disabled"
           (pointerdown)="$event.preventDefault()"

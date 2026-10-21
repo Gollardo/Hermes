@@ -693,6 +693,7 @@
                 [options]="ruleCategoryOptions()"
                 [recentKey]="'categories-' + ruleForm.controls.type.value"
                 [placeholder]="t('operations.typeACategoryName')"
+                matchMode="contains"
               />
             </div>
             @if (editingId() && hasUnavailableReference()) {

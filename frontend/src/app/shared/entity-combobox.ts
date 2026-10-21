@@ -18,6 +18,7 @@ export interface EntityOption {
   detail?: string;
   searchText?: string;
   disabled?: boolean;
+  level?: 0 | 1;
 }
 
 @Component({
