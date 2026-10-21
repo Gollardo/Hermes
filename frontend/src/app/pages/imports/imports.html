@@ -261,31 +261,48 @@
         </p>
         <div class="fields">
           @if (row.action === 'plan') {
-            <label
-              >{{ t('imports.plan')
-              }}<select [(ngModel)]="row.plan" (change)="selectPlan(row)">
-                <option value="">{{ t('imports.choose') }}</option>
-                @for (p of candidates(row, 'plans'); track p.id) {
-                  <option [value]="p.id">
-                    {{ p.date }} · {{ p.description }} · {{ p.amount | money }} · {{ reason(p) }}
-                  </option>
-                }
-              </select></label
-            >
+            <div class="control-label plan-candidate">
+              {{ t('imports.plan') }}
+              <app-entity-combobox
+                [(ngModel)]="row.plan"
+                (ngModelChange)="selectPlan(row)"
+                [accessibleLabel]="t('imports.plan')"
+                [options]="candidateOptions(row, 'plans')"
+                [recentKey]="'import-plans-' + row.row"
+                [placeholder]="t('imports.candidateSearch')"
+                [emptyLabel]="t('imports.noCandidates')"
+                [allowEmpty]="true"
+                [showOptionsWhenEmpty]="true"
+                matchMode="contains"
+              />
+            </div>
           }
           @if (row.action === 'existing' || row.action === 'plan') {
-            <label
-              >{{ t('imports.existing')
-              }}<select [(ngModel)]="row.existing" (change)="selectExisting(row)">
-                <option value="">{{ t('imports.none') }}</option>
-                @for (p of candidates(row, 'facts'); track p.id) {
-                  <option [value]="p.id">
-                    {{ p.date }} · {{ p.description }} · {{ p.amount | money }} · {{ reason(p) }}
-                  </option>
-                }
-              </select></label
-            >
+            <div class="control-label existing-candidate">
+              {{ t('imports.existing') }}
+              <app-entity-combobox
+                [(ngModel)]="row.existing"
+                (ngModelChange)="selectExisting(row)"
+                [accessibleLabel]="t('imports.existing')"
+                [options]="candidateOptions(row, 'facts')"
+                [recentKey]="'import-facts-' + row.row"
+                [placeholder]="t('imports.candidateSearch')"
+                [emptyLabel]="t('imports.noCandidates')"
+                [allowEmpty]="true"
+                [showOptionsWhenEmpty]="true"
+                matchMode="contains"
+              />
+            </div>
           }
+          <label class="candidate-window"
+            >{{ t('imports.window')
+            }}<input
+              type="number"
+              min="0"
+              max="3660"
+              [(ngModel)]="row.windowDays"
+              (change)="changeCandidateWindow(row)"
+          /></label>
           <label
             >{{ t('imports.date')
             }}<input

@@ -192,6 +192,7 @@ describe('Statement import', () => {
     http.expectNone('/api/v1/imports/commit');
     row.date = '2026-01-02';
     page.changeFactDate(row);
+    http.expectOne('/api/v1/imports/candidates').flush({ facts: [], plans: [] });
     page.submit();
     http.expectOne('/api/v1/imports/commit').flush({ results: [] });
   });
@@ -257,6 +258,93 @@ describe('Statement import', () => {
     expect(options[1].classList).toContain('nested');
     options[1].click();
     expect(page.rows()[0].category).toBe('utilities');
+  });
+  it('searches row candidates with suggestions first and preserves the reviewed draft', () => {
+    const page = preview();
+    const row = page.rows()[0];
+    row.action = 'plan';
+    row.description = 'Reviewed note';
+    row.category = 'category';
+    row.windowDays = 3;
+    row.plans = [
+      {
+        id: 'suggested',
+        version: 1,
+        type: 'expense',
+        direction: 'expense',
+        amount: '10.1234',
+        date: '2026-01-02',
+        description: 'Coffee plan with a very long descriptive label',
+        category_id: 'category',
+        reasons: ['amount', 'date'],
+      },
+      {
+        id: 'manual',
+        version: 1,
+        type: 'expense',
+        direction: 'expense',
+        amount: '9.5',
+        date: '2026-01-01',
+        description: 'Ручной кандидат',
+        category_id: 'category',
+        reasons: [],
+      },
+    ];
+    page.rows.set([...page.rows()]);
+    fixture.detectChanges();
+
+    row.plan = 'suggested';
+    page.selectPlan(row);
+    expect(row.date).toBe('2026-01-02');
+    expect(row.category).toBe('category');
+    expect(row.description).toContain('very long descriptive label');
+
+    const combobox = fixture.nativeElement.querySelector(
+      '.plan-candidate app-entity-combobox',
+    ) as HTMLElement;
+    const input = combobox.querySelector('input') as HTMLInputElement;
+    input.dispatchEvent(new FocusEvent('focus'));
+    input.value = '9,50 Food 2026-01-01 ручной';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    const options = [...combobox.querySelectorAll<HTMLElement>('[role="option"]')];
+    expect(options.map((option) => option.dataset['optionId'])).toEqual(['manual']);
+    expect(options[0].textContent).toContain('9,50');
+
+    row.date = '2026-01-04';
+    page.changeFactDate(row);
+    const search = http.expectOne('/api/v1/imports/candidates');
+    expect(search.request.body).toEqual({
+      account_id: 'account',
+      fact_date: '2026-01-04',
+      direction: 'expense',
+      amount: '10.1234',
+      source_description: 'Coffee',
+      window_days: 3,
+    });
+    search.flush({ facts: [], plans: row.plans });
+    expect(row.date).toBe('2026-01-04');
+    expect(row.description).toBe('Coffee plan with a very long descriptive label');
+    expect(row.category).toBe('category');
+  });
+
+  it('widens candidates for only one row and drops a stale selected candidate', () => {
+    const page = preview();
+    const first = page.rows()[0];
+    const second = { ...first, row: 3, facts: [], plans: [], windowDays: 3 };
+    first.action = 'existing';
+    first.existing = 'stale';
+    page.rows.set([first, second]);
+
+    first.windowDays = 10;
+    page.changeCandidateWindow(first);
+    const request = http.expectOne('/api/v1/imports/candidates');
+    expect(request.request.body.window_days).toBe(10);
+    request.flush({ facts: [], plans: [] });
+    expect(first.existing).toBe('');
+    expect(first.date).toBe('2026-01-02');
+    expect(second.windowDays).toBe(3);
+    expect(second.date).toBe('2026-01-02');
   });
   it('preserves exact amounts, choice and draft after a failed commit', () => {
     const page = preview();

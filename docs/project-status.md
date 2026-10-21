@@ -175,12 +175,15 @@ Source/operation description separation is now implemented: new facts start
 blank with an explicit copy action, matching still uses the source text,
 plan-backed facts and merged groups use the plan description, and existing-fact
 links preserve their stored description. Import review now uses the established
-searchable category combobox with visible parent-child paths, as do ordinary
-operation entry and scheduling. Normalized substring search covers either
-hierarchy level,
+searchable combobox for categories, planned payments and existing facts.
+Category paths remain visible as in ordinary operation entry and scheduling.
+Normalized substring search covers either hierarchy level,
 active roots remain selectable, active children are indented, and archived
-categories remain historical-only. The searchable planned-payment combobox with
-suggestions first is still only approved. These decisions are documented in
+categories remain historical-only. Plan and existing-fact candidates are
+evaluated per editable row fact date with a default ±3-day window. Explained
+suggestions appear first, manual eligible candidates remain searchable, and a
+row can widen its own window without changing its fact date or another draft.
+These decisions are documented in
 [ADR 0005](decisions/0005-statement-import.md). The source-date implementation
 slice maps a source-date column in saved profiles, supports the six bounded
 text date/date-time formats and native XLSX dates, and defaults each preview
@@ -198,17 +201,17 @@ Production and browser acceptance remain open.
 Inclusive source-date filtering is implemented in browser state: it defaults to
 the complete parsed period, counts excluded parsed rows, preserves hidden edits,
 and shows the selected fact-date posting period with an expansion warning.
-Per-row plan windows and the remaining reconciliation-selector work are not
-implemented. Receipt-level source date/description provenance is now
-implemented through forward migration `0018_import_provenance`: confirmation
+Per-row plan windows, plan-owned merged descriptions and the reconciliation
+selectors are also implemented. Receipt-level source date/description
+provenance is now implemented through forward migration
+`0018_import_provenance`: confirmation
 stores only those two narrow fields, retries and allowed operation edits do not
 rewrite them, and deletion leaves the receipt intact. Operation details compose
 the optional Imports-owned values through a public contract and show a distinct
 RU/EN statement-evidence block; ordinary operations show no synthetic source.
 Schema-1 JSON backup export and restore include the fields while older backups
-default them to unknown. Searchable existing-fact selection remains approved
-but unimplemented. Chronological posting and the
-explicit 200-row boundary are implemented: the server orders by reviewed fact
+default them to unknown. Chronological posting and the explicit 200-row boundary
+are implemented: the server orders by reviewed fact
 date and physical source row, the review shows and submits that order, oversized
 batches receive period-narrowing guidance, and no automatic splitting occurs.
 Atomic rollback, completed-row exclusion, journal links, unchanged retries and
@@ -233,6 +236,15 @@ hierarchy context, keyboard behavior, recent choices, empty results, long
 Russian labels, inclusive period boundaries, excluded counts, draft restoration,
 expanded posting warnings and unchanged account prefix matching. Real-browser desktop and
 390 px acceptance remains part of the complete import refinement.
+
+Candidate-search verification on 2026-10-21: 220 default backend tests passed
+with 125 PostgreSQL-gated skips, all 126 PostgreSQL integration tests passed,
+and all 208 frontend tests passed. Lint, formatting, catalog, Python and
+TypeScript type checks, documentation checks and the production frontend build
+also passed; the existing frontend budget warnings remain. Automated coverage
+includes authenticated per-row windows, widening, suggestion order, manual
+candidates without reasons, stale plans, exact searchable amounts and preserved
+row dates/drafts. Real-browser desktop and 390 px acceptance remains open.
 
 Chronological-confirmation verification on 2026-10-21: 220 default backend
 tests passed with 124 PostgreSQL-gated skips, all 125 PostgreSQL integration

@@ -3,12 +3,13 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
 
-from app.application.imports import commit, preview
+from app.application.imports import candidates, commit, preview
 from app.core.database import DatabaseSession
 from app.modules.imports.errors import ImportDecisionError, ImportGroupingError
 from app.modules.imports.models import ImportProfile
 from app.modules.imports.parser import read_file
 from app.modules.imports.schemas import (
+    CandidateRequest,
     CommitRequest,
     FileRequest,
     Mapping,
@@ -68,6 +69,14 @@ def preview_file(payload: PreviewRequest, session: DatabaseSession) -> dict[str,
     try:
         return preview(session, payload)
     except (ValueError, RuntimeError, OverflowError, ImportDecisionError) as error:
+        raise failure(error) from error
+
+
+@write_router.post("/candidates")
+def search_candidates(payload: CandidateRequest, session: DatabaseSession) -> dict[str, Any]:
+    try:
+        return candidates(session, payload)
+    except (ValueError, RuntimeError, OverflowError) as error:
         raise failure(error) from error
 
 

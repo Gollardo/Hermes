@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { t, localizedSignal, TranslationKey } from '../../i18n/i18n';
 import { DecimalInput, decimalPayload } from '../../shared/decimal-input';
-import { MoneyPipe, currencySymbol } from '../../shared/money.pipe';
+import { MoneyPipe, currencySymbol, formatMoney } from '../../shared/money.pipe';
 import { DateTextPipe } from '../../shared/date-text.pipe';
 import { apiErrorMessage } from '../../core/api-error';
 import { categoryComboboxOptions } from '../../shared/category-combobox';
@@ -59,6 +59,7 @@ interface Row {
   allocate: boolean;
   fund: string;
   fundAmount: string;
+  windowDays: number;
 }
 interface Mapping {
   sheet: string;
@@ -306,6 +307,7 @@ export class ImportsPage {
             plan: '',
             existing: '',
             allocate: false,
+            windowDays: this.window,
           }));
           this.rows.set(rows);
           this.resetImportPeriod();
@@ -319,7 +321,13 @@ export class ImportsPage {
     return !!this.file?.filename.toLowerCase().endsWith('.xlsx') || !!this.mapping.date_format;
   }
   changeFactDate(row: Row): void {
-    if (row.date && row.date <= this.today) row.date_error = null;
+    if (row.date && row.date <= this.today) {
+      row.date_error = null;
+      this.refreshCandidates(row);
+    }
+  }
+  changeCandidateWindow(row: Row): void {
+    this.refreshCandidates(row);
   }
   changeAction(row: Row): void {
     row.plan = '';
@@ -331,17 +339,14 @@ export class ImportsPage {
     row.description = row.sourceDescription;
   }
   selectPlan(row: Row): void {
-    const plan = this.plans.find((p) => p.id === row.plan);
+    const plan =
+      row.plans.find((p) => p.id === row.plan) ?? this.plans.find((p) => p.id === row.plan);
     if (!plan) return;
-    row.type = plan.type;
-    row.category = plan.category_id ?? '';
-    row.account = plan.account_id ?? this.account;
-    row.destination = plan.destination_account_id ?? '';
-    row.allocate = plan.allocate_to_funds ?? false;
     row.description = plan.description;
   }
   selectExisting(row: Row): void {
-    const fact = this.facts.find((p) => p.id === row.existing);
+    const fact =
+      row.facts.find((p) => p.id === row.existing) ?? this.facts.find((p) => p.id === row.existing);
     if (!fact) return;
     // Fetch the complete public journal fact, including both transfer accounts.
     this.busy.set(true);
@@ -373,7 +378,9 @@ export class ImportsPage {
       });
   }
   suggestCategory(row: Row): string {
-    const candidates = [...row.facts, ...row.plans];
+    const candidates = [...row.facts, ...row.plans].filter(
+      (candidate) => (candidate.reasons?.length ?? 0) > 0,
+    );
     const ids = [
       ...new Set(
         candidates
@@ -449,13 +456,51 @@ export class ImportsPage {
       left.date === right.date ? left.row - right.row : left.date.localeCompare(right.date),
     );
   }
-  candidates(row: Row, kind: 'plans' | 'facts'): Candidate[] {
-    return [
-      ...row[kind],
-      ...(kind === 'plans' ? this.plans : this.facts).filter(
-        (p) => !row[kind].some((x) => x.id === p.id),
-      ),
-    ];
+  candidateOptions(row: Row, kind: 'plans' | 'facts'): EntityOption[] {
+    return row[kind].map((candidate) => {
+      const category = this.categories().find((item) => item.id === candidate.category_id)?.name;
+      const reasons = this.reason(candidate);
+      const amount = formatMoney(candidate.amount);
+      const categoryLabel = category ?? t('imports.none');
+      return {
+        id: candidate.id,
+        label: `${candidate.date} · ${candidate.description || t('imports.unnamedRow')}`,
+        detail: `${amount} · ${categoryLabel} · ${reasons || t('imports.manual')}`,
+        searchText: [
+          candidate.date,
+          candidate.description,
+          candidate.amount,
+          amount,
+          categoryLabel,
+          reasons,
+        ].join(' '),
+      };
+    });
+  }
+
+  private refreshCandidates(row: Row): void {
+    if (!row.date || row.date > this.today || !this.account || !row.amount) return;
+    this.http
+      .post<{ facts: Candidate[]; plans: Candidate[] }>(this.url('/imports/candidates'), {
+        account_id: this.account,
+        fact_date: row.date,
+        direction: row.type,
+        amount: row.amount,
+        source_description: row.sourceDescription,
+        window_days: row.windowDays,
+      })
+      .subscribe({
+        next: (candidates) => {
+          row.facts = candidates.facts;
+          row.plans = candidates.plans;
+          if (row.plan && !row.plans.some((candidate) => candidate.id === row.plan)) row.plan = '';
+          if (row.existing && !row.facts.some((candidate) => candidate.id === row.existing)) {
+            row.existing = '';
+          }
+          this.rows.set([...this.rows()]);
+        },
+        error: (error) => this.fail(error),
+      });
   }
   planGroups(): { id: string; rows: Row[]; total: string; compatible: boolean }[] {
     const groups = new Map<string, Row[]>();
@@ -494,7 +539,13 @@ export class ImportsPage {
       });
   }
   planDescription(id: string): string {
-    return this.plans.find((plan) => plan.id === id)?.description ?? '';
+    return (
+      this.rows()
+        .flatMap((row) => row.plans)
+        .find((plan) => plan.id === id)?.description ??
+      this.plans.find((plan) => plan.id === id)?.description ??
+      ''
+    );
   }
   groupRowNumbers(rows: Row[]): string {
     return rows.map((row) => row.row).join(', ');
@@ -558,9 +609,15 @@ export class ImportsPage {
       },
       occurrence_id: r.action === 'plan' ? r.plan : null,
       occurrence_version:
-        r.action === 'plan' ? this.plans.find((p) => p.id === r.plan)?.version : null,
+        r.action === 'plan'
+          ? (r.plans.find((p) => p.id === r.plan) ?? this.plans.find((p) => p.id === r.plan))
+              ?.version
+          : null,
       existing_id: r.existing || null,
-      existing_version: r.existing ? this.facts.find((p) => p.id === r.existing)?.version : null,
+      existing_version: r.existing
+        ? (r.facts.find((p) => p.id === r.existing) ?? this.facts.find((p) => p.id === r.existing))
+            ?.version
+        : null,
       allocate_to_funds: r.allocate,
     }));
     this.http

@@ -95,6 +95,8 @@ export const en = {
   'imports.choose': 'Choose',
   'imports.manual': 'All candidates in selected period',
   'imports.window': 'Search ± days from fact date',
+  'imports.candidateSearch': 'Search by date, amount, category or description',
+  'imports.noCandidates': 'No candidates in this date window',
   'imports.confirm': 'Post selected rows',
   'imports.review':
     'Review dates, accounts, categories and links. Selected rows commit together; an error rolls back the entire batch. Do not add historical transactions on top of an already recorded current balance.',

@@ -187,6 +187,16 @@ existing three-day window on either side as the default. An explicitly merged
 plan group also uses the plan description instead of the first row's source
 description.
 
+The implemented candidate-search endpoint accepts one row's reviewed fact date,
+direction, exact amount, source description and window. It returns actionable
+plans and existing facts from the owning modules, ranks candidates with advisory
+amount, source-description and same-date reasons first, and retains eligible
+manual candidates with no reason. The established combobox searches each result
+by date, exact formatted or API amount, stored/plan description and category.
+Refreshing or widening one row replaces only that row's candidate directory;
+it does not change its fact date or another row's draft. A selected candidate
+that is no longer returned is cleared for explicit re-review.
+
 Every row defaults to skip even when suggestions are strong. The user may widen
 one row's plan window without changing its fact date. Category search matches
 within both levels of the displayed category path.
