@@ -18,6 +18,7 @@ import { apiErrorMessage } from '../../core/api-error';
 import { DateTextPipe } from '../../shared/date-text.pipe';
 import { currencySymbol, formatMoney, MoneyPipe } from '../../shared/money.pipe';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
+import { categoryComboboxOptions } from '../../shared/category-combobox';
 import {
   DecimalInput,
   moneyExpressionPayload,
@@ -296,16 +297,10 @@ export class SchedulingPage implements OnInit {
   }
 
   protected ruleCategoryOptions(): EntityOption[] {
-    return this.availableCategories().map((category) => {
-      const parent = category.parent_id
-        ? this.categories().find((item) => item.id === category.parent_id)
-        : null;
-      return {
-        id: category.id,
-        label: category.name,
-        detail: `${category.type === 'income' ? t('operation-create-menu.income') : t('operation-create-menu.expense')}${parent ? ` · ${parent.name}` : ''}${category.archived ? ' ' + t('funds.archived') : ''}`,
-        disabled: category.archived && this.ruleWillBeActive(),
-      };
+    return categoryComboboxOptions(this.availableCategories(), {
+      allCategories: this.categories(),
+      archivedLabel: t('funds.archived'),
+      disabled: (category) => category.archived && this.ruleWillBeActive(),
     });
   }
 

@@ -169,8 +169,9 @@ every bank file automatically without configuration.
   explicit-date flow is implemented; the mapped-date refinement is approved
   but not implemented.
 - [~] Searchable hierarchical category selection and searchable planned-payment
-  selection. The shared combobox exists; import adoption is approved but not
-  implemented.
+  selection. The shared two-level category combobox is implemented in import,
+  ordinary operation entry and scheduling; searchable planned-payment selection
+  remains approved but not implemented.
 - [~] Durable receipt provenance for source date and description, chronological
   posting of up to 200 selected rows, and searchable existing-fact selection.
   These refinements are approved but not implemented.

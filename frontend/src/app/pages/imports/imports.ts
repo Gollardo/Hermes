@@ -8,6 +8,8 @@ import { DecimalInput, decimalPayload } from '../../shared/decimal-input';
 import { MoneyPipe, currencySymbol } from '../../shared/money.pipe';
 import { DateTextPipe } from '../../shared/date-text.pipe';
 import { apiErrorMessage } from '../../core/api-error';
+import { categoryComboboxOptions } from '../../shared/category-combobox';
+import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
 
 type Kind = 'income' | 'expense' | 'transfer';
 interface Entity {
@@ -15,6 +17,7 @@ interface Entity {
   name: string;
   archived: boolean;
   type?: string;
+  parent_id?: string | null;
 }
 interface Candidate {
   id: string;
@@ -77,7 +80,7 @@ interface Preview {
 }
 @Component({
   selector: 'app-imports-page',
-  imports: [FormsModule, RouterLink, MoneyPipe, DecimalInput, DateTextPipe],
+  imports: [FormsModule, RouterLink, MoneyPipe, DecimalInput, DateTextPipe, EntityCombobox],
   templateUrl: './imports.html',
   styleUrl: './imports.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -144,6 +147,12 @@ export class ImportsPage {
   }
   columnLabel(column: string): string {
     return t(('imports.' + column) as TranslationKey);
+  }
+  categoryOptions(type: Kind): EntityOption[] {
+    return categoryComboboxOptions(
+      this.categories().filter((category) => category.type === type && !category.archived),
+      { allCategories: this.categories() },
+    );
   }
   private url(path: string): string {
     return environment.apiBaseUrl + path;

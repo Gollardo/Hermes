@@ -118,6 +118,7 @@
                     [options]="categoryOptions(availableCategories())"
                     [recentKey]="'categories-' + form.controls.type.value"
                     [placeholder]="t('operations.typeACategoryName')"
+                    matchMode="contains"
                   />
                 </div>
               }
@@ -426,6 +427,7 @@
                 recentKey="categories"
                 [placeholder]="t('operations.allCategories')"
                 [allowEmpty]="true"
+                matchMode="contains"
               />
             </div>
             <div class="filter-actions">
