@@ -187,9 +187,10 @@ text date/date-time formats and native XLSX dates, and defaults each preview
 row's editable fact date from its source date. Missing, invalid and future
 dates remain visible without a fallback; legacy profiles remain readable but
 must be explicitly upgraded before review. Parser unit tests and focused
-frontend component tests pass. The complete default backend suite passed with
-219 tests and 122 PostgreSQL-gated skips, all 123 PostgreSQL integration tests
-passed against disposable local databases, and all 201 frontend tests passed.
+frontend component tests pass. The complete integrated default backend suite
+passed with 220 tests and 122 PostgreSQL-gated skips, all 123 PostgreSQL
+integration tests passed against disposable local databases, and all 202
+frontend tests passed.
 Lint, type checks, documentation checks and the
 production frontend build also passed with the existing budget warnings.
 Production and browser acceptance remain open.
@@ -210,9 +211,9 @@ period-filter changes preserve browser-draft edits until reload. The product
 decision tree for this refinement is complete; implementation and verification
 continue in bounded slices.
 
-Combined source-description and category-search verification on 2026-10-21:
-206 default backend tests passed with 121 PostgreSQL-gated skips, all 122
-PostgreSQL integration tests passed, and all 201 frontend tests passed. Lint,
+Combined source-date, source-description and category-search verification on
+2026-10-21: 220 default backend tests passed with 122 PostgreSQL-gated skips,
+all 123 PostgreSQL integration tests passed, and all 202 frontend tests passed. Lint,
 catalog checks, formatting, Python and TypeScript type checking, documentation
 checks and the production frontend build also passed. Existing bundle and
 component-style budget warnings remain. Automated tests cover description
