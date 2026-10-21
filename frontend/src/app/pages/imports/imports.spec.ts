@@ -32,10 +32,11 @@ describe('Statement import', () => {
     const page = fixture.componentInstance;
     page.file = { filename: 'example.csv', content: 'YQ==' };
     page.account = 'account';
-    page.date = '2026-01-02';
+    page.mapping.source_date = 2;
+    page.mapping.date_format = 'iso';
     page.preview();
     const req = http.expectOne('/api/v1/imports/preview');
-    expect(req.request.body.occurred_on).toBe('2026-01-02');
+    expect(req.request.body.occurred_on).toBeUndefined();
     req.flush({
       headers: ['Amount', 'Status'],
       sheets: ['CSV'],
@@ -48,6 +49,9 @@ describe('Statement import', () => {
           type: 'expense',
           amount: '10.1234',
           description: 'Coffee',
+          source_date: '2026-01-02',
+          fact_date: '2026-01-02',
+          date_error: null,
           currency: 'RUB',
           error: null,
           imported_id: null,
@@ -59,13 +63,58 @@ describe('Statement import', () => {
     fixture.detectChanges();
     return page;
   }
-  it('does not choose a fact date automatically and keeps pending rows visible', () => {
-    expect(fixture.componentInstance.date).toBe('');
+  it('uses each parsed source date as its editable fact date and keeps pending rows visible', () => {
     const page = preview();
     expect(page.rows().length).toBe(1);
+    expect(page.rows()[0].source_date).toBe('2026-01-02');
+    expect(page.rows()[0].date).toBe('2026-01-02');
     expect(fixture.nativeElement.textContent).toContain('pending');
     expect(page.selected()).toHaveLength(0);
     http.expectNone('/api/v1/imports/commit');
+  });
+  it('blocks legacy mappings and lets an invalid dated row be corrected or skipped', () => {
+    const page = fixture.componentInstance;
+    page.file = { filename: 'example.csv', content: 'YQ==' };
+    page.account = 'account';
+    page.preview();
+    http.expectNone('/api/v1/imports/preview');
+    expect(page.error()).toContain('дат');
+
+    page.mapping.source_date = 2;
+    page.mapping.date_format = 'iso';
+    page.preview();
+    http.expectOne('/api/v1/imports/preview').flush({
+      headers: ['Amount', 'Description', 'Date'],
+      sheets: ['CSV'],
+      facts: [],
+      plans: [],
+      rows: [
+        {
+          row: 2,
+          raw: ['10', 'Coffee', 'bad'],
+          type: 'expense',
+          amount: '10',
+          description: 'Coffee',
+          currency: 'RUB',
+          error: null,
+          date_error: 'Invalid source date',
+          source_date: null,
+          fact_date: null,
+          imported_id: null,
+          facts: [],
+          plans: [],
+        },
+      ],
+    });
+    const row = page.rows()[0];
+    row.action = 'new';
+    row.category = 'category';
+    page.submit();
+    http.expectNone('/api/v1/imports/commit');
+    row.date = '2026-01-02';
+    page.changeFactDate(row);
+    page.submit();
+    http.expectOne('/api/v1/imports/commit').flush({ results: [] });
   });
   it('preserves exact amounts, choice and draft after a failed commit', () => {
     const page = preview();

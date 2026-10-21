@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.modules.imports.errors import ImportDecisionError, ImportGroupingError
 from app.modules.imports.grouping import decision_groups
 from app.modules.imports.models import ImportReceipt
-from app.modules.imports.parser import normalize, read_file
+from app.modules.imports.parser import normalize, parse_source_date, read_file
 from app.modules.imports.schemas import CommitRequest, PreviewRequest
 
 
@@ -36,6 +36,7 @@ __all__ = [
     "PreviewRequest",
     "ImportDecisionError",
     "normalize",
+    "parse_source_date",
     "read_file",
     "find_receipt",
     "record_receipt",

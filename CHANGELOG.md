@@ -32,6 +32,12 @@ assigned.
 
 ### Added
 
+- Map a statement source-date column in saved import profiles and derive each
+  preview row's editable fact-date default. CSV and textual XLSX dates use one
+  of six explicit date/date-time formats; native XLSX date cells keep their
+  calendar date without timezone conversion. Missing, invalid and future dates
+  remain visible and blocked without an invented fallback, while legacy
+  profiles remain readable and can be explicitly upgraded.
 - Select an actual non-future payment date when confirming a one-off or recurring
   plan. Overdue plans default to their due date in Calendar and the composer;
   the journal retains an explicit Apply today shortcut.

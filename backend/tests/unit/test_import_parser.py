@@ -1,11 +1,12 @@
 import base64
 import io
 import zipfile
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from app.modules.imports.parser import normalize, number, read_file, xml
+from app.modules.imports.parser import normalize, number, parse_source_date, read_file, xml
 from app.modules.imports.schemas import FileRequest, Mapping
 
 
@@ -58,6 +59,44 @@ def test_split_columns_and_currency_alias() -> None:
         normalize(["5", "2"], mapping)
 
 
+@pytest.mark.parametrize(
+    "value,date_format,expected",
+    [
+        ("31.01.2026", "dmy_dot", date(2026, 1, 31)),
+        ("2026-01-31", "iso", date(2026, 1, 31)),
+        ("31/01/2026", "dmy_slash", date(2026, 1, 31)),
+        ("31.01.2026 23:59", "dmy_dot_datetime", date(2026, 1, 31)),
+        ("2026-01-31T23:59:58", "iso_datetime", date(2026, 1, 31)),
+        ("31/01/2026 23:59:58", "dmy_slash_datetime", date(2026, 1, 31)),
+    ],
+)
+def test_source_date_uses_only_the_explicit_bounded_format(
+    value: str, date_format: str, expected: date
+) -> None:
+    mapping = Mapping(source_date=0, date_format=date_format)
+    assert parse_source_date([value], mapping, today=date(2026, 2, 1)) == expected
+
+
+@pytest.mark.parametrize(
+    "value,date_format",
+    [
+        ("01/02/2026", None),
+        ("01/02/2026", "dmy_dot"),
+        ("2026/02/01", "dmy_slash"),
+        ("01.02.26", "dmy_dot"),
+        ("01.02.2026 25:90", "dmy_dot_datetime"),
+        ("", "iso"),
+        ("2026-02-02", "iso"),
+    ],
+)
+def test_source_date_rejects_missing_ambiguous_invalid_and_future_values(
+    value: str, date_format: str | None
+) -> None:
+    mapping = Mapping(source_date=0, date_format=date_format)
+    with pytest.raises(ValueError):
+        parse_source_date([value], mapping, today=date(2026, 2, 1))
+
+
 def test_xlsx_reads_numeric_xml_without_float_and_never_evaluates_formula() -> None:
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w") as z:
@@ -104,6 +143,43 @@ def test_xlsx_reads_numeric_xml_without_float_and_never_evaluates_formula() -> N
     _, sheets, rows = read_file(request)
     assert sheets == ["Data"]
     assert rows == [["9999999999999999.9999", "[formula unsupported]"], [], ["pending"]]
+
+
+def test_xlsx_native_date_cells_keep_their_calendar_date_without_text_format() -> None:
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, "w") as archive:
+        archive.writestr(
+            "xl/workbook.xml",
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<sheets><sheet name="Data" r:id="r1"/></sheets></workbook>',
+        )
+        archive.writestr(
+            "xl/_rels/workbook.xml.rels",
+            '<Relationships><Relationship Id="r1" Target="/xl/worksheets/sheet1.xml"/>'
+            "</Relationships>",
+        )
+        archive.writestr(
+            "xl/styles.xml",
+            '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            '<cellXfs count="2"><xf numFmtId="0"/><xf numFmtId="14"/></cellXfs>'
+            "</styleSheet>",
+        )
+        archive.writestr(
+            "xl/worksheets/sheet1.xml",
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            '<sheetData><row r="1"><c r="A1"><v>amount</v></c><c r="B1"><v>date</v></c>'
+            '</row><row r="2"><c r="A2"><v>-10</v></c><c r="B2" s="1"><v>46053</v>'
+            "</c></row></sheetData></worksheet>",
+        )
+    request = FileRequest(
+        filename="dates.xlsx",
+        content=base64.b64encode(stream.getvalue()).decode(),
+        mapping=Mapping(amount=0, description=0, direction=None, currency=None, source_date=1),
+    )
+    _, _, rows = read_file(request)
+    assert rows[1][1] == "46053"
+    assert parse_source_date(rows[1], request.mapping, today=date(2026, 2, 1)) == date(2026, 1, 31)
 
 
 def test_file_bounds_and_unsupported_format() -> None:

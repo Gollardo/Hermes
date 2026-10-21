@@ -14,6 +14,12 @@ Implemented as a separate `/imports` review flow entered from the operation
 journal. Uses existing page, field, state, exact-money and responsive patterns.
 This is not a replacement design system.
 
+The source-date mapping slice is implemented: profiles record the source-date
+column and bounded text format, native XLSX dates need no text format, and each
+recognized row starts with its own editable fact date. Invalid dates remain
+visible and correctable. Import-period filtering and the searchable
+reconciliation controls described below remain in progress.
+
 ## User flow
 
 1. Upload CSV or XLSX; choose worksheet, header, column mapping and CSV settings.

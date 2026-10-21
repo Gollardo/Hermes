@@ -2,7 +2,7 @@
 
 import hashlib
 import json
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from difflib import SequenceMatcher
 from typing import Any
@@ -20,6 +20,7 @@ from app.modules.imports.contracts import (
     decision_groups,
     find_receipt,
     normalize,
+    parse_source_date,
     read_file,
     receipt_ids,
     record_receipt,
@@ -42,10 +43,30 @@ def source_key(digest: str, sheet: str, row: int) -> str:
 def preview(session: Session, request: PreviewRequest) -> dict[str, Any]:
     digest, sheets, rows = read_file(request)
     sheet = request.mapping.sheet or sheets[0]
-    from_on = request.occurred_on - timedelta(days=request.window_days)
-    through_on = request.occurred_on + timedelta(days=request.window_days)
-    facts = import_candidates(session, request.account_id, from_on, through_on)
-    plans = import_plan_candidates(session, request.account_id, from_on, through_on)
+    if request.mapping.source_date is None:
+        raise ValueError("Source date column is required")
+    parsed_dates: dict[int, date] = {}
+    date_errors: dict[int, str] = {}
+    source_dates: dict[int, date] = {}
+    for number, raw in enumerate(rows, 1):
+        if number <= request.mapping.header_row:
+            continue
+        try:
+            parsed = parse_source_date(raw, request.mapping)
+            parsed_dates[number] = parsed
+            source_dates[number] = parsed
+        except ValueError as error:
+            date_errors[number] = str(error)
+            if str(error) == "Future source date":
+                source_dates[number] = parse_source_date(raw, request.mapping, today=date.max)
+    if parsed_dates:
+        from_on = min(parsed_dates.values()) - timedelta(days=request.window_days)
+        through_on = max(parsed_dates.values()) + timedelta(days=request.window_days)
+        facts = import_candidates(session, request.account_id, from_on, through_on)
+        plans = import_plan_candidates(session, request.account_id, from_on, through_on)
+    else:
+        facts = []
+        plans = []
     receipts = receipt_ids(
         session,
         [
@@ -58,17 +79,37 @@ def preview(session: Session, request: PreviewRequest) -> dict[str, Any]:
     for number, raw in enumerate(rows, 1):
         if number <= request.mapping.header_row:
             continue
-        item: dict[str, Any] = dict(row=number, raw=raw, error=None, facts=[], plans=[])
+        source_date = source_dates.get(number)
+        item: dict[str, Any] = dict(
+            row=number,
+            raw=raw,
+            error=None,
+            date_error=date_errors.get(number),
+            source_date=source_date.isoformat() if source_date else None,
+            fact_date=source_date.isoformat() if source_date else None,
+            facts=[],
+            plans=[],
+        )
         receipt_id = receipts.get(source_key(digest, sheet, number))
         item["imported_id"] = str(receipt_id) if receipt_id else None
         item["imported_deleted"] = receipt_id is not None and receipt_id not in existing_receipts
         try:
             kind, amount, description, currency = normalize(raw, request.mapping)
             item.update(type=kind, amount=amount, description=description, currency=currency)
+            row_date = parsed_dates.get(number)
+            if row_date is None:
+                output.append(item)
+                continue
+            from_on = row_date - timedelta(days=request.window_days)
+            through_on = row_date + timedelta(days=request.window_days)
             for label, candidates in (("facts", facts), ("plans", plans)):
                 matches = []
                 for candidate in candidates:
-                    if candidate["direction"] != kind:
+                    candidate_date = date.fromisoformat(str(candidate["date"]))
+                    if (
+                        candidate["direction"] != kind
+                        or not from_on <= candidate_date <= through_on
+                    ):
                         continue
                     reasons = []
                     if Decimal(str(candidate["amount"])) == Decimal(amount):
@@ -82,7 +123,7 @@ def preview(session: Session, request: PreviewRequest) -> dict[str, Any]:
                     ):
                         reasons.append("description")
                     if reasons:
-                        if candidate["date"] == request.occurred_on.isoformat():
+                        if candidate["date"] == row_date.isoformat():
                             reasons.append("date")
                         matches.append(dict(candidate, reasons=reasons))
                 item[label] = sorted(matches, key=lambda x: (-len(x["reasons"]), str(x["id"])))

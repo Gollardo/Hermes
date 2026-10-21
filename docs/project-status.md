@@ -1,6 +1,6 @@
 # Project status
 
-Last reviewed: 2026-10-01. This is the current release snapshot, not a task log.
+Last reviewed: 2026-10-21. This is the current release snapshot, not a task log.
 Detailed history belongs in [CHANGELOG](../CHANGELOG.md); future scope belongs in
 [roadmap](roadmap.md). Domain rules remain authoritative under [domains](index.md#domains).
 
@@ -58,7 +58,7 @@ or live-route acceptance. No dependency was added.
 | Plans | Recurring rules and one-off plans, postpone/cancel/confirm lifecycle, series shifts and compact calendar | [Scheduling](domains/scheduling.md) |
 | Forecast | Read-only exact free/total projections, fund effects, risks and event explanations | [Forecasting](domains/forecasting.md) |
 | Reports | Posted income/expense totals, category breakdown and source operations | [Reports](domains/reports.md) |
-| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions and explicit fact dates; mapped row dates and searchable review selectors are approved but not implemented | [Import/export](domains/import-export.md) |
+| Statement import | Unreleased CSV/XLSX review, profiles, exact posting, duplicate/plan suggestions and profile-mapped per-row source/fact dates; period filtering, provenance and searchable review selectors remain incomplete | [Import/export](domains/import-export.md) |
 | Portability | Schema-1 JSON and protected Hermes V1 backup, validated atomic restore | [Import/export](domains/import-export.md) |
 | Languages | RU/EN interface, browser-local preference, independent fresh category-template language | [Internationalization](ui-ux/internationalization.md) |
 
@@ -167,7 +167,7 @@ without page overflow. A synthetic CSV exercised editable operation fields and
 an exact negative account effect without posting. No production data or service
 was changed, and private fixtures/screenshots are outside the repository.
 
-## Approved statement-import workflow refinement
+## In-progress statement-import workflow refinement
 
 On 2026-10-20 the owner approved replacing the mandatory file-level fact date
 with profile-mapped, editable source dates per row and a derived import period.
@@ -175,21 +175,33 @@ The source description will remain review evidence instead of becoming the
 default operation description. Import review will adopt the established
 searchable category combobox with visible parent-child paths and a searchable
 planned-payment combobox with suggestions first. These decisions are documented
-in [ADR 0005](decisions/0005-statement-import.md) but are not implemented or
-verified capabilities. Explicit text formats, inclusive period filtering,
-per-row plan windows and plan-owned merged descriptions are approved but not
-implemented. Invalid/future-date blocking, explicit legacy-profile upgrades,
-substring category search and skip-by-default rows are also approved but not
-implemented. Receipt-level source date/description, chronological posting,
+in [ADR 0005](decisions/0005-statement-import.md). The first implementation
+slice maps a source-date column in saved profiles, supports the six bounded
+text date/date-time formats and native XLSX dates, and defaults each preview
+row's editable fact date from its source date. Missing, invalid and future
+dates remain visible without a fallback; legacy profiles remain readable but
+must be explicitly upgraded before review. Parser unit tests and focused
+frontend component tests pass. The complete default backend suite passed with
+219 tests and 122 PostgreSQL-gated skips, all 123 PostgreSQL integration tests
+passed against disposable local databases, and all 198
+frontend tests passed. Lint, type checks, documentation checks and the
+production frontend build also passed with the existing budget warnings.
+Production and browser acceptance remain open.
+
+Inclusive period filtering, per-row plan windows and plan-owned merged
+descriptions are approved but not implemented. Substring category search and
+the remaining reconciliation-selector work are also not implemented.
+Receipt-level source date/description, chronological posting,
 searchable existing-fact selection and the explicit 200-row boundary are
-approved but not implemented. Bulk review actions remain out of scope.
+approved; provenance and search remain unimplemented while the existing
+200-decision request bound remains enforced. Bulk review actions remain out of scope.
 Source-date filtering and fact-date posting ranges are distinct; the approved
 UI uses bounded common date formats, a selectable two-level category tree and
 source provenance in operation details without a new import-history screen.
 Fact-date corrections outside the source period remain selected with a warning;
 period-filter changes preserve browser-draft edits until reload. The product
 decision tree for this refinement is complete; implementation and verification
-have not started.
+continue in bounded slices.
 
 ## Release assumptions and technical debt
 
