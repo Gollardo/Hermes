@@ -16,7 +16,8 @@ assigned.
 
 - Validate statement source dates against the configured application timezone,
   keep transfer candidate refreshes tied to the statement-side direction and
-  localize candidate dates while preserving ISO date search.
+  localize candidate dates while preserving ISO date search. Correct the RU/EN
+  import introduction to describe mapped per-row source dates and write-free preview.
 - Keep import operation-detail composition behind the Operations public contract.
 
 - Reject initialized setup before backup parsing/decryption, including competing

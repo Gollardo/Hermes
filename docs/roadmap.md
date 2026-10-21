@@ -171,22 +171,26 @@ every bank file automatically without configuration.
   import period, all-status review and links to planned payments. The existing
   explicit-date flow, profile-mapped per-row preview dates and browser-local
   inclusive period filtering and reconciliation refinements are implemented at
-  automated boundaries; required desktop and 390 px RU/EN browser checks remain open.
+  automated boundaries. A complete Russian multi-day CSV browser flow and RU/EN
+  responsive checks passed; browser XLSX interaction remains open.
 - [~] Searchable hierarchical category, planned-payment and existing-fact
   selection. Candidate selectors use per-row fact-date windows, keep explained
-  suggestions first and retain manual eligible choices; browser acceptance remains open.
+  suggestions first and retain manual eligible choices. Keyboard category search
+  passed in the CSV browser flow; browser XLSX interaction remains open.
 - [~] Durable receipt provenance for source date and description and
   chronological posting of up to 200 selected rows. Server-authoritative
   chronological posting, its review summary, the explicit atomic boundary and
-  searchable existing-fact selection are implemented; browser acceptance remains open.
+  searchable existing-fact selection are implemented. Journal links and source
+  provenance passed in the CSV browser flow; browser XLSX interaction remains open.
 - [~] Separate source-date import and fact-date posting periods, bounded common
   date formats, selectable two-level category presentation and imported source
   details on the operation. The operation detail composes the narrow Imports
   evidence through the public module contract; no raw source row or file is
-  persisted. Browser acceptance remains open.
+  persisted. The separate periods and warning passed in the CSV browser flow;
+  browser XLSX interaction remains open.
 - [~] Explicit compatible same-date income/expense row groups against one plan.
   Partial settlement, multi-date grouping and additions to closed plans remain
-  outside this slice; browser acceptance remains open.
+  outside this slice; browser XLSX interaction remains open.
 
 Additional formats, ready-made bank profiles, and reconciliation improvements
 may ship as `4.x` minor versions without changing import ownership.

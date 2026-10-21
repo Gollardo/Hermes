@@ -268,10 +268,14 @@ local-storage/combobox race. Ruff, Python formatting, ESLint, catalogs,
 Prettier, mypy, TypeScript and documentation checks passed. The production
 frontend build passed with unchanged budget warnings. A fresh disposable
 database upgraded through `0018_import_provenance`, and `alembic check` found no
-metadata drift. Native browser attachment was unavailable and then hung before
-the page could be observed; the review-fix pass also found no provider in a
-bounded inventory attempt. Desktop/390 px RU/EN browser acceptance therefore remains
-open; no owner statement, production data or production service was used. See
+metadata drift. A later local browser run against disposable PostgreSQL covered
+the complete Russian multi-day CSV flow, including filtering, restored hidden
+drafts, keyboard category search, posting-period warning, chronological and
+atomic confirmation, response-gated success, journal links and source
+provenance. Russian and English at 390 px and English at 1440 px had no document
+overflow or console warning/error. Browser XLSX interaction, real-device/Safari
+assistive technology, PostgreSQL 17 Compose, production and owner-data acceptance
+remain open; no production data or service was used. See
 the [acceptance evidence](operations/multiday-import-acceptance-2026-10-21.md).
 
 ## Release assumptions and technical debt

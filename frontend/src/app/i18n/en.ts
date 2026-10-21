@@ -34,7 +34,7 @@ export const en = {
 
   'imports.title': 'Statement import',
   'imports.intro':
-    'All rows are available regardless of bank status. Choose the fact date; bank dates are not applied. Preview does not change balances or plans.',
+    "All rows are available regardless of bank status. The mapped source date seeds each row's editable fact date. Preview does not change balances or plans.",
   'imports.file': 'CSV or XLSX file',
   'imports.date': 'Fact date',
   'imports.source_date': 'Source date column',
