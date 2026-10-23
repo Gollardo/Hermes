@@ -279,7 +279,7 @@ describe('Statement import', () => {
     const row = page.rows()[0];
     row.action = 'plan';
     row.description = 'Reviewed note';
-    row.category = 'category';
+    row.category = '';
     row.windowDays = 3;
     row.plans = [
       {
@@ -341,6 +341,36 @@ describe('Statement import', () => {
     expect(row.date).toBe('2026-01-04');
     expect(row.description).toBe('Coffee plan with a very long descriptive label');
     expect(row.category).toBe('category');
+  });
+
+  it('seeds a selected plan category without preventing a reviewed override', () => {
+    const page = preview();
+    const row = page.rows()[0];
+    row.action = 'plan';
+    row.category = '';
+    row.plan = 'plan';
+    row.plans = [
+      {
+        id: 'plan',
+        version: 1,
+        type: 'expense',
+        direction: 'expense',
+        amount: '10.1234',
+        date: '2026-01-02',
+        description: 'Coffee plan',
+        category_id: 'category',
+      },
+    ];
+
+    page.selectPlan(row);
+    expect(row.category).toBe('category');
+
+    row.category = 'reviewed-category';
+    page.submit();
+
+    const request = http.expectOne('/api/v1/imports/commit');
+    expect(request.request.body.decisions[0].operation.category_id).toBe('reviewed-category');
+    request.flush({ results: [] });
   });
 
   it('localizes candidate dates while retaining ISO dates in searchable text', () => {

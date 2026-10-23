@@ -345,6 +345,7 @@ export class ImportsPage {
       row.plans.find((p) => p.id === row.plan) ?? this.plans.find((p) => p.id === row.plan);
     if (!plan) return;
     row.description = plan.description;
+    if (plan.category_id) row.category = plan.category_id;
   }
   selectExisting(row: Row): void {
     const fact =

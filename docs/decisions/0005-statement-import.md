@@ -40,8 +40,8 @@ clears the non-persisted review draft.
 The statement source description remains separate source evidence and may drive
 matching and suggestions. A new fact starts with an empty optional operation
 description and offers an explicit copy-from-source action. Selecting a plan
-uses the plan description; linking an existing fact preserves that fact's
-description.
+uses the plan description and category while keeping the category editable;
+linking an existing fact preserves that fact's description.
 
 Each row can be skipped, posted as a new operation, linked to an existing fact,
 or used to confirm one actionable recurring occurrence or one-off plan. A plan
@@ -134,8 +134,8 @@ that row. When several compatible rows explicitly close one plan, the resulting
 operation uses the plan description rather than the first source description.
 
 These controls improve review only. They do not make similarity authoritative,
-change category or Scheduling ownership, or allow an ineligible plan to be
-confirmed.
+transfer category or Scheduling ownership to Imports, or allow an ineligible
+plan to be confirmed.
 
 Bulk action, category and plan assignment remain outside this refinement. Every
 row still requires its own reviewed posting decision.

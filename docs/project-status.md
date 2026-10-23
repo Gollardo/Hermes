@@ -205,7 +205,8 @@ with profile-mapped, editable source dates per row and a derived import period.
 Source/operation description separation is now implemented: new facts start
 blank with an explicit copy action, matching still uses the source text,
 plan-backed facts and merged groups use the plan description, and existing-fact
-links preserve their stored description. Import review now uses the established
+links preserve their stored description. Selecting an eligible plan also seeds
+its category into the editable row review. Import review now uses the established
 searchable combobox for categories, planned payments and existing facts.
 Category paths remain visible as in ordinary operation entry and scheduling.
 Normalized substring search covers either hierarchy level,
