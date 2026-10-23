@@ -49,13 +49,15 @@
       (animate.enter)="motion.enter($event, 'modal')"
       (animate.leave)="motion.leave($event, 'modal')"
       role="presentation"
-      (keydown.escape)="cancelEdit()"
     >
       <section
+        appModalFocus
         class="modal-card wide entry-panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="entry-title"
+        tabindex="-1"
+        (modalEscape)="cancelEdit()"
       >
         <div class="modal-header">
           <div>
@@ -119,7 +121,18 @@
                     [recentKey]="'categories-' + form.controls.type.value"
                     [placeholder]="t('operations.typeACategoryName')"
                     matchMode="contains"
+                    [ariaInvalid]="form.touched && !form.controls.categoryId.value"
+                    [ariaDescribedby]="
+                      form.touched && !form.controls.categoryId.value
+                        ? 'operation-category-error'
+                        : null
+                    "
                   />
+                  @if (form.touched && !form.controls.categoryId.value) {
+                    <p class="field-error" id="operation-category-error">
+                      {{ t('funds.required') }}
+                    </p>
+                  }
                 </div>
               }
 
@@ -137,11 +150,22 @@
                   appDecimalInput="expression"
                   formControlName="amount"
                   inputmode="text"
-                  placeholder="0.00"
+                  [placeholder]="t('common.decimalPlaceholder')"
+                  [attr.aria-invalid]="form.controls.amount.touched && form.controls.amount.invalid"
+                  [attr.aria-describedby]="
+                    form.controls.amount.touched && form.controls.amount.invalid
+                      ? 'operation-amount-hint operation-amount-error'
+                      : 'operation-amount-hint'
+                  "
                 />
                 <p class="hint" id="operation-amount-hint">
                   {{ t('operations.addOrSubtract3542323454') }}
                 </p>
+                @if (form.controls.amount.touched && form.controls.amount.invalid) {
+                  <p class="field-error" id="operation-amount-error">
+                    {{ t('funds.enterAPositiveAmount') }}
+                  </p>
+                }
               </div>
               <div class="form-field">
                 <label for="operation-account">
@@ -157,7 +181,18 @@
                   [options]="accountOptions(activeAccounts(currentOperation()))"
                   recentKey="accounts"
                   [placeholder]="t('funds.typeAnAccountName')"
+                  [ariaInvalid]="form.controls.accountId.touched && form.controls.accountId.invalid"
+                  [ariaDescribedby]="
+                    form.controls.accountId.touched && form.controls.accountId.invalid
+                      ? 'operation-account-error'
+                      : null
+                  "
                 />
+                @if (form.controls.accountId.touched && form.controls.accountId.invalid) {
+                  <p class="field-error" id="operation-account-error">
+                    {{ t('funds.required') }}
+                  </p>
+                }
               </div>
 
               @if (
@@ -230,7 +265,7 @@
                       appDecimalInput="expression"
                       formControlName="fundAmount"
                       inputmode="text"
-                      placeholder="0.00"
+                      [placeholder]="t('common.decimalPlaceholder')"
                     />
                   </div>
                   <p class="impact-preview form-field-wide">
@@ -336,7 +371,7 @@
                   {{ t('accounts.cancelChanges') }}
                 </button>
               }
-              <button type="submit" [disabled]="saving() || !canSubmit()">
+              <button type="submit" [disabled]="saving()">
                 {{
                   saving()
                     ? t('accounts.saving')

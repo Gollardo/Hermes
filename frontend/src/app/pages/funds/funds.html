@@ -283,80 +283,15 @@
       </div>
     </section>
 
-    <section class="panel history-panel">
-      <div class="panel-heading">
-        <div>
-          <h2>{{ t('funds.fundMovementHistory') }}</h2>
-          <p>{{ t('funds.everyAllocationAndMovementRemainsExplainable') }}</p>
-        </div>
-      </div>
-      @if (history().length === 0) {
-        <p class="empty-state">{{ t('funds.noFundMovementsYet') }}</p>
-      } @else {
-        <div class="history-list">
-          @for (event of history(); track event.id) {
-            <article>
-              <div>
-                <div class="history-meta">
-                  <span class="badge">{{ eventLabel(event) }}</span>
-                  <strong>{{ event.occurred_on | textDate }}</strong>
-                </div>
-                <p>{{ event.description || t('funds.noDescription') }}</p>
-                @if (event.type === 'fund_release' && event.caused_by_operation_id) {
-                  <a
-                    routerLink="/operations"
-                    [queryParams]="{ focus: event.caused_by_operation_id }"
-                    >{{ t('funds.releaseOpenTransfer') }}</a
-                  >
-                }
-              </div>
-              <ul>
-                @for (movement of event.movements; track movement.fund_id + movement.account_id) {
-                  <li>
-                    {{ movement.fund_name }} · {{ movement.account_name }}
-                    <strong>{{ movement.amount | money }} {{ baseCurrency() }}</strong>
-                  </li>
-                }
-                @for (movement of event.reserve_movements; track movement.account_id) {
-                  <li>
-                    {{ t('funds.reserveP0', { p0: movement.account_name }) }}
-                    <strong>{{ movement.amount | money }} {{ baseCurrency() }}</strong>
-                  </li>
-                }
-              </ul>
-            </article>
-          }
-        </div>
-      }
-      @if (historyTotal() > historyPageSize || historyPage() > 1) {
-        <nav class="pagination" [attr.aria-label]="t('funds.fundHistoryPages')">
-          <button
-            type="button"
-            class="secondary"
-            (click)="previousHistoryPage()"
-            [disabled]="historyPage() === 1"
-          >
-            {{ t('funds.back') }}
-          </button>
-          <span>
-            {{
-              t('funds.pageP0OfP1', {
-                p0: historyPage(),
-                p1: Math.max(1, Math.ceil(historyTotal() / historyPageSize)),
-              })
-            }}
-          </span>
-          <button
-            type="button"
-            class="secondary"
-            (click)="nextHistoryPage()"
-            [disabled]="historyPage() * historyPageSize >= historyTotal()"
-          >
-            {{ t('funds.next') }}
-          </button>
-        </nav>
-      }
-    </section>
+    <app-fund-history
+      [events]="history()"
+      [page]="historyPage()"
+      [pageSize]="historyPageSize"
+      [total]="historyTotal()"
+      [baseCurrency]="baseCurrency()"
+      (previousPage)="previousHistoryPage()"
+      (nextPage)="nextHistoryPage()"
+    />
 
     @if (activeModal()) {
       <div
@@ -364,13 +299,15 @@
         (animate.enter)="motion.enter($event, 'modal')"
         (animate.leave)="motion.leave($event, 'modal')"
         role="presentation"
-        (keydown.escape)="closeModal()"
       >
         <section
+          appModalFocus
           class="modal-card"
           role="dialog"
           aria-modal="true"
           aria-labelledby="fund-modal-title"
+          tabindex="-1"
+          (modalEscape)="closeModal()"
         >
           <div class="modal-header">
             <div>
@@ -422,7 +359,18 @@
                 formControlName="name"
                 maxlength="120"
                 [placeholder]="t('funds.forExampleEmergencyFund')"
+                [attr.aria-invalid]="
+                  fundForm.controls.name.touched && fundForm.controls.name.invalid
+                "
+                [attr.aria-describedby]="
+                  fundForm.controls.name.touched && fundForm.controls.name.invalid
+                    ? 'fund-name-error'
+                    : null
+                "
               />
+              @if (fundForm.controls.name.touched && fundForm.controls.name.invalid) {
+                <p class="field-error" id="fund-name-error">{{ t('funds.required') }}</p>
+              }
               <label for="fund-description"> {{ t('accounts.description') }} </label
               ><textarea
                 id="fund-description"
@@ -437,6 +385,16 @@
                   id="fund-percentage"
                   formControlName="percentage"
                   inputmode="decimal"
+                  [attr.aria-invalid]="
+                    fundForm.controls.percentage.touched &&
+                    (fundForm.controls.percentage.invalid || percentageExceedsAvailable())
+                  "
+                  [attr.aria-describedby]="
+                    fundForm.controls.percentage.touched &&
+                    (fundForm.controls.percentage.invalid || percentageExceedsAvailable())
+                      ? 'fund-percentage-error'
+                      : null
+                  "
                 />
                 <p class="hint">
                   {{
@@ -446,9 +404,11 @@
                   }}
                 </p>
                 @if (fundForm.controls.percentage.touched && fundForm.controls.percentage.invalid) {
-                  <p class="field-error">{{ t('funds.enterAPercentageFrom0To100') }}</p>
+                  <p class="field-error" id="fund-percentage-error">
+                    {{ t('funds.enterAPercentageFrom0To100') }}
+                  </p>
                 } @else if (fundForm.controls.percentage.touched && percentageExceedsAvailable()) {
-                  <p class="field-error">
+                  <p class="field-error" id="fund-percentage-error">
                     {{ t('auth.activeFundPercentagesCannotTotalMoreThan') }}
                   </p>
                 }
@@ -464,6 +424,20 @@
                 formControlName="targetAmount"
                 inputmode="decimal"
                 [placeholder]="dynamicMode() ? t('funds.required') : t('funds.optional')"
+                [attr.aria-invalid]="
+                  fundForm.controls.targetAmount.touched &&
+                  (fundForm.controls.targetAmount.invalid ||
+                    (dynamicMode() && !fundForm.controls.targetAmount.value) ||
+                    optionalMoneyInvalid(fundForm.controls.targetAmount.value))
+                "
+                [attr.aria-describedby]="
+                  fundForm.controls.targetAmount.touched &&
+                  (fundForm.controls.targetAmount.invalid ||
+                    (dynamicMode() && !fundForm.controls.targetAmount.value) ||
+                    optionalMoneyInvalid(fundForm.controls.targetAmount.value))
+                    ? 'fund-target-error'
+                    : null
+                "
               />
               @if (
                 fundForm.controls.targetAmount.touched &&
@@ -471,7 +445,7 @@
                   (dynamicMode() && !fundForm.controls.targetAmount.value) ||
                   optionalMoneyInvalid(fundForm.controls.targetAmount.value))
               ) {
-                <p class="field-error">
+                <p class="field-error" id="fund-target-error">
                   {{
                     dynamicMode()
                       ? t('funds.setAPositiveTargetForDynamicMode')
@@ -522,7 +496,12 @@
                   <p class="field-error">{{ t('funds.selectAnAccountAmountAndDateTo') }}</p>
                 }
               }
-              <button type="submit" [disabled]="saving() || !canSaveFund()">
+              @if (fundSubmissionAttempted() && !canSaveFund()) {
+                <p class="form-error" role="alert">
+                  {{ t('common.completeRequiredFields') }}
+                </p>
+              }
+              <button type="submit" [disabled]="saving()">
                 {{
                   saving()
                     ? t('accounts.saving')

@@ -111,11 +111,28 @@
   width: 100%;
 }
 
+.confirmation-card {
+  max-width: 34rem;
+}
+
+.confirmation-card .modal-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
 .modal-card textarea {
   min-height: 5rem;
 }
 
 @media (max-width: 38rem) {
+  .item-more-actions summary {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+
   .balance-block {
     text-align: left;
   }

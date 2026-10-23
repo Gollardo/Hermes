@@ -1,0 +1,68 @@
+<div
+  class="modal-backdrop"
+  (animate.enter)="motion.enter($event, 'modal')"
+  (animate.leave)="motion.leave($event, 'modal')"
+  role="presentation"
+>
+  <section
+    appModalFocus
+    class="modal-card calendar-day-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="calendar-day-dialog-title"
+    tabindex="-1"
+    (modalEscape)="closed.emit()"
+  >
+    <div class="modal-header">
+      <div>
+        <p class="section-label">{{ t('scheduling.dayEvents') }}</p>
+        <h2 id="calendar-day-dialog-title">{{ day().iso | textDate }}</h2>
+      </div>
+      <button
+        type="button"
+        class="modal-close"
+        (click)="closed.emit()"
+        [attr.aria-label]="t('accounts.close')"
+      >
+        ×
+      </button>
+    </div>
+    <div class="calendar-day-dialog-list">
+      @for (occurrence of day().occurrences; track occurrence.id) {
+        @if (occurrence.status === 'confirmed' && occurrence.actual_operation_id) {
+          <a
+            class="calendar-day-dialog-item confirmed-link"
+            routerLink="/operations"
+            [queryParams]="{ focus: occurrence.actual_operation_id }"
+          >
+            <span
+              ><strong>{{ occurrenceTitle(occurrence) }}</strong
+              ><small
+                >{{ typeLabel(occurrence.type) }} · {{ statusLabel(occurrence.status) }}</small
+              ></span
+            >
+            <strong>{{ occurrence.amount | money }} {{ baseCurrency() }}</strong>
+          </a>
+        } @else {
+          <button
+            type="button"
+            class="calendar-day-dialog-item calendar-day-dialog-button"
+            (click)="occurrenceSelected.emit(occurrence)"
+          >
+            <span
+              ><strong>{{ occurrenceTitle(occurrence) }}</strong
+              ><small
+                >{{ typeLabel(occurrence.type) }} ·
+                {{ occurrence.overdue ? t('home.overdue') : statusLabel(occurrence.status) }}</small
+              >
+              @if (occurrence.preserve_from_series_shift) {
+                <small>{{ t('scheduling.preservedDuringSeriesShift') }}</small>
+              }
+            </span>
+            <strong>{{ occurrence.amount | money }} {{ baseCurrency() }}</strong>
+          </button>
+        }
+      }
+    </div>
+  </section>
+</div>

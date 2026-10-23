@@ -20,7 +20,7 @@ describe('HomePage', () => {
 
   afterEach(() => http.verify());
 
-  function flushOverview(options?: { analyticsFailure?: boolean }): void {
+  function flushOverview(options?: { analyticsFailure?: boolean; withRows?: boolean }): void {
     fixture.detectChanges();
     http.expectOne('/api/v1/scheduling/materialize').flush({ horizon_from: '2026-08-14' });
     http.expectOne('/api/v1/funds/summary').flush({
@@ -43,10 +43,40 @@ describe('HomePage', () => {
         minimum_on: '2026-08-20',
         first_negative_on: null,
       });
-    http.expectOne((request) => request.url === '/api/v1/operations').flush({ items: [] });
+    http
+      .expectOne((request) => request.url === '/api/v1/operations')
+      .flush({
+        items: options?.withRows
+          ? [
+              {
+                id: 'operation-1',
+                type: 'expense',
+                occurred_on: '2026-08-14',
+                amount: '10.0000',
+                description: 'Lunch',
+                reason: null,
+                category_name: 'Food',
+              },
+            ]
+          : [],
+      });
     http
       .expectOne((request) => request.url === '/api/v1/scheduling/occurrences')
-      .flush({ items: [], total: 0 });
+      .flush({
+        items: options?.withRows
+          ? [
+              {
+                id: 'occurrence-1',
+                due_on: '2026-08-14',
+                overdue: false,
+                type: 'expense',
+                amount: '10.0000',
+                description: 'Lunch',
+              },
+            ]
+          : [],
+        total: options?.withRows ? 1 : 0,
+      });
     http.expectOne('/api/v1/settings').flush({ base_currency: 'RUB' });
     const categories = http.expectOne((request) => {
       return (
@@ -103,5 +133,21 @@ describe('HomePage', () => {
       'Не удалось загрузить распределение по категориям',
     );
     expect(fixture.nativeElement.querySelector('.global-error')).toBeNull();
+  });
+
+  it('links recent operations and attention rows to their exact existing context', () => {
+    flushOverview({ withRows: true });
+
+    expect(
+      (fixture.nativeElement.querySelector('.recent-panel .overview-row-link') as HTMLAnchorElement)
+        .href,
+    ).toContain('/operations?focus=operation-1');
+    expect(
+      (
+        fixture.nativeElement.querySelector(
+          '.attention-panel .overview-row-link',
+        ) as HTMLAnchorElement
+      ).href,
+    ).toContain('/calendar?occurrence=occurrence-1');
   });
 });

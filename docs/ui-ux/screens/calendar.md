@@ -1,5 +1,11 @@
 # Calendar and recurring operations direction
 
+## Day dialog boundary — 2026-10-21
+
+The selected-day dialog is an isolated presentational component. Scheduling retains occurrence
+state and navigation ownership. The dialog uses the shared focus contract, closes with Escape and
+restores focus to the day that opened it.
+
 Modal and popover motion follows the shared [motion contract](../motion.md).
 Financial content and keyboard interactions remain immediate.
 

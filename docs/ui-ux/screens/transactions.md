@@ -1,5 +1,13 @@
 # Transactions
 
+## Interaction hardening — 2026-10-21
+
+Meaningful period, account, type, category and pagination state is represented in URL query
+parameters. Applying filters resets pagination; reload and direct links restore the validated
+selection. The operation composer keeps its existing API semantics but exposes validation after an
+attempted submit and moves focus to the first invalid control instead of relying on a disabled
+primary action.
+
 ## Visual refresh — 2026-09-26
 
 The journal uses a compact header, quiet day bands and distinct row-label,

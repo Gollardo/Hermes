@@ -273,7 +273,10 @@ describe('SchedulingPage recurrence editor', () => {
     const submit = fixture.nativeElement.querySelector(
       '.form-panel button[type="submit"]',
     ) as HTMLButtonElement;
-    expect(submit.disabled).toBe(true);
+    expect(submit.disabled).toBe(false);
+    submit.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.form-panel [role="alert"]')).not.toBeNull();
 
     setValue('.form-panel input[formControlName="startOn"]', '2026-08-28');
     expect(submit.disabled).toBe(false);
@@ -731,7 +734,10 @@ describe('SchedulingPage recurrence editor', () => {
         ) as HTMLButtonElement
       ).disabled,
     ).toBe(true);
-    expect(submit.disabled).toBe(true);
+    expect(submit.disabled).toBe(false);
+    submit.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.form-panel [role="alert"]')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain(
       'Для активного правила выберите действующие счёт и категорию',
     );

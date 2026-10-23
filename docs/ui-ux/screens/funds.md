@@ -1,5 +1,11 @@
 # Funds
 
+## Movement history boundary — 2026-10-21
+
+The movement-history result panel is an isolated presentational component. The Funds page retains
+ownership of pagination state and API requests; the panel renders exact events and emits only page
+intent. This decomposition does not change allocation or movement behavior.
+
 ## Follow-up review corrections
 
 Account and fund lists align desktop actions below the amount and mobile actions below the content. This is the shared row-action placement for financial directories.

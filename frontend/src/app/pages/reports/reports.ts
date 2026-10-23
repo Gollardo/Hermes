@@ -9,7 +9,8 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
+import { skip } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { apiErrorMessage } from '../../core/api-error';
@@ -65,6 +66,8 @@ interface Settings {
 export class ReportsPage implements OnInit {
   protected readonly t = t;
   private readonly http = inject(HttpClient);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   protected readonly periodMode = signal<PeriodMode>('month');
   protected readonly selectedMonth = signal('');
   protected readonly fromOn = signal('');
@@ -85,17 +88,20 @@ export class ReportsPage implements OnInit {
   protected readonly loading = signal(true);
   protected readonly error = localizedSignal();
   private requestSequence = 0;
+  private defaultMonth = '';
 
   ngOnInit(): void {
     this.http.get<Settings>(`${environment.apiBaseUrl}/settings`).subscribe({
       next: (settings) => {
         this.baseCurrency.set(currencySymbol(settings.base_currency));
         const month = currentMonth(settings.timezone);
-        const range = monthRange(month);
-        this.selectedMonth.set(month);
-        this.fromOn.set(range.from);
-        this.throughOn.set(range.through);
-        this.load();
+        this.defaultMonth = month;
+        this.restoreUrlState(month, this.route.snapshot.queryParamMap);
+        this.load(true);
+        this.route.queryParamMap.pipe(skip(1)).subscribe((query) => {
+          if (!this.restoreUrlState(this.defaultMonth, query)) return;
+          this.load(null);
+        });
       },
       error: (error: unknown) => {
         this.loading.set(false);
@@ -143,12 +149,12 @@ export class ReportsPage implements OnInit {
     return type === 'expense' ? t('categories.expenses') : t('categories.income');
   }
 
-  private load(): void {
+  private load(replaceUrl: boolean | null = false): void {
     if (!this.fromOn() || !this.throughOn()) return;
     const sequence = ++this.requestSequence;
     this.loading.set(true);
     this.error.set(null);
-    this.report.set(null);
+    if (replaceUrl !== null) this.updateUrlState(replaceUrl);
     const params = new HttpParams()
       .set('type', this.reportType())
       .set('from_on', this.fromOn())
@@ -167,6 +173,60 @@ export class ReportsPage implements OnInit {
           this.error.set(() => apiErrorMessage(error, t('reports.couldNotBuildTheReport')));
         },
       });
+  }
+
+  private restoreUrlState(defaultMonth: string, query: ParamMap): boolean {
+    const previous = this.urlStateKey();
+    const type = query.get('type');
+    this.reportType.set(type === 'income' ? 'income' : 'expense');
+    const requestedMode = query.get('period');
+    const requestedMonth = query.get('month');
+    const month =
+      requestedMonth && /^\d{4}-(0[1-9]|1[0-2])$/.test(requestedMonth)
+        ? requestedMonth
+        : defaultMonth;
+    this.selectedMonth.set(month);
+    const monthDates = monthRange(month);
+    const from = query.get('from');
+    const through = query.get('through');
+    const validCustom = Boolean(
+      requestedMode === 'custom' &&
+      from &&
+      through &&
+      /^\d{4}-\d{2}-\d{2}$/.test(from) &&
+      /^\d{4}-\d{2}-\d{2}$/.test(through) &&
+      from <= through,
+    );
+    this.periodMode.set(validCustom ? 'custom' : 'month');
+    this.fromOn.set(validCustom ? from! : monthDates.from);
+    this.throughOn.set(validCustom ? through! : monthDates.through);
+    return previous !== this.urlStateKey();
+  }
+
+  private urlStateKey(): string {
+    return [
+      this.reportType(),
+      this.periodMode(),
+      this.selectedMonth(),
+      this.fromOn(),
+      this.throughOn(),
+    ].join('|');
+  }
+
+  private updateUrlState(replaceUrl: boolean): void {
+    const custom = this.periodMode() === 'custom';
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        type: this.reportType(),
+        period: custom ? 'custom' : 'month',
+        month: custom ? null : this.selectedMonth(),
+        from: custom ? this.fromOn() : null,
+        through: custom ? this.throughOn() : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl,
+    });
   }
 }
 

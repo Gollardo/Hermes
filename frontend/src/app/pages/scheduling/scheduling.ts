@@ -24,6 +24,9 @@ import {
   moneyExpressionPayload,
   moneyExpressionValidator,
 } from '../../shared/decimal-input';
+import { ModalFocus } from '../../shared/modal-focus';
+import { revealInvalidFields } from '../../shared/form-validation';
+import { CalendarDayDialog } from './calendar-day-dialog';
 
 type OperationType = 'income' | 'expense' | 'transfer';
 type Frequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -133,7 +136,16 @@ interface UpcomingGroup {
 
 @Component({
   selector: 'app-scheduling-page',
-  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, DateTextPipe, EntityCombobox, DecimalInput],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MoneyPipe,
+    DateTextPipe,
+    EntityCombobox,
+    DecimalInput,
+    ModalFocus,
+    CalendarDayDialog,
+  ],
   templateUrl: './scheduling.html',
   styleUrls: ['../directory.css', './scheduling.css', './scheduling-actions.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -159,6 +171,7 @@ export class SchedulingPage implements OnInit {
   protected readonly baseCurrency = signal('RUB');
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
+  protected readonly ruleSubmissionAttempted = signal(false);
   protected readonly error = localizedSignal();
   protected readonly editingId = signal<string | null>(null);
   protected readonly ruleFormOpen = signal(false);
@@ -321,8 +334,9 @@ export class SchedulingPage implements OnInit {
   }
 
   protected submitRule(): void {
+    this.ruleSubmissionAttempted.set(true);
     if (!this.canSaveRule()) {
-      this.ruleForm.markAllAsTouched();
+      revealInvalidFields(this.ruleForm);
       return;
     }
     this.saving.set(true);
@@ -338,6 +352,7 @@ export class SchedulingPage implements OnInit {
       : this.http.post<RecurringRule>(`${environment.apiBaseUrl}/scheduling/rules`, body);
     request.subscribe({
       next: () => {
+        this.ruleSubmissionAttempted.set(false);
         this.saving.set(false);
         this.cancelEdit();
         this.loadSchedule();
@@ -381,6 +396,7 @@ export class SchedulingPage implements OnInit {
   }
 
   protected cancelEdit(): void {
+    this.ruleSubmissionAttempted.set(false);
     this.editingId.set(null);
     this.ruleForm.reset({
       type: 'expense',

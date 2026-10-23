@@ -50,6 +50,8 @@ export class EntityCombobox implements ControlValueAccessor, OnChanges {
   @Input() emptySelectionLabel: string | null = null;
   @Input() matchMode: 'prefix' | 'contains' = 'prefix';
   @Input() showOptionsWhenEmpty = false;
+  @Input() ariaInvalid: boolean | null = null;
+  @Input() ariaDescribedby: string | null = null;
   protected readonly query = signal('');
   protected readonly open = signal(false);
   protected readonly disabled = signal(false);

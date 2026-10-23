@@ -276,7 +276,15 @@ describe('FundsPage', () => {
     const fundSubmit = fixture.nativeElement.querySelector(
       '.modal-card button[type="submit"]',
     ) as HTMLButtonElement;
-    expect(fundSubmit.disabled).toBe(true);
+    expect(fundSubmit.disabled).toBe(false);
+    fundSubmit.click();
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement.querySelector('#fund-percentage') as HTMLInputElement).getAttribute(
+        'aria-invalid',
+      ),
+    ).toBe('true');
+    expect(fixture.nativeElement.querySelector('.modal-card [role="alert"]')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Доступно: 90,00%');
 
     clickButton('Закрыть');

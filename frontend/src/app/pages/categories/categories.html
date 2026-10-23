@@ -251,13 +251,15 @@
       (animate.enter)="motion.enter($event, 'modal')"
       (animate.leave)="motion.leave($event, 'modal')"
       role="presentation"
-      (keydown.escape)="cancelEdit()"
     >
       <section
+        appModalFocus
         class="modal-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="category-form-title"
+        tabindex="-1"
+        (modalEscape)="cancelEdit()"
       >
         <div class="modal-header">
           <div>

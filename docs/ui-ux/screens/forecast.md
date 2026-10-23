@@ -1,5 +1,11 @@
 # Forecast
 
+## Shareable scope — 2026-10-21
+
+Account, horizon and free-or-total balance mode are represented in validated query parameters.
+Unknown accounts fall back to all accounts, and invalid horizon or balance-mode values fall back to
+the documented defaults without changing forecast calculations.
+
 ## Follow-up review corrections
 
 Safe spend precedes the plot; minimum, ending balance and net flow follow it before the event feed in DOM and visual order. Mobile uses a native period select, with account and balance mode visible. Empty account scope is a display value, not a placeholder or submitted account identifier.

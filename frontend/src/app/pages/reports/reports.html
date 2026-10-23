@@ -78,6 +78,9 @@
   @if (loading() && !report()) {
     <section class="panel empty-state">{{ t('reports.buildingReport') }}</section>
   } @else if (report(); as data) {
+    @if (loading()) {
+      <p class="status-note report-updating" role="status">{{ t('reports.updating') }}</p>
+    }
     <section class="panel report-chart-panel" aria-labelledby="report-chart-title">
       <div class="report-summary">
         <div class="report-summary-copy">

@@ -110,6 +110,32 @@ begins around 1135 px versus 1940 px with the populated overdue state. No
 horizontal document overflow was observed on the checked routes. Backend tests
 were not repeated because this follow-up changes only presentation and client UI.
 
+## Unreleased usability hardening
+
+The completed issue #10 usability slice centralizes dialog focus containment, safe Escape dismissal and
+opener focus restoration across the existing account, category, operation, fund and scheduling
+dialogs. Account deletion requires a named, consequence-aware confirmation and prevents duplicate
+requests. Login adds an explicit accessible password-visibility control, while the main account,
+operation, fund and scheduling submissions reveal invalid state and move focus to the first field
+that needs correction without changing API or financial contracts.
+
+Dashboard attention and recent-operation rows, plus account history actions, now link to the exact
+existing context. Operation filters and pagination, report scope, and forecast scope use validated
+URL query state and restore it during browser Back/Forward navigation. Reports retain the last
+successful result during a non-destructive refresh and announce that the result is updating. The
+fund-history result panel and calendar-day dialog are isolated components with parent-owned data
+loading and actions. RU/EN runtime copy and exact decimal behavior are preserved.
+
+Frontend verification covers shared modal behavior, destructive confirmation, linked field errors,
+password visibility, contextual navigation, report refresh retention and isolated result/dialog
+components; all 219 frontend tests and all 129 PostgreSQL integration tests pass. Local browser
+acceptance on desktop, 820 px and 390 px covers Accounts, Operations, Funds, Calendar, Reports and
+Forecast in RU and EN, including keyboard focus/escape restoration, Back navigation, populated,
+filtered-empty, loading/error behavior, canonical money formatting, long content, and absence of
+document overflow. A clean primary-route pass produced no console errors. The browser pass used a
+loopback mock API. GitHub issue #10 is closed after these local acceptance gates; owner visual
+acceptance and production deployment remain separate release gates.
+
 ## Interaction motion
 
 The owner-authorized [motion pass](ui-ux/motion.md) adds shared 240 ms dialog,

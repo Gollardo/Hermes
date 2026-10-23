@@ -67,6 +67,7 @@ button,
   min-height: 2.75rem;
   padding: 0.65rem 1rem;
   text-decoration: none;
+  touch-action: manipulation;
   transition:
     background 160ms ease,
     border-color 160ms ease,
@@ -113,8 +114,13 @@ button:disabled {
   max-height: calc(100dvh - 1.5rem);
   max-width: 40rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: clamp(1.1rem, 3vw, 1.6rem);
   width: 100%;
+}
+
+.modal-card [aria-invalid='true'] {
+  border-color: var(--danger);
 }
 
 .modal-card.wide {

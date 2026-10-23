@@ -51,6 +51,13 @@
                 <strong class="balance">{{ account.balance | money }} {{ baseCurrency() }}</strong>
               </div>
               <div class="item-actions">
+                <a
+                  class="button-link secondary"
+                  routerLink="/operations"
+                  [queryParams]="{ account_id: account.id }"
+                >
+                  {{ t('accounts.history') }}
+                </a>
                 <button type="button" class="secondary" (click)="edit(account)">
                   {{ t('accounts.edit') }}
                 </button>
@@ -64,7 +71,7 @@
                     <button type="button" class="secondary" (click)="toggleArchive(account)">
                       {{ account.archived ? t('accounts.restore') : t('accounts.archive') }}
                     </button>
-                    <button type="button" class="danger" (click)="remove(account)">
+                    <button type="button" class="danger" (click)="requestRemove(account)">
                       {{ t('accounts.delete') }}
                     </button>
                   </div>
@@ -86,10 +93,14 @@
       (keydown.escape)="cancelEdit()"
     >
       <section
+        appModalFocus
         class="modal-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="account-form-title"
+        aria-describedby="account-form-description"
+        tabindex="-1"
+        (modalEscape)="cancelEdit()"
       >
         <div class="modal-header">
           <div>
@@ -110,16 +121,29 @@
           </button>
         </div>
         <form [formGroup]="form" (ngSubmit)="submit()">
-          <p class="hint">{{ t('accounts.balancesCannotBeEditedDirectly') }}</p>
+          <p class="hint" id="account-form-description">
+            {{ t('accounts.balancesCannotBeEditedDirectly') }}
+          </p>
           <label for="account-name"> {{ t('accounts.name') }} </label>
           <input
             id="account-name"
+            name="name"
+            data-modal-initial-focus
             formControlName="name"
             maxlength="120"
             [placeholder]="t('accounts.forExampleCash')"
+            [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid"
+            [attr.aria-describedby]="
+              form.controls.name.touched && form.controls.name.invalid ? 'account-name-error' : null
+            "
           />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <p class="field-error" id="account-name-error" role="alert">
+              {{ t('accounts.enterAccountName') }}
+            </p>
+          }
           <label for="account-type"> {{ t('accounts.accountType') }} </label>
-          <select id="account-type" formControlName="type">
+          <select id="account-type" name="type" formControlName="type">
             <option value="cash">{{ t('accounts.cash') }}</option>
             <option value="debit">{{ t('accounts.debit') }}</option>
             <option value="savings">{{ t('accounts.savings') }}</option>
@@ -127,20 +151,32 @@
           <label for="initial-balance"> {{ t('accounts.openingBalance') }} </label>
           <input
             id="initial-balance"
+            name="initialBalance"
             appDecimalInput
             formControlName="initialBalance"
             inputmode="decimal"
-            placeholder="0"
+            [placeholder]="t('accounts.amountPlaceholder')"
+            [attr.aria-invalid]="
+              form.controls.initialBalance.touched && form.controls.initialBalance.invalid
+            "
+            [attr.aria-describedby]="
+              form.controls.initialBalance.touched && form.controls.initialBalance.invalid
+                ? 'initial-balance-error'
+                : 'initial-balance-hint'
+            "
           />
-          <p class="hint">
+          <p class="hint" id="initial-balance-hint">
             {{ t('accounts.recordedAsASeparateAdjustmentUpTo') }}
           </p>
           @if (form.controls.initialBalance.touched && form.controls.initialBalance.invalid) {
-            <p class="field-error">{{ t('accounts.enterANonNegativeNumberWithUp') }}</p>
+            <p class="field-error" id="initial-balance-error" role="alert">
+              {{ t('accounts.enterANonNegativeNumberWithUp') }}
+            </p>
           }
           <label for="account-description"> {{ t('accounts.description') }} </label>
           <textarea
             id="account-description"
+            name="description"
             formControlName="description"
             maxlength="2000"
             rows="3"
@@ -164,6 +200,48 @@
             </button>
           }
         </form>
+      </section>
+    </div>
+  }
+
+  @if (deletingAccount(); as account) {
+    <div class="modal-backdrop" role="presentation">
+      <section
+        appModalFocus
+        class="modal-card confirmation-card"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-account-title"
+        aria-describedby="delete-account-description"
+        tabindex="-1"
+        (modalEscape)="cancelRemove()"
+      >
+        <div class="modal-header">
+          <div>
+            <p class="section-label">{{ t('accounts.destructiveAction') }}</p>
+            <h2 id="delete-account-title">
+              {{ t('accounts.deleteNamedAccount', { name: account.name }) }}
+            </h2>
+          </div>
+        </div>
+        <p id="delete-account-description">{{ t('accounts.deleteAccountConsequence') }}</p>
+        @if (error(); as message) {
+          <p class="form-error" role="alert">{{ message }}</p>
+        }
+        <div class="modal-action-buttons">
+          <button
+            type="button"
+            class="secondary"
+            data-modal-initial-focus
+            [disabled]="deleting()"
+            (click)="cancelRemove()"
+          >
+            {{ t('accounts.keepAccount') }}
+          </button>
+          <button type="button" class="danger" [disabled]="deleting()" (click)="confirmRemove()">
+            {{ deleting() ? t('accounts.deleting') : t('accounts.delete') }}
+          </button>
+        </div>
       </section>
     </div>
   }

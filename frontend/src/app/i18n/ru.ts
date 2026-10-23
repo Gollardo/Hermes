@@ -3,6 +3,8 @@ export const ru = {
     'Обрабатывается другой вход или настройка. Повторите попытку чуть позже.',
   'auth.requestTooLarge': 'Запрос слишком большой. Уменьшите его размер и повторите попытку.',
   'app.skipContent': 'Перейти к содержимому',
+  'common.completeRequiredFields': 'Заполните обязательные поля и проверьте выделенные значения.',
+  'common.decimalPlaceholder': '0,00',
   'home.scaleNote': 'Длина полос — относительно крупнейшей суммы',
   'home.forecastScope': 'По известным планам · свободные средства',
 
@@ -211,6 +213,19 @@ export const ru = {
   'accounts.financialStructure': 'Финансовая структура',
   'accounts.accounts': 'Счета',
   'accounts.addAccount': 'Добавить счёт',
+  'accounts.history': 'История',
+  'accounts.enterAccountName': 'Введите название счёта.',
+  'accounts.amountPlaceholder': '0,00',
+  'accounts.destructiveAction': 'Необратимое действие',
+  'accounts.deleteNamedAccount': 'Удалить счёт «{name}»?',
+  'accounts.deleteAccountConsequence':
+    'Счёт будет удалён только если у него нет финансовой истории. Это действие нельзя отменить.',
+  'accounts.keepAccount': 'Оставить счёт',
+  'accounts.deleting': 'Удаление…',
+  'login.showPassword': 'Показать пароль',
+  'login.hidePassword': 'Скрыть пароль',
+  'login.enterPasswordToContinue': 'Введите мастер-пароль, чтобы продолжить.',
+  'reports.updating': 'Обновляем отчёт… Предыдущие результаты остаются на экране.',
   'accounts.whereYourMoneyIsHeldBalancesAre':
     'Физическое местонахождение денег. Остаток всегда рассчитывается из журнала движений.',
   'accounts.note': 'Важно:',

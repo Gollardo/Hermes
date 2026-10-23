@@ -1,5 +1,4 @@
 import { UiMotion } from '../../shared/ui-motion';
-import { RouterLink } from '@angular/router';
 import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
@@ -16,7 +15,9 @@ import { environment } from '../../../environments/environment';
 import { apiErrorMessage } from '../../core/api-error';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
 import { DecimalInput, decimalPayload } from '../../shared/decimal-input';
-import { DateTextPipe } from '../../shared/date-text.pipe';
+import { ModalFocus } from '../../shared/modal-focus';
+import { revealInvalidFields } from '../../shared/form-validation';
+import { FundEvent, FundHistory } from './fund-history';
 import {
   currencySymbol,
   formatMoney,
@@ -88,36 +89,6 @@ interface Preview {
   free_after: string;
 }
 
-interface FundMovement {
-  fund_id: string;
-  fund_name: string;
-  account_id: string;
-  account_name: string;
-  amount: string;
-}
-
-interface FundEvent {
-  caused_by_operation_id?: string | null;
-  id: string;
-  type:
-    | 'allocation'
-    | 'redistribution'
-    | 'fund_transfer'
-    | 'reserve_distribution'
-    | 'reserve_release'
-    | 'fund_release'
-    | 'expense'
-    | 'transfer';
-  occurred_on: string;
-  description: string | null;
-  movements: FundMovement[];
-  reserve_movements: {
-    account_id: string;
-    account_name: string;
-    amount: string;
-  }[];
-}
-
 interface History {
   items: FundEvent[];
   page: number;
@@ -134,7 +105,7 @@ interface AllocationTotals {
 
 @Component({
   selector: 'app-funds-page',
-  imports: [RouterLink, ReactiveFormsModule, MoneyPipe, DateTextPipe, EntityCombobox, DecimalInput],
+  imports: [ReactiveFormsModule, MoneyPipe, EntityCombobox, DecimalInput, ModalFocus, FundHistory],
   templateUrl: './funds.html',
   styleUrls: ['../directory.css', './funds.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -168,6 +139,7 @@ export class FundsPage implements OnInit {
   );
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
+  protected readonly fundSubmissionAttempted = signal(false);
   protected readonly error = localizedSignal();
   protected readonly editingId = signal<string | null>(null);
   protected readonly baseCurrency = signal('RUB');
@@ -440,8 +412,9 @@ export class FundsPage implements OnInit {
   }
 
   protected submitFund(): void {
+    this.fundSubmissionAttempted.set(true);
     if (!this.canSaveFund()) {
-      this.fundForm.markAllAsTouched();
+      revealInvalidFields(this.fundForm);
       return;
     }
     this.error.set(null);
@@ -470,6 +443,7 @@ export class FundsPage implements OnInit {
       : this.http.post<Fund>(`${environment.apiBaseUrl}/funds`, body);
     request.subscribe({
       next: () => {
+        this.fundSubmissionAttempted.set(false);
         this.saving.set(false);
         this.cancelEdit();
         this.load();
@@ -494,6 +468,7 @@ export class FundsPage implements OnInit {
 
   protected openFund(): void {
     this.cancelEdit();
+    this.fundSubmissionAttempted.set(false);
     this.activeModal.set('fund');
   }
 
@@ -641,6 +616,7 @@ export class FundsPage implements OnInit {
   }
 
   protected cancelEdit(): void {
+    this.fundSubmissionAttempted.set(false);
     this.editingId.set(null);
     this.fundForm.reset({
       name: '',
@@ -1008,19 +984,6 @@ export class FundsPage implements OnInit {
       available !== null &&
       amount <= available,
     );
-  }
-
-  protected eventLabel(event: FundEvent): string {
-    return {
-      allocation: t('funds.allocation'),
-      redistribution: t('funds.reallocation'),
-      fund_transfer: t('funds.transferBetweenFunds0368'),
-      reserve_distribution: t('funds.automaticContributionFromReserve'),
-      reserve_release: t('funds.reserveRelease'),
-      fund_release: t('funds.releaseTitle'),
-      expense: t('funds.fundExpense'),
-      transfer: t('funds.transferWithFund'),
-    }[event.type];
   }
 
   protected previousHistoryPage(): void {

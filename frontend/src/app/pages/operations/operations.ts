@@ -3,8 +3,8 @@ import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
+import { Observable, skip } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { apiErrorMessage } from '../../core/api-error';
@@ -19,6 +19,8 @@ import {
   moneyExpressionValidator,
 } from '../../shared/decimal-input';
 import { CreateOperationType, OperationCreateMenu } from '../../shared/operation-create-menu';
+import { ModalFocus } from '../../shared/modal-focus';
+import { revealInvalidFields } from '../../shared/form-validation';
 
 type OperationType = 'income' | 'expense' | 'transfer' | 'balance_adjustment';
 type CategoryType = 'income' | 'expense';
@@ -144,6 +146,7 @@ interface ExpectedOccurrence extends Omit<OneOffPlan, 'source_kind'> {
     DecimalInput,
     OperationCreateMenu,
     RouterLink,
+    ModalFocus,
   ],
   templateUrl: './operations.html',
   styleUrl: './operations.css',
@@ -222,26 +225,18 @@ export class OperationsPage implements OnInit {
     if (planId) this.loadOneOffPlan(planId);
     const occurrenceId = query?.get('occurrence');
     if (occurrenceId) this.loadOccurrenceForConfirmation(occurrenceId);
-    const queryType = query?.get('type');
-    const filterType: OperationType | '' =
-      queryType === 'income' ||
-      queryType === 'expense' ||
-      queryType === 'transfer' ||
-      queryType === 'balance_adjustment'
-        ? queryType
-        : '';
-    this.filters.patchValue({
-      occurredFrom: query?.get('occurred_from') ?? '',
-      occurredTo: query?.get('occurred_to') ?? '',
-      categoryId: query?.get('category_id') ?? '',
-      type: filterType,
-    });
+    if (query) this.restoreJournalUrlState(query);
     if (this.filterChips().length) this.filtersOpen.set(true);
     this.loadSettings();
     this.loadDirectories();
     this.load();
     const createType = query?.get('new');
     if (isCreateOperationType(createType)) this.openCreate(createType);
+    this.route?.queryParamMap?.pipe(skip(1)).subscribe((nextQuery) => {
+      if (!this.restoreJournalUrlState(nextQuery)) return;
+      this.filtersOpen.set(this.filterChips().length > 0);
+      this.load();
+    });
   }
 
   protected currentOperation(): Operation | undefined {
@@ -528,7 +523,7 @@ export class OperationsPage implements OnInit {
         ? this.adjustmentDelta(amount)
         : amount;
     if (!this.canSubmit() || postingAmount === null || fundAmount === null) {
-      this.form.markAllAsTouched();
+      revealInvalidFields(this.form);
       this.error.set(() => t('operations.completeTheRequiredFieldsForTheSelected'));
       return;
     }
@@ -712,6 +707,7 @@ export class OperationsPage implements OnInit {
 
   protected applyFilters(): void {
     this.page.set(1);
+    this.updateUrlState();
     this.load();
   }
 
@@ -729,6 +725,7 @@ export class OperationsPage implements OnInit {
   protected previousPage(): void {
     if (this.page() > 1) {
       this.page.update((value) => value - 1);
+      this.updateUrlState();
       this.load();
     }
   }
@@ -736,6 +733,7 @@ export class OperationsPage implements OnInit {
   protected nextPage(): void {
     if (this.page() * this.pageSize < this.total()) {
       this.page.update((value) => value + 1);
+      this.updateUrlState();
       this.load();
     }
   }
@@ -965,6 +963,64 @@ export class OperationsPage implements OnInit {
       },
     });
     if (this.applicationToday()) this.loadPlannedOperations(filter);
+  }
+
+  private updateUrlState(): void {
+    const filter = this.filters.getRawValue();
+    const queryParams: Record<string, string | number | null> = {
+      occurred_from: filter.occurredFrom || null,
+      occurred_to: filter.occurredTo || null,
+      account_id: filter.accountId || null,
+      type: filter.type || null,
+      category_id: filter.categoryId || null,
+      page: this.page() > 1 ? this.page() : null,
+      focus: null,
+      plan: null,
+      occurrence: null,
+      new: null,
+    };
+    void this.router.navigate([], {
+      relativeTo: this.route ?? undefined,
+      queryParams,
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  private restoreJournalUrlState(query: ParamMap): boolean {
+    const previous = this.journalUrlStateKey();
+    const queryType = query.get('type');
+    const type: OperationType | '' =
+      queryType === 'income' ||
+      queryType === 'expense' ||
+      queryType === 'transfer' ||
+      queryType === 'balance_adjustment'
+        ? queryType
+        : '';
+    this.filters.patchValue(
+      {
+        occurredFrom: query.get('occurred_from') ?? '',
+        occurredTo: query.get('occurred_to') ?? '',
+        accountId: query.get('account_id') ?? '',
+        categoryId: query.get('category_id') ?? '',
+        type,
+      },
+      { emitEvent: false },
+    );
+    const requestedPage = Number(query.get('page') ?? '1');
+    this.page.set(Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1);
+    return previous !== this.journalUrlStateKey();
+  }
+
+  private journalUrlStateKey(): string {
+    const filter = this.filters.getRawValue();
+    return [
+      filter.occurredFrom,
+      filter.occurredTo,
+      filter.accountId,
+      filter.type,
+      filter.categoryId,
+      this.page(),
+    ].join('|');
   }
 
   private loadPlannedOperations(filter: {

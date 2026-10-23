@@ -314,6 +314,10 @@ CSS values into a permanent design system or approve unimplemented screens.
 - MUST NOT treat preliminary CSS values as approved design tokens.
 - MUST surface a need for a new shared pattern when no documented pattern
   satisfies the task.
+- Existing modal consumers MUST use the shared focus-management behavior for intentional initial
+  focus, contained sequential focus, safe Escape handling and opener restoration.
+- Forms that can explain an invalid submission MUST keep the primary action available outside a
+  pending request, reveal field-level guidance after the attempt and focus the first invalid field.
 
 ## UI Modification Rules
 

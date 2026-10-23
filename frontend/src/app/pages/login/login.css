@@ -50,6 +50,27 @@
   padding-right: 3rem;
 }
 
+.password-field {
+  align-items: stretch;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.password-field input {
+  min-width: 0;
+}
+
+.password-toggle {
+  white-space: nowrap;
+}
+
+@media (max-width: 28rem) {
+  .password-field {
+    grid-template-columns: 1fr;
+  }
+}
+
 .compact input:focus-visible {
   box-shadow: 0 0 0 0.16rem rgb(23 115 79 / 10%);
 }

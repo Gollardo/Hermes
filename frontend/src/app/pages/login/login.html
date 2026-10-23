@@ -21,14 +21,38 @@
       <app-language-select />
       <form [formGroup]="form" (ngSubmit)="submit()">
         <label for="login-password"> {{ t('login.masterPassword') }} </label>
-        <input
-          id="login-password"
-          type="password"
-          formControlName="password"
-          autocomplete="current-password"
-          [placeholder]="t('login.enterTheMasterPassword')"
-        />
-        <p class="hint">{{ t('login.yourInstanceVerifiesThePasswordWithoutSending') }}</p>
+        <div class="password-field">
+          <input
+            id="login-password"
+            name="password"
+            [type]="passwordVisible() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="current-password"
+            [placeholder]="t('login.enterTheMasterPassword')"
+            [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+            [attr.aria-describedby]="
+              form.controls.password.touched && form.controls.password.invalid
+                ? 'login-password-error login-password-hint'
+                : 'login-password-hint'
+            "
+          />
+          <button
+            type="button"
+            class="password-toggle secondary"
+            [attr.aria-pressed]="passwordVisible()"
+            (click)="togglePasswordVisibility()"
+          >
+            {{ passwordVisible() ? t('login.hidePassword') : t('login.showPassword') }}
+          </button>
+        </div>
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <p class="field-error" id="login-password-error" role="alert">
+            {{ t('login.enterPasswordToContinue') }}
+          </p>
+        }
+        <p class="hint" id="login-password-hint">
+          {{ t('login.yourInstanceVerifiesThePasswordWithoutSending') }}
+        </p>
         @if (error(); as message) {
           <p class="form-error" role="alert">{{ message }}</p>
         }

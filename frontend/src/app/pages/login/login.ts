@@ -5,6 +5,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 
 import { AuthService } from '../../core/auth.service';
 import { apiErrorMessage } from '../../core/api-error';
+import { revealInvalidFields } from '../../shared/form-validation';
 
 @Component({
   selector: 'app-login-page',
@@ -19,6 +20,7 @@ export class LoginPage {
   private readonly formBuilder = inject(NonNullableFormBuilder);
 
   protected readonly submitting = signal(false);
+  protected readonly passwordVisible = signal(false);
   protected readonly error = localizedSignal();
   protected readonly form = this.formBuilder.group({
     password: ['', [Validators.required, Validators.maxLength(1024)]],
@@ -26,10 +28,7 @@ export class LoginPage {
 
   protected submit(): void {
     this.error.set(null);
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    if (revealInvalidFields(this.form)) return;
     this.submitting.set(true);
     this.auth.login(this.form.getRawValue().password).subscribe({
       next: () => this.submitting.set(false),
@@ -38,5 +37,9 @@ export class LoginPage {
         this.error.set(() => apiErrorMessage(error, t('login.couldNotSignInCheckYourPassword')));
       },
     });
+  }
+
+  protected togglePasswordVisibility(): void {
+    this.passwordVisible.update((value) => !value);
   }
 }

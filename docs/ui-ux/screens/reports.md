@@ -1,5 +1,11 @@
 # Reports screen
 
+## Refresh and URL-state hardening — 2026-10-21
+
+Report type and useful month or custom-range scope are represented in validated query parameters.
+After the first successful result, a refresh retains that result with a non-blocking updating
+status; a failed replacement request does not present stale data as newly updated.
+
 ## Visual refresh — 2026-09-26
 
 Period controls wrap within the workspace; the scoped total is more prominent

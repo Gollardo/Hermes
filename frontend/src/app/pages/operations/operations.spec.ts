@@ -2,7 +2,14 @@ import { language } from '../../i18n/i18n';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Router, provideRouter } from '@angular/router';
+import {
+  ActivatedRoute,
+  ParamMap,
+  Router,
+  convertToParamMap,
+  provideRouter,
+} from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 
 import { OperationsPage } from './operations';
 
@@ -41,12 +48,14 @@ describe('OperationsPage', () => {
   let http: HttpTestingController;
   let focusedId: string | null;
   let queryParams: Record<string, string>;
+  let queryParamMap: BehaviorSubject<ParamMap>;
 
   beforeEach(async () => {
     localStorage.setItem('hermes-recent-accounts', JSON.stringify(['account-1', 'account-2']));
     localStorage.setItem('hermes-recent-categories-expense', JSON.stringify(['category-1']));
     focusedId = null;
     queryParams = {};
+    queryParamMap = new BehaviorSubject(convertToParamMap({}));
     await TestBed.configureTestingModule({
       imports: [OperationsPage],
       providers: [
@@ -56,6 +65,7 @@ describe('OperationsPage', () => {
         {
           provide: ActivatedRoute,
           useFactory: () => ({
+            queryParamMap,
             snapshot: {
               queryParamMap: {
                 get: (key: string) => (key === 'focus' ? focusedId : (queryParams[key] ?? null)),
@@ -131,7 +141,9 @@ describe('OperationsPage', () => {
       positions: options?.positions ?? [],
     });
     const journal = http.expectOne(
-      (request) => request.url === '/api/v1/operations' && request.params.get('page') === '1',
+      (request) =>
+        request.url === '/api/v1/operations' &&
+        request.params.get('page') === (options?.expectedJournalParams?.['page'] ?? '1'),
     );
     for (const [key, value] of Object.entries(options?.expectedJournalParams ?? {})) {
       expect(journal.request.params.get(key)).toBe(value);
@@ -139,7 +151,7 @@ describe('OperationsPage', () => {
     const operations = options?.operations ?? [];
     journal.flush({
       items: operations,
-      page: 1,
+      page: Number(options?.expectedJournalParams?.['page'] ?? '1'),
       page_size: 25,
       total: options?.total ?? operations.length,
       total_amount: options?.totalAmount ?? '0.0000',
@@ -304,10 +316,16 @@ describe('OperationsPage', () => {
     },
   );
 
-  it('starts without an unapproved type default and enables only a complete expense', () => {
+  it('starts without an unapproved type default and explains an incomplete expense on submit', () => {
     flushInitial();
     const submit = fixture.nativeElement.querySelector('.entry-panel button[type="submit"]');
-    expect(submit.disabled).toBe(true);
+    expect(submit.disabled).toBe(false);
+    fixture.nativeElement.querySelector('.entry-panel form').dispatchEvent(new Event('submit'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain(
+      'Заполните обязательные поля выбранного типа операции',
+    );
+    http.expectNone('/api/v1/operations');
 
     setValue('#operation-type', 'expense');
     setValue('#operation-category', 'category-1');
@@ -480,7 +498,7 @@ describe('OperationsPage', () => {
           '.entry-panel button[type="submit"]',
         ) as HTMLButtonElement
       ).disabled,
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('applies a one-off plan due today and does not duplicate it among other plans', () => {
@@ -859,6 +877,8 @@ describe('OperationsPage', () => {
       occurred_to: '2026-08-31',
       type: 'expense',
       category_id: 'category-1',
+      account_id: 'account-1',
+      page: '3',
     };
     flushInitial({
       expectedJournalParams: {
@@ -866,6 +886,8 @@ describe('OperationsPage', () => {
         occurred_to: '2026-08-31',
         type: 'expense',
         category_id: 'category-1',
+        account_id: 'account-1',
+        page: '3',
       },
     });
     expect(fixture.nativeElement.querySelector('#operation-filters')).not.toBeNull();
@@ -890,6 +912,27 @@ describe('OperationsPage', () => {
   it('keeps filters collapsed when there is no active selection', () => {
     flushInitial();
     expect(fixture.nativeElement.querySelector('#operation-filters')).toBeNull();
+  });
+
+  it('restores journal filters and pagination from browser history state', () => {
+    flushInitial();
+
+    queryParamMap.next(convertToParamMap({ account_id: 'account-1', type: 'expense', page: '2' }));
+    const journal = http.expectOne(
+      (request) =>
+        request.url === '/api/v1/operations' &&
+        request.params.get('account_id') === 'account-1' &&
+        request.params.get('type') === 'expense' &&
+        request.params.get('page') === '2',
+    );
+    journal.flush({ items: [], page: 2, page_size: 25, total: 26, total_amount: '-10.0000' });
+    http
+      .match((request) => request.url === '/api/v1/scheduling/occurrences')
+      .forEach((request) => request.flush({ items: [], page: 1, page_size: 367, total: 0 }));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.filter-chips').textContent).toContain('Расход');
+    expect((fixture.componentInstance as unknown as { page: () => number }).page()).toBe(2);
   });
 
   it('opens the exact actual operation linked from the calendar', () => {
@@ -992,7 +1035,7 @@ describe('OperationsPage', () => {
           '.entry-panel button[type="submit"]',
         ) as HTMLButtonElement
       ).disabled,
-    ).toBe(true);
+    ).toBe(false);
     setValue('#operation-amount', '80');
     fixture.nativeElement.querySelector('.entry-panel form').dispatchEvent(new Event('submit'));
 

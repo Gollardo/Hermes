@@ -75,7 +75,12 @@
         } @else {
           <div class="overview-list">
             @for (item of attention(); track item.id) {
-              <article [class.overdue]="item.overdue">
+              <a
+                class="overview-row-link"
+                [class.overdue]="item.overdue"
+                routerLink="/calendar"
+                [queryParams]="{ occurrence: item.id }"
+              >
                 <div>
                   <span
                     >{{ item.overdue ? t('home.overdue') : t('home.today') }} ·
@@ -83,7 +88,8 @@
                   ><strong>{{ item.description || typeLabel(item.type) }}</strong>
                 </div>
                 <b>{{ item.amount | money }} {{ baseCurrency() }}</b>
-              </article>
+                <span class="row-link-arrow" aria-hidden="true">→</span>
+              </a>
             }
           </div>
           <a class="section-link" routerLink="/calendar"> {{ t('home.resolveInCalendar') }} </a>
@@ -153,14 +159,19 @@
         } @else {
           <div class="overview-list">
             @for (operation of recentOperations(); track operation.id) {
-              <article>
+              <a
+                class="overview-row-link"
+                routerLink="/operations"
+                [queryParams]="{ focus: operation.id }"
+              >
                 <div>
                   <span
                     >{{ operation.occurred_on | textDate }} · {{ typeLabel(operation.type) }}</span
                   ><strong>{{ operationTitle(operation) }}</strong>
                 </div>
                 <b>{{ signedOperation(operation) | money }} {{ baseCurrency() }}</b>
-              </article>
+                <span class="row-link-arrow" aria-hidden="true">→</span>
+              </a>
             }
           </div>
           <a class="section-link" routerLink="/operations"> {{ t('home.openFullJournal') }} </a>

@@ -106,8 +106,8 @@ describe('ReportsPage', () => {
         type: 'expense',
         from_on: '2026-08-01',
         through_on: '2026-08-31',
-        total_amount: '0.0000',
-        operation_count: 0,
+        total_amount: '5.0000',
+        operation_count: 1,
         categories: [],
       });
     const page = fixture.componentInstance as unknown as {
@@ -115,6 +115,9 @@ describe('ReportsPage', () => {
     };
     page.changeType('income');
     const stale = http.expectOne((request) => request.params.get('type') === 'income');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('5,00 ₽');
+    expect(fixture.nativeElement.querySelector('.report-updating')).not.toBeNull();
     page.changeType('expense');
     const current = http.expectOne((request) => request.params.get('type') === 'expense');
     current.flush({

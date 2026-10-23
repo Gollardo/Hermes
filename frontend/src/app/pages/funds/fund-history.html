@@ -1,0 +1,67 @@
+<section class="panel history-panel">
+  <div class="panel-heading">
+    <div>
+      <h2>{{ t('funds.fundMovementHistory') }}</h2>
+      <p>{{ t('funds.everyAllocationAndMovementRemainsExplainable') }}</p>
+    </div>
+  </div>
+  @if (events().length === 0) {
+    <p class="empty-state">{{ t('funds.noFundMovementsYet') }}</p>
+  } @else {
+    <div class="history-list">
+      @for (event of events(); track event.id) {
+        <article>
+          <div>
+            <div class="history-meta">
+              <span class="badge">{{ eventLabel(event) }}</span>
+              <strong>{{ event.occurred_on | textDate }}</strong>
+            </div>
+            <p>{{ event.description || t('funds.noDescription') }}</p>
+            @if (event.type === 'fund_release' && event.caused_by_operation_id) {
+              <a routerLink="/operations" [queryParams]="{ focus: event.caused_by_operation_id }">
+                {{ t('funds.releaseOpenTransfer') }}
+              </a>
+            }
+          </div>
+          <ul>
+            @for (movement of event.movements; track movement.fund_id + movement.account_id) {
+              <li>
+                {{ movement.fund_name }} · {{ movement.account_name }}
+                <strong>{{ movement.amount | money }} {{ baseCurrency() }}</strong>
+              </li>
+            }
+            @for (movement of event.reserve_movements; track movement.account_id) {
+              <li>
+                {{ t('funds.reserveP0', { p0: movement.account_name }) }}
+                <strong>{{ movement.amount | money }} {{ baseCurrency() }}</strong>
+              </li>
+            }
+          </ul>
+        </article>
+      }
+    </div>
+  }
+  @if (total() > pageSize() || page() > 1) {
+    <nav class="pagination" [attr.aria-label]="t('funds.fundHistoryPages')">
+      <button
+        type="button"
+        class="secondary"
+        (click)="previousPage.emit()"
+        [disabled]="page() === 1"
+      >
+        {{ t('funds.back') }}
+      </button>
+      <span>{{
+        t('funds.pageP0OfP1', { p0: page(), p1: Math.max(1, Math.ceil(total() / pageSize())) })
+      }}</span>
+      <button
+        type="button"
+        class="secondary"
+        (click)="nextPage.emit()"
+        [disabled]="page() * pageSize() >= total()"
+      >
+        {{ t('funds.next') }}
+      </button>
+    </nav>
+  }
+</section>

@@ -427,72 +427,12 @@
   </div>
 
   @if (selectedCalendarDay(); as selectedDay) {
-    <div
-      class="modal-backdrop"
-      (animate.enter)="motion.enter($event, 'modal')"
-      (animate.leave)="motion.leave($event, 'modal')"
-      role="presentation"
-      (keydown.escape)="closeCalendarDay()"
-    >
-      <section
-        class="modal-card calendar-day-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="calendar-day-dialog-title"
-      >
-        <div class="modal-header">
-          <div>
-            <p class="section-label">{{ t('scheduling.dayEvents') }}</p>
-            <h2 id="calendar-day-dialog-title">{{ selectedDay.iso | textDate }}</h2>
-          </div>
-          <button
-            type="button"
-            class="modal-close"
-            (click)="closeCalendarDay()"
-            [attr.aria-label]="t('accounts.close')"
-          >
-            ×
-          </button>
-        </div>
-        <div class="calendar-day-dialog-list">
-          @for (occurrence of selectedDay.occurrences; track occurrence.id) {
-            @if (occurrence.status === 'confirmed' && occurrence.actual_operation_id) {
-              <a
-                class="calendar-day-dialog-item confirmed-link"
-                routerLink="/operations"
-                [queryParams]="{ focus: occurrence.actual_operation_id }"
-              >
-                <span>
-                  <strong>{{ occurrenceTitle(occurrence) }}</strong>
-                  <small
-                    >{{ typeLabel(occurrence.type) }} · {{ statusLabel(occurrence.status) }}</small
-                  >
-                </span>
-                <strong>{{ occurrence.amount | money }} {{ baseCurrency() }}</strong>
-              </a>
-            } @else {
-              <button
-                type="button"
-                class="calendar-day-dialog-item calendar-day-dialog-button"
-                (click)="openOccurrenceEditor(occurrence)"
-              >
-                <span>
-                  <strong>{{ occurrenceTitle(occurrence) }}</strong>
-                  <small>
-                    {{ typeLabel(occurrence.type) }} ·
-                    {{ occurrence.overdue ? t('home.overdue') : statusLabel(occurrence.status) }}
-                  </small>
-                  @if (occurrence.preserve_from_series_shift) {
-                    <small> {{ t('scheduling.preservedDuringSeriesShift') }} </small>
-                  }
-                </span>
-                <strong>{{ occurrence.amount | money }} {{ baseCurrency() }}</strong>
-              </button>
-            }
-          }
-        </div>
-      </section>
-    </div>
+    <app-calendar-day-dialog
+      [day]="selectedDay"
+      [baseCurrency]="baseCurrency()"
+      (closed)="closeCalendarDay()"
+      (occurrenceSelected)="openOccurrenceEditor($event)"
+    />
   }
 
   @if (ruleFormOpen()) {
@@ -501,14 +441,16 @@
       (animate.enter)="motion.enter($event, 'modal')"
       (animate.leave)="motion.leave($event, 'modal')"
       role="presentation"
-      (keydown.escape)="cancelEdit()"
     >
       <section
+        appModalFocus
         id="rule-editor"
         class="modal-card form-panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="rule-editor-title"
+        tabindex="-1"
+        (modalEscape)="cancelEdit()"
       >
         <div class="modal-header">
           <div>
@@ -606,7 +548,23 @@
                     ? t('scheduling.annualEventDate')
                     : t('scheduling.startDate')
               }}
-              <input type="date" formControlName="startOn" />
+              <input
+                type="date"
+                formControlName="startOn"
+                [attr.aria-invalid]="
+                  ruleForm.controls.startOn.touched && ruleForm.controls.startOn.invalid
+                "
+                [attr.aria-describedby]="
+                  ruleForm.controls.startOn.touched && ruleForm.controls.startOn.invalid
+                    ? 'rule-start-date-error'
+                    : null
+                "
+              />
+              @if (ruleForm.controls.startOn.touched && ruleForm.controls.startOn.invalid) {
+                <span class="field-error" id="rule-start-date-error">{{
+                  t('funds.required')
+                }}</span>
+              }
             </label>
             <label>
               {{ t('scheduling.endDate') }} <input type="date" formControlName="endOn" />
@@ -626,11 +584,23 @@
               inputmode="text"
               formControlName="amount"
               autocomplete="off"
+              [attr.aria-invalid]="
+                ruleForm.controls.amount.touched && ruleForm.controls.amount.invalid
+              "
+              [attr.aria-describedby]="
+                ruleForm.controls.amount.touched && ruleForm.controls.amount.invalid
+                  ? 'rule-amount-hint rule-amount-error'
+                  : 'rule-amount-hint'
+              "
             />
-            <span class="hint"> {{ t('scheduling.addOrSubtract3542323454') }} </span>
+            <span class="hint" id="rule-amount-hint">
+              {{ t('scheduling.addOrSubtract3542323454') }}
+            </span>
           </label>
           @if (ruleForm.controls.amount.touched && ruleForm.controls.amount.invalid) {
-            <p class="field-error">{{ t('scheduling.enterAPositiveAmountWithUpTo') }}</p>
+            <p class="field-error" id="rule-amount-error">
+              {{ t('scheduling.enterAPositiveAmountWithUpTo') }}
+            </p>
           }
           <fieldset class="weekday-picker allocation-choice">
             <legend>{{ t('scheduling.postponingAnEvent') }}</legend>
@@ -659,7 +629,18 @@
               [options]="ruleAccountOptions()"
               recentKey="accounts"
               [placeholder]="t('funds.typeAnAccountName')"
+              [ariaInvalid]="
+                ruleForm.controls.accountId.touched && ruleForm.controls.accountId.invalid
+              "
+              [ariaDescribedby]="
+                ruleForm.controls.accountId.touched && ruleForm.controls.accountId.invalid
+                  ? 'rule-account-error'
+                  : null
+              "
             />
+            @if (ruleForm.controls.accountId.touched && ruleForm.controls.accountId.invalid) {
+              <p class="field-error" id="rule-account-error">{{ t('funds.required') }}</p>
+            }
           </div>
           @if (ruleForm.controls.type.value === 'transfer') {
             <div class="control-label">
@@ -705,7 +686,12 @@
           <label>
             {{ t('accounts.description') }} <textarea formControlName="description"></textarea>
           </label>
-          <button type="submit" [disabled]="saving() || !canSaveRule()">
+          @if (ruleSubmissionAttempted() && !canSaveRule()) {
+            <p class="form-error" role="alert">
+              {{ t('common.completeRequiredFields') }}
+            </p>
+          }
+          <button type="submit" [disabled]="saving()">
             {{ editingId() ? t('accounts.saveChanges') : t('scheduling.createRule') }}
           </button>
           @if (editingId()) {

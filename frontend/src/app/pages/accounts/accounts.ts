@@ -3,11 +3,14 @@ import { t, localizedSignal } from '../../i18n/i18n';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { environment } from '../../../environments/environment';
 import { apiErrorMessage } from '../../core/api-error';
 import { currencySymbol, MoneyPipe } from '../../shared/money.pipe';
 import { DecimalInput, decimalPayload } from '../../shared/decimal-input';
+import { revealInvalidFields } from '../../shared/form-validation';
+import { ModalFocus } from '../../shared/modal-focus';
 
 type AccountType = 'cash' | 'debit' | 'savings';
 
@@ -22,7 +25,7 @@ interface Account {
 
 @Component({
   selector: 'app-accounts-page',
-  imports: [ReactiveFormsModule, MoneyPipe, DecimalInput],
+  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, DecimalInput, ModalFocus],
   templateUrl: './accounts.html',
   styleUrl: './accounts.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +42,8 @@ export class AccountsPage implements OnInit {
   protected readonly error = localizedSignal();
   protected readonly editingId = signal<string | null>(null);
   protected readonly formOpen = signal(false);
+  protected readonly deletingAccount = signal<Account | null>(null);
+  protected readonly deleting = signal(false);
   protected readonly baseCurrency = signal('₽');
   protected readonly form = this.builder.group({
     name: ['', [Validators.required, Validators.maxLength(120)]],
@@ -60,10 +65,7 @@ export class AccountsPage implements OnInit {
 
   protected submit(): void {
     this.error.set(null);
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    if (revealInvalidFields(this.form)) return;
     const value = this.form.getRawValue();
     const id = this.editingId();
     const body = { type: value.type, name: value.name, description: value.description || null };
@@ -130,11 +132,28 @@ export class AccountsPage implements OnInit {
       });
   }
 
-  protected remove(account: Account): void {
+  protected requestRemove(account: Account): void {
+    this.deletingAccount.set(account);
+  }
+
+  protected cancelRemove(): void {
+    if (!this.deleting()) this.deletingAccount.set(null);
+  }
+
+  protected confirmRemove(): void {
+    const account = this.deletingAccount();
+    if (!account || this.deleting()) return;
+    this.deleting.set(true);
     this.http.delete<void>(`${environment.apiBaseUrl}/accounts/${account.id}`).subscribe({
-      next: () => this.load(),
-      error: (error: unknown) =>
-        this.error.set(() => apiErrorMessage(error, t('accounts.couldNotDeleteTheAccount'))),
+      next: () => {
+        this.deleting.set(false);
+        this.deletingAccount.set(null);
+        this.load();
+      },
+      error: (error: unknown) => {
+        this.deleting.set(false);
+        this.error.set(() => apiErrorMessage(error, t('accounts.couldNotDeleteTheAccount')));
+      },
     });
   }
 

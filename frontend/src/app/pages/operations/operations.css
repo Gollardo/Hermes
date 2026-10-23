@@ -51,11 +51,12 @@
 .filter-actions {
   align-items: end;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 .filter-actions button {
   margin: 0;
-  width: auto;
+  width: fit-content;
 }
 .filter-chips {
   display: flex;
@@ -358,14 +359,16 @@
     grid-template-columns: 1fr;
   }
 }
+@media (max-width: 52rem) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 42rem) {
   .focused-operation {
     align-items: flex-start;
     flex-direction: column;
     gap: 0.75rem;
-  }
-  .filter-grid {
-    grid-template-columns: 1fr;
   }
   .journal-heading {
     align-items: stretch;

@@ -1,5 +1,11 @@
 # Dashboard
 
+## Contextual navigation hardening — 2026-10-21
+
+Recent operations are ordinary links to the corresponding journal context. Attention rows link to
+the exact calendar occurrence, preserving standard browser behavior and avoiding a second lookup.
+Permission and destination behavior remain owned by the existing routes and APIs.
+
 ## Follow-up review corrections
 
 Breakdown rows are full-width links with arrows and larger text. Relative bars have an explicit largest-amount caption and no percentage track. Summary surfaces size to content; forecast copy preserves known-plan/free-money scope without repeating the current balance.

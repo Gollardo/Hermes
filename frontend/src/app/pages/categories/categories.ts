@@ -14,6 +14,8 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { environment } from '../../../environments/environment';
 import { apiErrorMessage } from '../../core/api-error';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
+import { ModalFocus } from '../../shared/modal-focus';
+import { revealInvalidFields } from '../../shared/form-validation';
 
 type CategoryType = 'income' | 'expense';
 
@@ -31,7 +33,7 @@ interface Category {
 
 @Component({
   selector: 'app-categories-page',
-  imports: [ReactiveFormsModule, EntityCombobox],
+  imports: [ReactiveFormsModule, EntityCombobox, ModalFocus],
   templateUrl: './categories.html',
   styleUrl: './categories.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -106,10 +108,7 @@ export class CategoriesPage implements OnInit {
 
   protected submit(): void {
     this.error.set(null);
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    if (revealInvalidFields(this.form)) return;
     const value = this.form.getRawValue();
     const body = {
       type: value.type,

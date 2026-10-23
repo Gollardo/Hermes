@@ -11,6 +11,8 @@
     [attr.aria-expanded]="open()"
     [attr.aria-controls]="optionsId"
     [attr.aria-activedescendant]="activeOptionId()"
+    [attr.aria-invalid]="ariaInvalid"
+    [attr.aria-describedby]="ariaDescribedby"
     (input)="input($event)"
     (focus)="focus($event)"
     (keydown)="keydown($event)"

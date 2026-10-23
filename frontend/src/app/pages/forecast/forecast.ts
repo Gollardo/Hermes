@@ -12,8 +12,8 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
+import { forkJoin, skip } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { apiErrorMessage } from '../../core/api-error';
@@ -164,6 +164,8 @@ interface ForecastRiskMarker extends PlotCoordinate {
 export class ForecastPage implements OnInit {
   protected readonly t = t;
   private readonly http = inject(HttpClient);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly chartCanvas = viewChild<ElementRef<HTMLElement>>('chartCanvas');
   private readonly chartWidth = signal(0);
 
@@ -454,8 +456,15 @@ export class ForecastPage implements OnInit {
       next: ({ accounts, settings }) => {
         this.accounts.set(accounts);
         this.baseCurrency.set(currencySymbol(settings.base_currency));
+        this.restoreUrlState(accounts);
         this.loadForecast();
         this.loadFundForecast();
+        this.route.queryParamMap.pipe(skip(1)).subscribe((query) => {
+          const previousHorizon = this.selectedHorizon();
+          if (!this.restoreUrlState(accounts, query, false)) return;
+          this.loadForecast();
+          if (previousHorizon !== this.selectedHorizon()) this.loadFundForecast();
+        });
       },
       error: (error: unknown) => {
         this.loading.set(false);
@@ -466,17 +475,20 @@ export class ForecastPage implements OnInit {
 
   protected changeAccount(value: string): void {
     this.selectedAccountId.set(value);
+    this.updateUrlState();
     this.loadForecast();
   }
 
   protected changeHorizon(value: ForecastHorizon): void {
     this.selectedHorizon.set(value);
+    this.updateUrlState();
     this.loadForecast();
     this.loadFundForecast();
   }
 
   protected changeBalanceMode(mode: ForecastBalanceMode): void {
     this.balanceMode.set(mode);
+    this.updateUrlState();
     this.loadForecast();
   }
 
@@ -691,12 +703,51 @@ export class ForecastPage implements OnInit {
       },
     });
   }
+
+  private restoreUrlState(
+    accounts: Account[],
+    query: ParamMap = this.route.snapshot.queryParamMap,
+    normalize = true,
+  ): boolean {
+    const previous = this.urlStateKey();
+    const accountId = query.get('account');
+    this.selectedAccountId.set(
+      accounts.some((account) => account.id === accountId) ? accountId! : '',
+    );
+    const horizon = query.get('horizon');
+    if (isForecastHorizon(horizon)) this.selectedHorizon.set(horizon);
+    else this.selectedHorizon.set('month');
+    this.balanceMode.set(query.get('mode') === 'total' ? 'total' : 'free');
+    if (normalize) this.updateUrlState(true);
+    return previous !== this.urlStateKey();
+  }
+
+  private urlStateKey(): string {
+    return [this.selectedAccountId(), this.selectedHorizon(), this.balanceMode()].join('|');
+  }
+
+  private updateUrlState(replaceUrl = false): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        account: this.selectedAccountId() || null,
+        horizon: this.selectedHorizon(),
+        mode: this.balanceMode(),
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl,
+    });
+  }
 }
 
 const FUND_COLORS = ['#086b4c', '#52a36f', '#d28a0c', '#526b82', '#a64872', '#6d4bb8'];
 
 function fundColor(index: number): string {
   return FUND_COLORS[index % FUND_COLORS.length];
+}
+
+function isForecastHorizon(value: string | null): value is ForecastHorizon {
+  return ['two_weeks', 'month', 'quarter', 'half_year', 'year'].includes(value ?? '');
 }
 
 function segment(
