@@ -13,10 +13,15 @@ it does not change financial values, API calls, validation or commit behavior.
 | Native More menus in directories, fund actions and calendar | Occasional; state indication | Symmetric opacity transition on native details content, 180 ms |
 | Submit, close, add-operation, menu-toggle, page primary actions and button links | Frequent; subtle feedback | Press/release scale 0.97, 120 ms |
 | Operation and report disclosure arrows | Frequent; subtle state indication | Rotation retargeted by CSS transition, 120 ms |
+| Dashboard and Reports comparison bars | On successful pointer-driven data display or explicit context change; visual continuity | Fill to the already-rendered exact value, 320 ms |
+| Forecast projected-balance line | On successful pointer-driven data display or explicit context change; visual continuity | Left-to-right visual reveal, 320 ms |
 
 Amounts, graph coordinates, chart data, ledger rows, page navigation, active
-filters and typing do not animate. There are no decorative scroll reveals,
-staggers of financial data, counters, springs or new runtime dependencies.
+filters and typing do not animate. Chart motion never changes, delays or
+interpolates a financial value: the exact final data is already present in the
+DOM. Dashboard may offset its three chart groups by 50 ms, but individual data
+rows do not stagger. There are no decorative scroll reveals, counters, springs
+or new runtime dependencies.
 
 ## Shared implementation
 
@@ -35,25 +40,33 @@ An outgoing surface is inert and hidden from accessibility immediately. A fast
 reopen completes any stale exit first. Both cancellation and completion release
 the Angular callback exactly once; destruction cleans up listeners and motion.
 
+`ChartMotion` is a presentation-only directive shared by Dashboard, Forecast
+and Reports. It runs only after a confirmed non-empty chart result, and keys a
+replay to an explicit chart-context change. Browser Back/Forward, viewport
+resize, background refresh, loading, errors and empty results stay static. A
+new chart result or keyboard event cancels the prior visual reveal immediately.
+
 ## Keyboard and reduced motion
 
 A captured pointer event enables motion; any keydown switches back to instant
 interaction and completes in-flight motion. Keyboard-opened surfaces, typing,
 shortcuts and Escape therefore do not wait for animation. Existing menu focus
-behavior and form handlers are retained.
+behavior and form handlers are retained. History navigation never replays
+chart motion.
 
 With reduced motion enabled, pointer-opened surfaces fade without scaling;
-press movement and arrow transitions are disabled. Native More menus retain
-opacity feedback. The existing loading indicator remains static under reduced
-motion. No information depends on movement.
+press movement, arrow transitions and chart reveals are disabled. Native More
+menus retain opacity feedback. The existing loading indicator remains static
+under reduced motion. No information depends on movement.
 
 ## Verification and acceptance
 
 Unit tests cover keyboard bypass, switching modality mid-animation, reduced-motion
-keyframes, interrupted entry, inert exits and rapid reopening. Browser checks
-exercise the operation menu, composer entry/exit, native More-menu transition,
-entity-list origin and keyboard menu navigation without posting data. Build, lint and typing checks cover every integrated
-surface; not every form variation was individually played in the browser.
+keyframes, interrupted entry, inert exits, rapid reopening, chart-history suppression
+and chart interruption. Browser checks exercise the operation menu, composer
+entry/exit, native More-menu transition, entity-list origin and keyboard menu
+navigation without posting data. Build, lint and typing checks cover every
+integrated surface; not every form variation was individually played in the browser.
 
 Timing is intentionally short, but subjective motion quality still requires
 owner feel-check on the actual device: open/close a composer, reverse quickly,

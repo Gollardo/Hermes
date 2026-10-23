@@ -156,7 +156,7 @@
               }
             </div>
             <div class="chart-viewport">
-              <div class="chart-canvas" #chartCanvas>
+              <div class="chart-canvas" #chartCanvas [appChartMotion]="chartMotionKey(vm.dataset)">
                 <svg
                   class="forecast-chart"
                   viewBox="0 0 100 100"
@@ -192,16 +192,18 @@
                       [attr.y2]="zeroY()"
                     />
                   }
-                  @for (line of plotSegments(); track line.key) {
-                    <line
-                      class="forecast-segment"
-                      [class.risk-segment]="line.risk"
-                      [attr.x1]="line.x1"
-                      [attr.y1]="line.y1"
-                      [attr.x2]="line.x2"
-                      [attr.y2]="line.y2"
-                    />
-                  }
+                  <g class="forecast-line">
+                    @for (line of plotSegments(); track line.key) {
+                      <line
+                        class="forecast-segment"
+                        [class.risk-segment]="line.risk"
+                        [attr.x1]="line.x1"
+                        [attr.y1]="line.y1"
+                        [attr.x2]="line.x2"
+                        [attr.y2]="line.y2"
+                      />
+                    }
+                  </g>
                 </svg>
 
                 @if (startingPlotPoint(); as startingPoint) {

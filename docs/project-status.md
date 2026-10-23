@@ -139,17 +139,22 @@ acceptance and production deployment remain separate release gates.
 ## Interaction motion
 
 The owner-authorized [motion pass](ui-ux/motion.md) adds shared 240 ms dialog,
-180 ms popover/More-menu and 120 ms press/disclosure feedback. Keyboard use is
-instant; reduced motion removes scaling and retains opacity. Exits are inert,
-interruptible and cleaned up before a fast reopen. No financial data or page
-navigation animates, and no dependency was added. Verification: 193 frontend tests pass, alongside lint, formatting, catalog
-checks, TypeScript, mypy and production build. Existing bundle/style budget
-warnings remain; limits were not increased. Browser checks confirm pointer and
+180 ms popover/More-menu and 120 ms press/disclosure feedback. Dashboard and
+Reports bars now fill to their already-rendered values, while the Forecast line
+reveals left-to-right, using the same 320 ms pointer-only chart motion. Keyboard
+and history navigation remain instant; reduced motion disables chart reveals.
+Loading, errors, empty results, financial values, chart coordinates and page
+navigation remain static. Exits are inert, interruptible and cleaned up before
+a fast reopen. No dependency was added. The original motion pass verified 193
+frontend tests, lint, formatting, catalog checks, TypeScript, mypy and a
+production build. This chart-motion extension verifies 224 frontend tests,
+lint, formatting, catalog checks, TypeScript, documentation checks and a
+production frontend build. Existing bundle/style budget warnings remain; limits
+were not increased. Browser checks from the original pass confirm pointer and
 keyboard menu behavior, inert modal exits and removal, account composer, native
-More-menu transitions and entity-list origin. No records were saved. Reduced
-motion and interruption paths are unit-tested; real-device feel-check remains
-owner acceptance. Backend suites were not repeated for this presentation-only
-change.
+More-menu transitions and entity-list origin. Chart motion still needs an
+owner real-device feel-check. Reduced-motion and interruption paths are
+unit-tested; backend suites were not repeated for this presentation-only change.
 
 ## Release verification
 

@@ -118,6 +118,13 @@
   width: 100%;
 }
 
+.chart-motion-pending .forecast-line {
+  clip-path: inset(0 100% 0 0);
+}
+.chart-motion-pending.chart-motion-ready .forecast-line {
+  animation: forecast-line-reveal var(--motion-chart) var(--ease-out) both;
+}
+
 .forecast-area {
   fill: url('#forecast-area-gradient');
   stroke: none;

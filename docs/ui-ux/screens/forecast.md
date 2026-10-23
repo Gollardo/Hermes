@@ -22,6 +22,12 @@ and fund projection retain their existing calculation and interaction contracts.
 See [atlas refresh](../atlas-refresh.md). This records implementation under the
 owner-authorized redesign, not separate final visual acceptance.
 
+On a successful pointer-driven result or explicit scope, horizon or balance-mode
+change, the already-rendered forecast line may reveal left-to-right over the
+shared 320 ms chart motion. Points, values, axes, tooltips and all non-success
+states remain static; keyboard, reduced-motion and history navigation skip the
+effect. See [interface motion](../motion.md).
+
 ## Status
 
 The owner approved the implemented `0.4.0` composition on 2026-08-18 as the

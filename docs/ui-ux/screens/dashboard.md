@@ -27,6 +27,12 @@ amounts, top-five/Other aggregation, period labels, links and partial errors are
 preserved. See [atlas refresh](../atlas-refresh.md). Historical approvals below
 do not imply owner acceptance of every new CSS value.
 
+When pointer navigation leads to a successful non-empty result, the three
+breakdown groups may fill their existing exact bars over the shared 320 ms chart
+motion. The groups differ by only 50 ms. The values, labels, rows, loading,
+error and empty states remain static; keyboard, reduced-motion and history
+navigation skip the effect. See [interface motion](../motion.md).
+
 ## Status
 
 The owner confirmed the primary product focus on 2026-08-02. After owner review

@@ -4,6 +4,34 @@
   --motion-press: 120ms;
   --motion-popover: 180ms;
   --motion-modal: 240ms;
+  --motion-chart: 320ms;
+  --motion-chart-stagger: 50ms;
+}
+
+@keyframes chart-bar-reveal {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes forecast-line-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.chart-motion-pending :is(.breakdown-track i, .chart-bar i) {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.chart-motion-pending.chart-motion-ready :is(.breakdown-track i, .chart-bar i) {
+  animation: chart-bar-reveal var(--motion-chart) var(--ease-out) both;
 }
 
 /* The modality guard keeps keyboard operations instantaneous. */
@@ -80,6 +108,11 @@ html[data-motion-input='keyboard']
   }
   html[data-motion-input='pointer'] :is(.operation-disclosure, .category-disclosure) {
     transition: none;
+  }
+  .chart-motion :is(.breakdown-track i, .chart-bar i, .forecast-line) {
+    animation: none !important;
+    clip-path: none !important;
+    transform: none !important;
   }
 }
 

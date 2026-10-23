@@ -9,6 +9,7 @@ import { apiErrorMessage } from '../../core/api-error';
 import { DateTextPipe } from '../../shared/date-text.pipe';
 import { currencySymbol, MoneyPipe } from '../../shared/money.pipe';
 import { OperationCreateMenu } from '../../shared/operation-create-menu';
+import { ChartMotion } from '../../shared/chart-motion';
 
 interface Coverage {
   physical_balance: string;
@@ -87,7 +88,7 @@ interface Settings {
 
 @Component({
   selector: 'app-home-page',
-  imports: [RouterLink, MoneyPipe, DateTextPipe, OperationCreateMenu],
+  imports: [RouterLink, MoneyPipe, DateTextPipe, OperationCreateMenu, ChartMotion],
   templateUrl: './home.html',
   styleUrl: './home.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -236,6 +237,16 @@ export class HomePage implements OnInit {
         operationType: null,
       },
     ];
+  }
+
+  protected analyticsMotionKey(): string | null {
+    if (this.analyticsError()) return null;
+    const charts = this.analyticsCharts().map((chart) => this.chartItems(chart.items));
+    if (!charts.some((items) => items.length)) return null;
+    return charts
+      .flat()
+      .map((item) => `${item.category_id}:${item.amount}`)
+      .join('|');
   }
 
   protected barWidth(item: CategoryAmount, items: CategoryAmount[]): string {

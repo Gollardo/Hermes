@@ -171,6 +171,12 @@
   background: #6a8f68;
   border-radius: inherit;
 }
+.analytics-grid.chart-motion-ready .breakdown-card:nth-child(2) .breakdown-track i {
+  animation-delay: var(--motion-chart-stagger);
+}
+.analytics-grid.chart-motion-ready .breakdown-card:nth-child(3) .breakdown-track i {
+  animation-delay: calc(var(--motion-chart-stagger) * 2);
+}
 .overview-list {
   display: grid;
 }

@@ -14,6 +14,12 @@ and report scope remain unchanged.
 See [atlas refresh](../atlas-refresh.md). This records implementation under the
 owner-authorized redesign, not separate final visual acceptance.
 
+On a successful pointer-driven result or explicit report-context change, the
+already-rendered category bars may fill over the shared 320 ms chart motion.
+Exact amounts, shares, category labels, loading, errors and empty states remain
+static; keyboard, reduced-motion and history navigation skip the effect. See
+[interface motion](../motion.md).
+
 The report developed on the intermediate `0.2.0` line and is recorded under
 `0.3.0` in the current changelog. It exposes a top-level Reports destination.
 Its first report answers how income or expense is distributed over a selected

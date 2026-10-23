@@ -19,6 +19,7 @@ import { environment } from '../../../environments/environment';
 import { apiErrorMessage } from '../../core/api-error';
 import { DateTextPipe, formatTextDate } from '../../shared/date-text.pipe';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
+import { ChartMotion } from '../../shared/chart-motion';
 import {
   currencySymbol,
   formatMoney,
@@ -151,7 +152,7 @@ interface ForecastRiskMarker extends PlotCoordinate {
 
 @Component({
   selector: 'app-forecast-page',
-  imports: [FormsModule, RouterLink, MoneyPipe, DateTextPipe, EntityCombobox],
+  imports: [FormsModule, RouterLink, MoneyPipe, DateTextPipe, EntityCombobox, ChartMotion],
   templateUrl: './forecast.html',
   styleUrls: [
     './forecast.css',
@@ -557,6 +558,17 @@ export class ForecastPage implements OnInit {
 
   protected chartTitle(mode: ForecastBalanceMode): string {
     return mode === 'free' ? t('forecast.freeBalanceForecast') : t('forecast.totalBalanceForecast');
+  }
+
+  protected chartMotionKey(dataset: ForecastDataset): string | null {
+    if (dataset.points.length < 2) return null;
+    return [
+      dataset.balance_mode,
+      dataset.account_id ?? 'all',
+      dataset.from_on,
+      dataset.through_on,
+      ...dataset.points.map((point) => `${point.on}:${point.closing_balance}`),
+    ].join('|');
   }
 
   protected granularityLabel(value: ForecastDataset): string {

@@ -100,7 +100,11 @@
     @if (analyticsError(); as message) {
       <p class="form-error analytics-error" role="status">{{ message }}</p>
     }
-    <section class="analytics-grid" [attr.aria-label]="t('home.incomeExpenseAndFundBreakdown')">
+    <section
+      class="analytics-grid"
+      [appChartMotion]="analyticsMotionKey()"
+      [attr.aria-label]="t('home.incomeExpenseAndFundBreakdown')"
+    >
       @for (chart of analyticsCharts(); track chart.operationType ?? 'funds') {
         <article
           class="panel breakdown-card"

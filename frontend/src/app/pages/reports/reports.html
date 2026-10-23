@@ -106,6 +106,7 @@
       @if (data.categories.length) {
         <div
           class="category-chart"
+          [appChartMotion]="chartMotionKey(data)"
           role="list"
           [attr.aria-label]="typeLabel(data.type) + ' ' + t('reports.byCategory')"
         >

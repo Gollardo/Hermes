@@ -15,6 +15,7 @@ import { skip } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { apiErrorMessage } from '../../core/api-error';
 import { DateTextPipe } from '../../shared/date-text.pipe';
+import { ChartMotion } from '../../shared/chart-motion';
 import {
   currencySymbol,
   formatPercentageBreakdown,
@@ -58,7 +59,7 @@ interface Settings {
 
 @Component({
   selector: 'app-reports-page',
-  imports: [FormsModule, RouterLink, MoneyPipe, DateTextPipe],
+  imports: [FormsModule, RouterLink, MoneyPipe, DateTextPipe, ChartMotion],
   templateUrl: './reports.html',
   styleUrl: './reports.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -147,6 +148,16 @@ export class ReportsPage implements OnInit {
 
   protected typeLabel(type: ReportType = this.reportType()): string {
     return type === 'expense' ? t('categories.expenses') : t('categories.income');
+  }
+
+  protected chartMotionKey(report: IncomeExpenseReport): string | null {
+    if (!report.categories.length) return null;
+    return [
+      report.type,
+      report.from_on,
+      report.through_on,
+      ...report.categories.map((category) => `${category.category_id}:${category.amount}`),
+    ].join('|');
   }
 
   private load(replaceUrl: boolean | null = false): void {
