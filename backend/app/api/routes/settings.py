@@ -29,6 +29,7 @@ def _response(settings: ApplicationSettings) -> SettingsResponse:
         timezone=settings.timezone,
         default_account_id=settings.default_account_id,
         fund_allocation_mode=settings.fund_allocation_mode,
+        minimum_balance_buffer=f"{settings.minimum_balance_buffer:.4f}",
         base_currency_locked=settings.base_currency_locked_at is not None,
         updated_at=settings.updated_at,
         application_today=datetime.now(UTC).astimezone(ZoneInfo(settings.timezone)).date(),
@@ -51,6 +52,7 @@ def replace_settings(
             base_currency=payload.base_currency,
             timezone=payload.timezone,
             default_account_id=payload.default_account_id,
+            minimum_balance_buffer=payload.minimum_balance_buffer,
         )
     except AccountReferenceError as error:
         raise HTTPException(

@@ -324,9 +324,14 @@ export const en = {
   'forecast.confirmPostponeOrCancelThem': 'Confirm, postpone or cancel them.',
   'forecast.goToEvents': 'Go to events',
   'forecast.availableToSpendNow': 'Available to spend now',
+  'forecast.bufferWillBeBreachedOnP0': 'The minimum balance buffer will be breached on {p0}.',
+  'forecast.minimumBalanceBufferP0': 'Minimum balance buffer: {p0}.',
+  'forecast.changeBuffer': 'Change',
   'forecast.coverTheForecastShortfallFirst': 'Cover the forecast shortfall first.',
   'forecast.maximumWithoutTheForecastDroppingBelow0':
     'Maximum under known plans without the forecast dropping below 0,00 {p0}.',
+  'forecast.maximumWithoutTheForecastDroppingBelowBufferP0':
+    'Maximum under known plans without breaching the minimum balance buffer, {p0}.',
   'forecast.minimumBalance': 'Minimum balance',
   'forecast.balanceAtPeriodEnd': 'Balance at period end',
   'forecast.netFlow': 'Net flow',
@@ -1031,6 +1036,9 @@ export const en = {
     'This session will also end. You will need the master password to continue.',
   'settings.endAllSessions': 'End all sessions',
   'settings.settingsSaved': 'Settings saved.',
+  'settings.minimumBalanceBuffer': 'Minimum balance buffer',
+  'settings.minimumBalanceBufferHint':
+    'Included in backups and limits the forecast recommendation without changing plans or balances.',
   'settings.couldNotSaveSettings': 'Could not save settings.',
   'settings.theNewPasswordsDoNotMatch': 'The new passwords do not match.',
   'settings.masterPasswordChangedOtherSessionsHaveEnded':

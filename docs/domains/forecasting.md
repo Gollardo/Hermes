@@ -25,6 +25,18 @@ negative-balance date and its exact balance, and the operations influencing
 changes. If the starting snapshot is already negative, that current balance is
 the first negative value even when today's planned closing later recovers.
 
+## Confirmed next policy, not implemented
+
+The owner has confirmed one persisted, base-currency minimum balance buffer,
+owned by Application Settings and defaulting to zero. It will constrain the
+safe-spend recommendation in every forecast scope and balance mode without
+changing forecast balances, planned events, facts, or virtual-fund reserves.
+Its safe-spend rule is `max(0, forecast minimum - buffer)`, where the minimum
+includes the starting balance and projected daily closings. A buffer breach is
+shown only when no cash gap exists; a cash gap takes risk-display priority.
+See [ADR 0006](../decisions/0006-minimum-balance-buffer.md). This policy is not
+yet a shipped capability.
+
 The default series represents free money: current physical balances minus
 amounts reserved in virtual funds. The owner can explicitly switch to all money,
 including reserved amounts. This view choice does not change allocations.

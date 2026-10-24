@@ -1,4 +1,5 @@
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -36,6 +37,7 @@ def initialize_settings(session: Session, *, base_currency: str, timezone: str) 
             base_currency=base_currency,
             timezone=timezone,
             fund_allocation_mode=FundAllocationMode.MANUAL,
+            minimum_balance_buffer=Decimal(0),
             default_account_id=None,
             base_currency_locked_at=None,
             created_at=now,
@@ -90,6 +92,7 @@ def update_application_settings(
     base_currency: str,
     timezone: str,
     default_account_id: UUID | None = None,
+    minimum_balance_buffer: Decimal = Decimal(0),
 ) -> ApplicationSettings:
     settings = session.scalar(
         select(ApplicationSettings).where(ApplicationSettings.id == 1).with_for_update()
@@ -101,6 +104,7 @@ def update_application_settings(
     settings.base_currency = base_currency
     settings.timezone = timezone
     settings.default_account_id = default_account_id
+    settings.minimum_balance_buffer = minimum_balance_buffer
     settings.updated_at = datetime.now(UTC)
     return settings
 

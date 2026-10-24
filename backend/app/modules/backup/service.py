@@ -237,6 +237,8 @@ def validate_document(data: BackupData) -> None:
             raise BackupInvariantError("Duplicate import metadata")
     normalize_currency(data.settings.base_currency)
     normalize_timezone(data.settings.timezone)
+    if data.settings.minimum_balance_buffer < 0:
+        raise BackupInvariantError("Minimum balance buffer must not be negative")
     account_ids = {item.id for item in data.accounts}
     category_ids = {item.id for item in data.categories}
     operation_ids = {item.id for item in data.operations}

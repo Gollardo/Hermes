@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import cast
 from uuid import UUID
@@ -81,6 +81,22 @@ def test_two_week_forecast_includes_its_inclusive_end() -> None:
     assert len(result.points) == 15
     assert result.points[-1].on == through_on
     assert result.ending_balance == "90.0000"
+
+
+def test_minimum_balance_buffer_records_a_breach_without_changing_cash_gap() -> None:
+    result = calculate_forecast(
+        today=TODAY,
+        through_on=TODAY + timedelta(days=1),
+        balances={SOURCE: Decimal("50000.0000")},
+        account_name_by_id={SOURCE: "Main"},
+        events=[event(1, due_on=TODAY + timedelta(days=1), type=OperationType.EXPENSE, amount="8000")],
+        account_id=SOURCE,
+        horizon=ForecastHorizon.TWO_WEEKS,
+        minimum_balance_buffer=Decimal("45000"),
+    )
+    assert result.minimum_balance == "42000.0000"
+    assert result.buffer_breach_on == TODAY + timedelta(days=1)
+    assert result.first_negative_on is None
 
 
 def test_fund_forecast_applies_only_flagged_transfers_with_exact_rounding(

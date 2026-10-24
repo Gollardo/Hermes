@@ -266,6 +266,9 @@ export class ForecastPage implements OnInit {
     const values = (value?.points ?? []).map((point) => Number(point.closing_balance));
     if (value) {
       values.push(Number(value.starting_balance), Number(value.minimum_balance));
+      if (value.first_negative_on === null && Number(value.minimum_balance_buffer) > 0) {
+        values.push(Number(value.minimum_balance_buffer));
+      }
       if (value.first_negative_balance !== null) {
         values.push(Number(value.first_negative_balance));
       }
@@ -317,6 +320,14 @@ export class ForecastPage implements OnInit {
   });
 
   protected readonly zeroY = computed(() => plotY(0, this.chartScale()));
+  protected readonly bufferY = computed(() =>
+    plotY(Number(this.forecast()?.minimum_balance_buffer ?? 0), this.chartScale()),
+  );
+  protected readonly showBufferBoundary = computed(
+    () =>
+      this.forecast()?.first_negative_on === null &&
+      Number(this.forecast()?.minimum_balance_buffer ?? 0) > 0,
+  );
   protected readonly showZeroBoundary = computed(() => this.chartScale().showZero);
   protected readonly showNegativeZone = computed(
     () => this.showZeroBoundary() && Number(this.forecast()?.minimum_balance ?? 0) < 0,

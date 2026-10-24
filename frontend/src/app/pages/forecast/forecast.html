@@ -102,9 +102,15 @@
         <strong>{{ vm.metrics.safeToSpend | money }} {{ baseCurrency() }}</strong>
         @if (vm.metrics.hasCashGap) {
           <p>{{ t('forecast.coverTheForecastShortfallFirst') }}</p>
+        } @else if (vm.metrics.bufferBreachDate) {
+          <p>{{ t('forecast.bufferWillBeBreachedOnP0', { p0: (vm.metrics.bufferBreachDate | textDate) }) }}</p>
         } @else {
-          <p>{{ t('forecast.maximumWithoutTheForecastDroppingBelow0', { p0: baseCurrency() }) }}</p>
+          <p>{{ t('forecast.maximumWithoutTheForecastDroppingBelowBufferP0', { p0: baseCurrency() }) }}</p>
         }
+        <p class="field-hint">
+          {{ t('forecast.minimumBalanceBufferP0', { p0: (vm.metrics.minimumBalanceBuffer | money) + ' ' + baseCurrency() }) }}
+          <a routerLink="/settings">{{ t('forecast.changeBuffer') }}</a>
+        </p>
       </article>
     </section>
 
@@ -190,6 +196,15 @@
                       [attr.y1]="zeroY()"
                       x2="97"
                       [attr.y2]="zeroY()"
+                    />
+                  }
+                  @if (showBufferBoundary()) {
+                    <line
+                      class="buffer-line"
+                      x1="11"
+                      [attr.y1]="bufferY()"
+                      x2="97"
+                      [attr.y2]="bufferY()"
                     />
                   }
                   <g class="forecast-line">

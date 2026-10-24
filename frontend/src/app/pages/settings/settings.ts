@@ -9,6 +9,7 @@ import { AuthService } from '../../core/auth.service';
 import { apiErrorMessage } from '../../core/api-error';
 import { formatTextTimestamp } from '../../shared/date-text.pipe';
 import { currencySymbol } from '../../shared/money.pipe';
+import { decimalPayload, DecimalInput } from '../../shared/decimal-input';
 import { EntityCombobox, EntityOption } from '../../shared/entity-combobox';
 
 interface ApplicationSettings {
@@ -16,6 +17,7 @@ interface ApplicationSettings {
   timezone: string;
   default_account_id: string | null;
   fund_allocation_mode: 'manual' | 'dynamic';
+  minimum_balance_buffer: string;
   base_currency_locked: boolean;
   updated_at: string;
 }
@@ -46,7 +48,7 @@ const RESTORE_CONFIRMATION = 'ЗАМЕНИТЬ ВСЕ ДАННЫЕ';
 
 @Component({
   selector: 'app-settings-page',
-  imports: [LanguageSelect, ReactiveFormsModule, EntityCombobox],
+  imports: [LanguageSelect, ReactiveFormsModule, EntityCombobox, DecimalInput],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -95,6 +97,7 @@ export class SettingsPage implements OnInit {
     baseCurrency: ['RUB', [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
     timezone: ['UTC', Validators.required],
     defaultAccountId: this.formBuilder.control({ value: '', disabled: true }),
+    minimumBalanceBuffer: ['0.00', [Validators.required, Validators.pattern(/^\d{1,16}(?:\.\d{1,4})?$/)]],
   });
   protected readonly fundModeForm = this.formBuilder.group({
     mode: this.formBuilder.control<'manual' | 'dynamic'>('manual'),
@@ -140,6 +143,7 @@ export class SettingsPage implements OnInit {
         base_currency: value.baseCurrency,
         timezone: value.timezone,
         default_account_id: value.defaultAccountId || null,
+        minimum_balance_buffer: decimalPayload(value.minimumBalanceBuffer),
       })
       .subscribe({
         next: (settings) => {
@@ -430,6 +434,7 @@ export class SettingsPage implements OnInit {
       baseCurrency: settings.base_currency,
       timezone: settings.timezone,
       defaultAccountId: settings.default_account_id ?? '',
+      minimumBalanceBuffer: settings.minimum_balance_buffer ?? '0.00',
     });
     this.currentFundMode.set(fundMode);
     this.fundModeForm.setValue({ mode: fundMode });

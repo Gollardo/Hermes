@@ -36,6 +36,8 @@ export interface ForecastDataset {
   ending_balance: string;
   minimum_balance: string;
   minimum_on: string;
+  minimum_balance_buffer: string;
+  buffer_breach_on: string | null;
   first_negative_on: string | null;
   first_negative_balance: string | null;
   expected_income: string;
@@ -56,6 +58,8 @@ export interface ForecastMetrics {
   netPlannedTransferFlow: string;
   netPlannedFlow: string;
   safeToSpend: string;
+  minimumBalanceBuffer: string;
+  bufferBreachDate: string | null;
   hasCashGap: boolean;
 }
 
@@ -78,6 +82,7 @@ export interface ForecastViewModel {
  * precision because their visible points are intentionally grouped by month.
  */
 export function buildForecastViewModel(dataset: ForecastDataset): ForecastViewModel {
+  const minimumBalanceBuffer = dataset.minimum_balance_buffer ?? '0';
   const dailyMetrics = dataset.granularity === 'day' ? deriveDailySeriesMetrics(dataset) : null;
   const forecastEndBalance = dataset.points.at(-1)?.closing_balance ?? dataset.ending_balance;
   const minimumBalance = dailyMetrics?.minimumBalance ?? dataset.minimum_balance;
@@ -122,7 +127,12 @@ export function buildForecastViewModel(dataset: ForecastDataset): ForecastViewMo
       totalPlannedExpense: dataset.expected_expense,
       netPlannedTransferFlow,
       netPlannedFlow: subtractDecimal(forecastEndBalance, dataset.starting_balance),
-      safeToSpend: compareDecimal(minimumBalance, '0') > 0 ? minimumBalance : '0',
+      safeToSpend:
+        compareDecimal(subtractDecimal(minimumBalance, minimumBalanceBuffer), '0') > 0
+          ? subtractDecimal(minimumBalance, minimumBalanceBuffer)
+          : '0',
+      minimumBalanceBuffer,
+      bufferBreachDate: dataset.first_negative_on ? null : dataset.buffer_breach_on,
       hasCashGap: firstNegativeBalanceDate !== null,
     },
     timelineEvents,

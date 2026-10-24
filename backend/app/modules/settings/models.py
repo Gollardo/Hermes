@@ -1,8 +1,9 @@
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, SmallInteger, String
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Numeric, SmallInteger, String
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -26,6 +27,7 @@ class ApplicationSettings(Base):
             "fund_allocation_mode IN ('manual', 'dynamic')",
             name="ck_application_settings_fund_allocation_mode",
         ),
+        CheckConstraint("minimum_balance_buffer >= 0", name="ck_application_settings_minimum_buffer"),
     )
 
     id: Mapped[int] = mapped_column(SmallInteger, primary_key=True, default=1)
@@ -33,6 +35,9 @@ class ApplicationSettings(Base):
     timezone: Mapped[str] = mapped_column(String(64), nullable=False)
     fund_allocation_mode: Mapped[FundAllocationMode] = mapped_column(
         String(16), nullable=False, default=FundAllocationMode.MANUAL
+    )
+    minimum_balance_buffer: Mapped[Decimal] = mapped_column(
+        Numeric(20, 4), nullable=False, default=Decimal(0)
     )
     default_account_id: Mapped[UUID | None] = mapped_column(
         PostgreSQLUUID(as_uuid=True),

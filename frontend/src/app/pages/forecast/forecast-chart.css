@@ -147,6 +147,12 @@
   vector-effect: non-scaling-stroke;
 }
 
+.buffer-line {
+  stroke: var(--warning, #9a6700);
+  stroke-dasharray: 2 1;
+  stroke-width: 0.55;
+}
+
 .forecast-segment {
   stroke: var(--accent);
   stroke-linecap: round;

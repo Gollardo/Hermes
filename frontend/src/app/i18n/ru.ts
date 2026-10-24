@@ -321,9 +321,14 @@ export const ru = {
   'forecast.confirmPostponeOrCancelThem': 'Их нужно подтвердить, перенести или отменить.',
   'forecast.goToEvents': 'Перейти к событиям',
   'forecast.availableToSpendNow': 'Можно потратить сейчас',
+  'forecast.bufferWillBeBreachedOnP0': 'Неснижаемый остаток будет нарушен {p0}.',
+  'forecast.minimumBalanceBufferP0': 'Неснижаемый остаток: {p0}.',
+  'forecast.changeBuffer': 'Изменить',
   'forecast.coverTheForecastShortfallFirst': 'Сначала закройте прогнозируемый дефицит.',
   'forecast.maximumWithoutTheForecastDroppingBelow0':
     'Максимум по заданным планам без ухода прогноза ниже 0,00 {p0}.',
+  'forecast.maximumWithoutTheForecastDroppingBelowBufferP0':
+    'Максимум по заданным планам без нарушения неснижаемого остатка, {p0}.',
   'forecast.minimumBalance': 'Минимальный остаток',
   'forecast.balanceAtPeriodEnd': 'Прогноз на конец периода',
   'forecast.netFlow': 'Чистый поток',
@@ -1032,6 +1037,9 @@ export const ru = {
     'Текущая сессия тоже завершится. Для продолжения потребуется мастер-пароль.',
   'settings.endAllSessions': 'Завершить все сессии',
   'settings.settingsSaved': 'Настройки сохранены.',
+  'settings.minimumBalanceBuffer': 'Неснижаемый остаток',
+  'settings.minimumBalanceBufferHint':
+    'Сумма сохраняется в резервной копии и ограничивает рекомендацию в прогнозе, не меняя планы или остатки.',
   'settings.couldNotSaveSettings': 'Не удалось сохранить настройки.',
   'settings.theNewPasswordsDoNotMatch': 'Новые пароли не совпадают.',
   'settings.masterPasswordChangedOtherSessionsHaveEnded':

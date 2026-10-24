@@ -3,6 +3,12 @@
 Hermes is a single-owner personal-finance context that keeps actual financial
 facts, planned events and imported bank evidence distinct.
 
+## Forecasting
+
+**Minimum balance buffer**:
+A user-defined amount that a forecasted balance is intended not to fall below when Hermes recommends how much can be spent safely. It is distinct from virtual-fund reserves and does not alter actual balances, plans, or the forecast series.
+_Avoid_: Safe amount, reserve
+
 ## Statement import
 
 **Fact date**:

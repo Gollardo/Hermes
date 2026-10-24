@@ -43,7 +43,10 @@ from app.modules.scheduling.contracts import (
     PlannedOccurrence,
     forecast_schedule_snapshot,
 )
-from app.modules.settings.contracts import FundAllocationMode, fund_allocation_mode
+from app.modules.settings.contracts import (
+    FundAllocationMode,
+    fund_allocation_mode,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -186,6 +189,7 @@ def calculate_forecast(
     horizon: ForecastHorizon,
     overdue_excluded_count: int = 0,
     balance_mode: ForecastBalanceMode = ForecastBalanceMode.TOTAL,
+    minimum_balance_buffer: Decimal = Decimal(0),
 ) -> ForecastResponse:
     if through_on < today:
         raise ValueError("forecast end must not precede today")
@@ -221,6 +225,7 @@ def calculate_forecast(
     minimum_on = today
     first_negative: date | None = today if starting < 0 else None
     first_negative_balance: Decimal | None = starting if starting < 0 else None
+    buffer_breach = today if starting < minimum_balance_buffer else None
     risk_balance = starting
     for on in sorted(grouped):
         risk_balance += sum((effect for _, effect in grouped[on]), Decimal(0))
@@ -230,6 +235,8 @@ def calculate_forecast(
         if first_negative is None and risk_balance < 0:
             first_negative = on
             first_negative_balance = risk_balance
+        if buffer_breach is None and risk_balance < minimum_balance_buffer:
+            buffer_breach = on
 
     current = starting
     points: list[ForecastPointResponse] = []
@@ -269,6 +276,8 @@ def calculate_forecast(
         ending_balance=_money(current),
         minimum_balance=_money(minimum),
         minimum_on=minimum_on,
+        minimum_balance_buffer=_money(minimum_balance_buffer),
+        buffer_breach_on=None if first_negative is not None else buffer_breach,
         first_negative_on=first_negative,
         first_negative_balance=(
             _money(first_negative_balance) if first_negative_balance is not None else None
@@ -305,6 +314,7 @@ def build_forecast(
     horizon: ForecastHorizon,
     account_id: UUID | None,
     balance_mode: ForecastBalanceMode = ForecastBalanceMode.FREE,
+    minimum_balance_buffer: Decimal = Decimal(0),
 ) -> ForecastResponse:
     through_on = horizon_end(today, horizon)
     schedule_account_id = None if balance_mode == ForecastBalanceMode.FREE else account_id
@@ -364,6 +374,7 @@ def build_forecast(
         horizon=horizon,
         overdue_excluded_count=schedule.overdue_count,
         balance_mode=balance_mode,
+        minimum_balance_buffer=minimum_balance_buffer,
     )
 
 

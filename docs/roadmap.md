@@ -88,6 +88,11 @@ The hosted platform remains a separate architectural program.
 - [ ] Cover scenario calculation with exact-decimal, snapshot-consistency, and
   no-side-effect tests.
 
+The owner-confirmed baseline minimum balance buffer is distinct from this
+scenario-specific stop-loss: it is a persistent Settings policy for the
+ordinary forecast and is recorded in [ADR 0006](decisions/0006-minimum-balance-buffer.md).
+It does not settle the Oracle risk-boundary design.
+
 ## 2.1.0 — save and compare scenarios
 
 - [ ] Named scenarios that do not become confirmed plans.

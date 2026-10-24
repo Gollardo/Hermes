@@ -48,6 +48,18 @@ describe('buildForecastViewModel', () => {
     expect(viewModel.metrics.firstNegativeBalanceDate).toBe('2026-08-17');
   });
 
+  it('subtracts the exact minimum balance buffer and hides its breach behind a cash gap', () => {
+    const buffered = dataset(['50000', '42000']);
+    buffered.minimum_balance_buffer = '30000.0000';
+    buffered.buffer_breach_on = null;
+    expect(buildForecastViewModel(buffered).metrics.safeToSpend).toBe('12000.0000');
+
+    const cashGap = dataset(['50000', '-10']);
+    cashGap.minimum_balance_buffer = '30000.0000';
+    cashGap.buffer_breach_on = null;
+    expect(buildForecastViewModel(cashGap).metrics.bufferBreachDate).toBeNull();
+  });
+
   it('keeps the first date across several consecutive negative days', () => {
     const viewModel = buildForecastViewModel(dataset(['1000', '-100', '-500', '-200']));
 

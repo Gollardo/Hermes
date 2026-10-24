@@ -1,5 +1,6 @@
 """Cross-module application-settings use cases."""
 
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -48,6 +49,7 @@ def replace_application_settings(
     base_currency: str,
     timezone: str,
     default_account_id: UUID | None = None,
+    minimum_balance_buffer: Decimal = Decimal(0),
 ) -> ApplicationSettings:
     current_timezone = lock_application_timezone(session)
     if default_account_id is not None:
@@ -59,4 +61,5 @@ def replace_application_settings(
         base_currency=base_currency,
         timezone=timezone,
         default_account_id=default_account_id,
+        minimum_balance_buffer=minimum_balance_buffer,
     )

@@ -70,6 +70,8 @@ class ForecastResponse(BaseModel):
     ending_balance: str
     minimum_balance: str
     minimum_on: date
+    minimum_balance_buffer: str
+    buffer_breach_on: date | None
     first_negative_on: date | None
     first_negative_balance: str | None
     expected_income: str

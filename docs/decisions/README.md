@@ -19,6 +19,9 @@ accepted without an explicit project-owner decision.
 - [ADR 0004: Encrypted Hermes backup envelope](0004-encrypted-backup-envelope.md)
   records the owner-confirmed two-level key architecture, protected V1 format,
   legacy JSON compatibility and untrusted-file limits.
+- [ADR 0006: Minimum balance buffer for baseline forecasts](0006-minimum-balance-buffer.md)
+  records the owner-confirmed persisted cash-buffer policy, distinct from
+  virtual funds and future scenario stop-losses; implementation remains open.
 
 ## Template for a future ADR
 

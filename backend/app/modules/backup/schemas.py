@@ -36,6 +36,7 @@ class SettingsRecord(BackupModel):
     timezone: str
     default_account_id: UUID | None = None
     fund_allocation_mode: FundAllocationMode = FundAllocationMode.MANUAL
+    minimum_balance_buffer: Money = Decimal(0)
     base_currency_locked_at: AwareDatetime | None
     created_at: AwareDatetime
     updated_at: AwareDatetime

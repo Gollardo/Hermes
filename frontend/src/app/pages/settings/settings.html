@@ -77,6 +77,16 @@
           <p class="field-hint">
             {{ t('settings.prefilledOnlyForNewIncomeOrExpenses') }}
           </p>
+
+          <label for="settings-minimum-balance-buffer">{{ t('settings.minimumBalanceBuffer') }}</label>
+          <input
+            id="settings-minimum-balance-buffer"
+            formControlName="minimumBalanceBuffer"
+            appDecimalInput
+            inputmode="decimal"
+            autocomplete="off"
+          />
+          <p class="field-hint">{{ t('settings.minimumBalanceBufferHint') }}</p>
           @if (accountsError(); as message) {
             <p class="form-error" role="alert">{{ message }}</p>
           }

@@ -13,7 +13,7 @@ from app.modules.forecasting.schemas import (
     FundForecastResponse,
 )
 from app.modules.forecasting.service import build_forecast, build_fund_forecast
-from app.modules.settings.contracts import application_timezone
+from app.modules.settings.contracts import application_timezone, get_application_settings
 
 read_router = APIRouter(prefix="/forecast", tags=["forecast"])
 
@@ -33,6 +33,7 @@ def read_forecast(
             horizon=horizon,
             account_id=account_id,
             balance_mode=balance_mode,
+            minimum_balance_buffer=get_application_settings(session).minimum_balance_buffer,
         )
     except AccountReferenceError as error:
         raise HTTPException(

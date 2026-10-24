@@ -119,6 +119,18 @@ requests. Login adds an explicit accessible password-visibility control, while t
 operation, fund and scheduling submissions reveal invalid state and move focus to the first field
 that needs correction without changing API or financial contracts.
 
+## Unreleased minimum balance buffer
+
+Application Settings now persist an exact non-negative minimum balance buffer, defaulting to
+`0.0000` and included in backups. Forecast safe-to-spend uses the raw projected minimum less this
+buffer without changing ledger facts, plans, virtual-fund reserves or the projected balance series.
+When there is no cash gap, the forecast reports a buffer breach and draws its distinct boundary;
+a cash gap remains the only displayed risk when present. The Settings form accepts comma or dot
+decimal separators and the Forecast links back to that single setting. Migration `0019` is required.
+
+Focused forecast calculation tests and backend/frontend type checks passed locally. Full
+integration, backup/restore, browser and production-build acceptance remain open.
+
 Dashboard attention and recent-operation rows, plus account history actions, now link to the exact
 existing context. Operation filters and pagination, report scope, and forecast scope use validated
 URL query state and restore it during browser Back/Forward navigation. Reports retain the last
