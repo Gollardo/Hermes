@@ -103,12 +103,26 @@
         @if (vm.metrics.hasCashGap) {
           <p>{{ t('forecast.coverTheForecastShortfallFirst') }}</p>
         } @else if (vm.metrics.bufferBreachDate) {
-          <p>{{ t('forecast.bufferWillBeBreachedOnP0', { p0: (vm.metrics.bufferBreachDate | textDate) }) }}</p>
+          <p>
+            {{
+              t('forecast.bufferWillBeBreachedOnP0', {
+                p0: (vm.metrics.bufferBreachDate | textDate),
+              })
+            }}
+          </p>
         } @else {
-          <p>{{ t('forecast.maximumWithoutTheForecastDroppingBelowBufferP0', { p0: baseCurrency() }) }}</p>
+          <p>
+            {{
+              t('forecast.maximumWithoutTheForecastDroppingBelowBufferP0', { p0: baseCurrency() })
+            }}
+          </p>
         }
         <p class="field-hint">
-          {{ t('forecast.minimumBalanceBufferP0', { p0: (vm.metrics.minimumBalanceBuffer | money) + ' ' + baseCurrency() }) }}
+          {{
+            t('forecast.minimumBalanceBufferP0', {
+              p0: (vm.metrics.minimumBalanceBuffer | money) + ' ' + baseCurrency(),
+            })
+          }}
           <a routerLink="/settings">{{ t('forecast.changeBuffer') }}</a>
         </p>
       </article>
@@ -236,6 +250,12 @@
                 @if (showZeroBoundary()) {
                   <span class="zero-caption" [style.top.%]="zeroY()" aria-hidden="true">
                     {{ '0' | money }} {{ baseCurrency() }}
+                  </span>
+                }
+                @if (showBufferBoundary()) {
+                  <span class="buffer-caption" [style.top.%]="bufferY()" aria-hidden="true">
+                    {{ t('forecast.minimumBalanceBuffer') }} ·
+                    {{ vm.metrics.minimumBalanceBuffer | money }} {{ baseCurrency() }}
                   </span>
                 }
 

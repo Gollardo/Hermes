@@ -323,6 +323,7 @@ export const ru = {
   'forecast.availableToSpendNow': 'Можно потратить сейчас',
   'forecast.bufferWillBeBreachedOnP0': 'Неснижаемый остаток будет нарушен {p0}.',
   'forecast.minimumBalanceBufferP0': 'Неснижаемый остаток: {p0}.',
+  'forecast.minimumBalanceBuffer': 'Неснижаемый остаток',
   'forecast.changeBuffer': 'Изменить',
   'forecast.coverTheForecastShortfallFirst': 'Сначала закройте прогнозируемый дефицит.',
   'forecast.maximumWithoutTheForecastDroppingBelow0':

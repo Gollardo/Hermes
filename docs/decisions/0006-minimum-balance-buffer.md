@@ -1,6 +1,6 @@
 # ADR 0006: Minimum balance buffer for baseline forecasts
 
-- Status: accepted; not yet implemented
+- Status: accepted; implemented and unreleased
 - Date: 2026-10-24
 - Decision owner: project owner
 
@@ -59,9 +59,8 @@ amount; rendered values follow the shared financial presentation contract.
 
 ## Consequences
 
-Implementation needs a Settings-owned persistent field, public Settings
+The implementation adds a Settings-owned persistent field, public Settings
 contract, backup/restore compatibility policy, exact-decimal validation, and
-one consistent Forecasting read. It also needs focused tests for zero,
-positive, current-day, future breach, cash-gap priority, all scopes and both
-balance modes. This ADR authorizes the policy; it does not claim an implemented
-schema, API, UI, migration, or verified release.
+one consistent Forecasting read. Focused checks cover the core calculation;
+full integration, migration-upgrade, browser and release acceptance remain
+required before shipment.

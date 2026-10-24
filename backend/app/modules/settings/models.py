@@ -27,7 +27,9 @@ class ApplicationSettings(Base):
             "fund_allocation_mode IN ('manual', 'dynamic')",
             name="ck_application_settings_fund_allocation_mode",
         ),
-        CheckConstraint("minimum_balance_buffer >= 0", name="ck_application_settings_minimum_buffer"),
+        CheckConstraint(
+            "minimum_balance_buffer >= 0", name="ck_application_settings_minimum_buffer"
+        ),
     )
 
     id: Mapped[int] = mapped_column(SmallInteger, primary_key=True, default=1)

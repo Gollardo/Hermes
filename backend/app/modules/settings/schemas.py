@@ -1,7 +1,6 @@
 from datetime import date, datetime
-from uuid import UUID
-
 from decimal import Decimal
+from uuid import UUID
 
 from pydantic import BaseModel, field_validator
 
@@ -25,7 +24,7 @@ class SettingsUpdateRequest(BaseModel):
     base_currency: str
     timezone: str
     default_account_id: UUID | None = None
-    minimum_balance_buffer: Money = Decimal(0)
+    minimum_balance_buffer: Money | None = None
 
     @field_validator("base_currency")
     @classmethod
@@ -39,8 +38,8 @@ class SettingsUpdateRequest(BaseModel):
 
     @field_validator("minimum_balance_buffer")
     @classmethod
-    def non_negative_buffer(cls, value: Decimal) -> Decimal:
-        if value < 0:
+    def non_negative_buffer(cls, value: Decimal | None) -> Decimal | None:
+        if value is not None and value < 0:
             raise ValueError("minimum balance buffer must not be negative")
         return value
 

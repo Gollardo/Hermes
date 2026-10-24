@@ -326,6 +326,7 @@ export const en = {
   'forecast.availableToSpendNow': 'Available to spend now',
   'forecast.bufferWillBeBreachedOnP0': 'The minimum balance buffer will be breached on {p0}.',
   'forecast.minimumBalanceBufferP0': 'Minimum balance buffer: {p0}.',
+  'forecast.minimumBalanceBuffer': 'Minimum balance buffer',
   'forecast.changeBuffer': 'Change',
   'forecast.coverTheForecastShortfallFirst': 'Cover the forecast shortfall first.',
   'forecast.maximumWithoutTheForecastDroppingBelow0':

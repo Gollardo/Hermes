@@ -89,7 +89,14 @@ def test_minimum_balance_buffer_records_a_breach_without_changing_cash_gap() -> 
         through_on=TODAY + timedelta(days=1),
         balances={SOURCE: Decimal("50000.0000")},
         account_name_by_id={SOURCE: "Main"},
-        events=[event(1, due_on=TODAY + timedelta(days=1), type=OperationType.EXPENSE, amount="8000")],
+        events=[
+            event(
+                1,
+                due_on=TODAY + timedelta(days=1),
+                type=OperationType.EXPENSE,
+                amount="8000",
+            )
+        ],
         account_id=SOURCE,
         horizon=ForecastHorizon.TWO_WEEKS,
         minimum_balance_buffer=Decimal("45000"),

@@ -97,7 +97,10 @@ export class SettingsPage implements OnInit {
     baseCurrency: ['RUB', [Validators.required, Validators.pattern(/^[A-Za-z]{3}$/)]],
     timezone: ['UTC', Validators.required],
     defaultAccountId: this.formBuilder.control({ value: '', disabled: true }),
-    minimumBalanceBuffer: ['0.00', [Validators.required, Validators.pattern(/^\d{1,16}(?:\.\d{1,4})?$/)]],
+    minimumBalanceBuffer: [
+      '0.00',
+      [Validators.required, Validators.pattern(/^\d{1,16}(?:\.\d{1,4})?$/)],
+    ],
   });
   protected readonly fundModeForm = this.formBuilder.group({
     mode: this.formBuilder.control<'manual' | 'dynamic'>('manual'),

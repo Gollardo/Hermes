@@ -225,10 +225,20 @@ def test_settings_validation_and_currency_lock(postgres_database_settings: Setti
         updated = client.put(
             "/api/v1/settings",
             headers=csrf_headers(client),
-            json={"base_currency": "eur", "timezone": "UTC"},
+            json={"base_currency": "eur", "timezone": "UTC", "minimum_balance_buffer": "30000.5"},
         )
         assert updated.status_code == 200
         assert updated.json()["base_currency"] == "EUR"
+        assert updated.json()["minimum_balance_buffer"] == "30000.5000"
+        # Older callers that do not send this new field must not erase the owner's buffer.
+        assert (
+            client.put(
+                "/api/v1/settings",
+                headers=csrf_headers(client),
+                json={"base_currency": "EUR", "timezone": "UTC"},
+            ).json()["minimum_balance_buffer"]
+            == "30000.5000"
+        )
         account = client.post(
             "/api/v1/accounts",
             headers=csrf_headers(client),

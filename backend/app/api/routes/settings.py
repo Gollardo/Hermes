@@ -47,12 +47,17 @@ def replace_settings(
     session: DatabaseSession,
 ) -> SettingsResponse:
     try:
+        current = get_application_settings(session)
         settings = replace_application_settings(
             session,
             base_currency=payload.base_currency,
             timezone=payload.timezone,
             default_account_id=payload.default_account_id,
-            minimum_balance_buffer=payload.minimum_balance_buffer,
+            minimum_balance_buffer=(
+                current.minimum_balance_buffer
+                if payload.minimum_balance_buffer is None
+                else payload.minimum_balance_buffer
+            ),
         )
     except AccountReferenceError as error:
         raise HTTPException(

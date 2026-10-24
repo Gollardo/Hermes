@@ -59,7 +59,8 @@ its own sake.
 
 - scope and currency;
 - actual starting balance with a time marker;
-- safe amount that can be spent without taking the known forecast below zero;
+- safe amount that can be spent without taking the known forecast below the
+  active minimum balance buffer;
 - selected horizon and granularity;
 - forecast series;
 - minimum balance and date;
@@ -83,8 +84,9 @@ its own sake.
 1. One row for account scope, horizon, and free/all-money mode.
 2. Safe spend above the plot; minimum, period end and net flow below the plot.
    Cash gap is not duplicated in another KPI card.
-3. The primary chart with an actual starting point, forecast line, and
-   risk-aware zero boundary.
+3. The primary chart with an actual starting point, forecast line, a labelled
+   zero boundary where relevant, and a labelled minimum-balance-buffer boundary
+   when no cash gap exists.
 4. Synchronized timeline and details for the selected day or interval.
 5. A compact column of risks and period totals.
 6. Contextual disclosure of the free-money model boundary.
@@ -117,7 +119,9 @@ The future scenario flow is documented in [Oracle · What if?](scenarios.md).
   not become a uniformly weighted strip of points.
 - Daily end balance may be the baseline display, but same-day ordering requires
   an approved rule.
-- A risk threshold has a label and is not encoded only as a red area.
+- A risk threshold has a label and is not encoded only as a red area. The
+  minimum-balance buffer is a persisted Settings value; Forecast links to it
+  rather than presenting a second editor.
 - Tooltip shows exact date or interval, closing balance, net change in the shared
   two-place UI format, and event count. Opening balance and events appear in the
   synchronized detail panel.
@@ -207,8 +211,8 @@ unavailable source and offers retry; actual balance may appear separately.
 - Approximate amounts, ranges, and what-if scenarios are not implemented.
 - One forecast view model derives current, end, minimum, first-negative, total
   income and expense, net flow, and `safeToSpend`. Safe to spend is
-  `max(0, minimumBalance)`, so a projected shortfall never leads the interface
-  to recommend spending the current balance.
+  `max(0, minimumBalance - minimumBalanceBuffer)`, so a projected shortfall or
+  buffer breach never leads the interface to recommend spending the current balance.
 - Decision KPIs, chart, upcoming-event feed, risks, and period totals use one
   dataset and one set of derived metrics. Separate cards show minimum and date,
   period end, and first cash gap; an empty risk state reserves no space.

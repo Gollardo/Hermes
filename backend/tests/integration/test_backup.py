@@ -42,6 +42,18 @@ def test_first_run_restore_is_atomic_and_uses_backup_settings(
     with TestClient(app) as client:
         assert client.post("/api/v1/setup", json=SETUP).status_code == 201
         headers = csrf(client)
+        assert (
+            client.put(
+                "/api/v1/settings",
+                headers=headers,
+                json={
+                    "base_currency": "RUB",
+                    "timezone": "Europe/Moscow",
+                    "minimum_balance_buffer": "30000",
+                },
+            ).status_code
+            == 200
+        )
         parent = client.post(
             "/api/v1/categories",
             headers=headers,
@@ -488,6 +500,18 @@ def test_backup_round_trips_dynamic_fund_allocation_mode(
         assert client.post("/api/v1/setup", json=SETUP).status_code == 201
         headers = csrf(client)
         assert (
+            client.put(
+                "/api/v1/settings",
+                headers=headers,
+                json={
+                    "base_currency": "RUB",
+                    "timezone": "Europe/Moscow",
+                    "minimum_balance_buffer": "30000",
+                },
+            ).status_code
+            == 200
+        )
+        assert (
             client.post(
                 "/api/v1/funds",
                 headers=headers,
@@ -519,6 +543,7 @@ def test_backup_round_trips_dynamic_fund_allocation_mode(
         )
         document = client.get("/api/v1/backup/export").json()
         assert document["data"]["settings"]["fund_allocation_mode"] == "dynamic"
+        assert document["data"]["settings"]["minimum_balance_buffer"] == "30000.0000"
         assert sum(
             Decimal(item["allocation_percentage"]) for item in document["data"]["funds"]
         ) > Decimal("100")
@@ -534,6 +559,7 @@ def test_backup_round_trips_dynamic_fund_allocation_mode(
         )
         assert restored.status_code == 200
         assert client.get("/api/v1/settings").json()["fund_allocation_mode"] == "dynamic"
+        assert client.get("/api/v1/settings").json()["minimum_balance_buffer"] == "30000.0000"
         assert {item["allocation_percentage"] for item in client.get("/api/v1/funds").json()} == {
             "50.0000"
         }
